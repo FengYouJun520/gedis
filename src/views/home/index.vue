@@ -1,10 +1,11 @@
 <script setup lang="ts">
-useDark()
+
+
 </script>
 
 <template>
-  <router-view />
+  <div>home</div>
 </template>
 
-<style scoped>
+<style lang="css" scoped>
 </style>
