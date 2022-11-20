@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MenuBar from '@/components/MenuBar/index.vue'
+import Header from './Header.vue'
 </script>
 
 <template>
@@ -7,10 +8,12 @@ import MenuBar from '@/components/MenuBar/index.vue'
     <MenuBar />
     <el-container>
       <el-header>
-        header
+        <Header />
       </el-header>
       <el-main relative>
-        <router-view />
+        <el-scrollbar view-style="height: 100%">
+          <router-view />
+        </el-scrollbar>
       </el-main>
     </el-container>
   </el-container>
