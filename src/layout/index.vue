@@ -9,7 +9,7 @@ import MenuBar from '@/components/MenuBar/index.vue'
       <el-header>
         header
       </el-header>
-      <el-main>
+      <el-main relative>
         <router-view />
       </el-main>
     </el-container>

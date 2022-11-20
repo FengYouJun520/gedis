@@ -24,9 +24,7 @@ const handleChange = (value: any) => {
 }
 const resizeRef = ref<HTMLDivElement|null>(null)
 const { x } = useMouse({ touch: false })
-const { pressed } = useMousePressed({
-  target: resizeRef,
-})
+const { pressed } = useMousePressed({ target: resizeRef })
 
 watch(x, () => {
   if (unref(pressed)) {
@@ -83,7 +81,7 @@ watch(x, () => {
 }
 
 .aside-resize {
-  @apply fixed h-full;
+  @apply fixed h-full z999;
   border: 1px solid var(--el-border-color);
   width: 16px;
   height: 16px;

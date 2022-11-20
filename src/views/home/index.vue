@@ -4,11 +4,33 @@
 </script>
 
 <template>
-  <div>
-    home
-    <div class="space-x-8">
-      <div class="line-md:moon-filled-alt-to-sunny-filled-loop-transition w64px h64px" />
-      <div class="radix-icons:moon w64px h64px" />
+  <div relative h-full w-full>
+    <div
+      class="absolute left-[50%] top-[50%] -translate-[50%]"
+      flex
+      flex-col
+      gap-y-4
+      w-full
+      items-center
+    >
+      <i
+        class="logos:redis"
+        w200px
+        h200px
+      />
+      <div>
+        <span text-center>Gedis 0.1.0</span>
+      </div>
+      <div flex items-center>
+        <el-button size="large" circle text>
+          <template #icon>
+            <i
+              class="mdi:github"
+              p3
+            />
+          </template>
+        </el-button>
+      </div>
     </div>
   </div>
 </template>
