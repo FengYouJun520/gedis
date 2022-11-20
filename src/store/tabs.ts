@@ -1,5 +1,3 @@
-import { tabBarProps } from 'element-plus'
-
 interface TabsProps {
   key: string
   name: string
@@ -9,27 +7,32 @@ interface TabsProps {
 }
 
 interface TabsState {
-  tabs: Map<string, TabsProps>
+  tabs: TabsProps[]
 }
 
 export const useTabs = defineStore('tabs', {
   state: () : TabsState => ({
-    tabs: new Map(),
+    tabs: [],
   }),
   actions: {
-    addTab(key: string, tabsProps: TabsProps) {
-      if (this.tabs.has(key)) {
+    addTab(tabsProps: TabsProps) {
+      if (this.tabs.findIndex(t => t.key === tabsProps.key) !== -1) {
         return
       }
 
-      this.tabs.set(key, tabsProps)
+      this.tabs.push({ ...tabsProps })
     },
     removeTab(key: string) {
-      this.tabs.delete(key)
+      const index = this.tabs.findIndex(t => t.key === key)
+      if (index === -1) {
+        return
+      }
+
+      this.tabs.splice(index, 1)
     },
 
   },
   getters: {
-    getTabs: state => Array.from(state.tabs.values()),
+    getTabs: state => state.tabs,
   },
 })

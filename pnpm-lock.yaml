@@ -7,6 +7,7 @@ specifiers:
   '@tauri-apps/api': ^1.1.0
   '@tauri-apps/cli': ^1.1.0
   '@types/node': ^18.8.0
+  '@types/uuid': ^8.3.4
   '@typescript-eslint/eslint-plugin': ^5.40.1
   '@typescript-eslint/parser': ^5.40.1
   '@unocss/transformer-directives': ^0.46.5
@@ -25,6 +26,7 @@ specifiers:
   unocss: ^0.46.5
   unplugin-auto-import: ^0.11.4
   unplugin-vue-components: ^0.22.9
+  uuid: ^9.0.0
   vite: ^3.0.2
   vue: ^3.2.37
   vue-router: ^4.1.6
@@ -37,6 +39,7 @@ dependencies:
   element-plus: 2.2.22_vue@3.2.45
   pinia: 2.0.24_zwu2zepfy3m6u2gunxlolp35gi
   pinia-plugin-persistedstate: 2.4.0_pinia@2.0.24
+  uuid: 9.0.0
   vue: 3.2.45
   vue-router: 4.1.6_vue@3.2.45
 
@@ -46,6 +49,7 @@ devDependencies:
   '@iconify/json': 2.1.140
   '@tauri-apps/cli': 1.2.0
   '@types/node': 18.11.9
+  '@types/uuid': 8.3.4
   '@typescript-eslint/eslint-plugin': 5.43.0_ol5heeoi7wmwb4tenztnb7jlze
   '@typescript-eslint/parser': 5.43.0_zksrc6ykdxhogxjbhb5axiabwi
   '@unocss/transformer-directives': 0.46.5
@@ -631,6 +635,10 @@ packages:
 
   /@types/semver/7.3.13:
     resolution: {integrity: sha512-21cFJr9z3g5dW8B0CVI9g2O9beqaThGQ6ZFBqHfwhzLDKUxaqTIy3vnfah/UPkfOiF2pLq+tGz+W8RyCskuslw==}
+    dev: true
+
+  /@types/uuid/8.3.4:
+    resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
     dev: true
 
   /@types/web-bluetooth/0.0.16:
@@ -3605,6 +3613,11 @@ packages:
   /util-deprecate/1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
     dev: true
+
+  /uuid/9.0.0:
+    resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
+    hasBin: true
+    dev: false
 
   /v8-compile-cache-lib/3.0.1:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}

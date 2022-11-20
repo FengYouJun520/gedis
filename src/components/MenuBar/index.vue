@@ -4,7 +4,6 @@ import SubMenuTitle from '@/components/MenuBar/SubMenuTitle.vue'
 import MenuOperation from '@/components/MenuBar/MenuOperation.vue'
 import KeyList from '@/components/MenuBar/KeyList.vue'
 import { useUiState } from '@/store/ui'
-import { keysOf } from 'element-plus/es/utils'
 
 const uiState = useUiState()
 
