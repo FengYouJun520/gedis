@@ -17,23 +17,31 @@ const handleclose = (index: string, indexPath: string) => {
   console.log(`close index: ${index}, indexPath: ${indexPath}`)
 }
 
-
 const handleChange = (value: any) => {
   console.log(value)
 }
 const resizeRef = ref<HTMLDivElement|null>(null)
-const { x } = useMouse({ touch: false })
-const { pressed } = useMousePressed({ target: resizeRef })
+const { pressed } = useMousePressed({ target: resizeRef, touch: false })
 
-watch(x, () => {
+const handleMouse = (event: MouseEvent) => {
+  uiState.setAsideWidth(event.clientX)
+}
+
+watch(pressed, () => {
   if (unref(pressed)) {
-    uiState.setAsideWidth(unref(x))
+    window.addEventListener('mousemove', handleMouse)
+  } else {
+    window.removeEventListener('mousemove', handleMouse)
   }
 })
 </script>
 
 <template>
-  <el-aside h-full :width="`${uiState.asideWidth}px`">
+  <el-aside
+    h-full
+    :width="`${uiState.asideWidth}px`"
+    :class="{ 'select-none': pressed }"
+  >
     <div flex flex-col h-full>
       <!-- 头部 -->
       <MenuHeader />
@@ -70,17 +78,16 @@ watch(x, () => {
 </template>
 
 <style lang="css" scoped>
-.el-aside {
-  position: relative;
-  border-right: solid 1px var(--el-menu-border-color)
-}
-
 .el-menu {
   border-right: none;
 }
 
+.el-aside {
+  border-right: solid 1px var(--el-menu-border-color)
+}
+
 .aside-resize {
-  @apply fixed h-full z999;
+  @apply fixed h-full z99999;
   border: 1px solid var(--el-border-color);
   width: 16px;
   height: 16px;
