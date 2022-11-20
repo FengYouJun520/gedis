@@ -1,12 +1,10 @@
 <script setup lang="ts">
-
+import AsideBar from '@/components/AsideBar/index.vue'
 </script>
 
 <template>
-  <el-container>
-    <el-aside>
-      aside
-    </el-aside>
+  <el-container h-full>
+    <AsideBar />
     <el-container>
       <el-header>
         header
