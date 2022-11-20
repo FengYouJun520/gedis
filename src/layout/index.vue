@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import AsideBar from '@/components/AsideBar/index.vue'
+import MenuBar from '@/components/MenuBar/index.vue'
 </script>
 
 <template>
   <el-container h-full>
-    <AsideBar />
+    <MenuBar />
     <el-container>
       <el-header>
         header

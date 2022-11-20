@@ -13,6 +13,7 @@ specifiers:
   '@unocss/transformer-variant-group': ^0.46.5
   '@vitejs/plugin-vue': ^3.1.2
   '@vueuse/core': ^9.5.0
+  '@vueuse/router': ^9.5.0
   element-plus: ^2.2.22
   eslint: ^8.25.0
   eslint-plugin-vue: ^9.6.0
@@ -32,6 +33,7 @@ specifiers:
 dependencies:
   '@tauri-apps/api': 1.2.0
   '@vueuse/core': 9.5.0_vue@3.2.45
+  '@vueuse/router': 9.5.0_xsxatmlnmmg5bcuv3xdnj6fj7y
   element-plus: 2.2.22_vue@3.2.45
   pinia: 2.0.24_zwu2zepfy3m6u2gunxlolp35gi
   pinia-plugin-persistedstate: 2.4.0_pinia@2.0.24
@@ -1063,6 +1065,19 @@ packages:
 
   /@vueuse/metadata/9.5.0:
     resolution: {integrity: sha512-4M1AyPZmIv41pym+K5+4wup3bKuYebbH8w8BROY1hmT7rIwcyS4tEL+UsGz0Hiu1FCOxcoBrwtAizc0YmBJjyQ==}
+
+  /@vueuse/router/9.5.0_xsxatmlnmmg5bcuv3xdnj6fj7y:
+    resolution: {integrity: sha512-OtgV3iqC3CqbnXVy98Lv3PMf5exr/jntjxRDnAetsV+VAG9ipuzna3JW95KntW1m6I5EEsuQYdU3MXtCvvNlKQ==}
+    peerDependencies:
+      vue-router: '>=4.0.0-rc.1'
+    dependencies:
+      '@vueuse/shared': 9.5.0_vue@3.2.45
+      vue-demi: 0.13.11_vue@3.2.45
+      vue-router: 4.1.6_vue@3.2.45
+    transitivePeerDependencies:
+      - '@vue/composition-api'
+      - vue
+    dev: false
 
   /@vueuse/shared/9.5.0_vue@3.2.45:
     resolution: {integrity: sha512-HnnCWU1Vg9CVWRCcI8ohDKDRB2Sc4bTgT1XAIaoLSfVHHn+TKbrox6pd3klCSw4UDxkhDfOk8cAdcK+Z5KleCA==}
