@@ -87,7 +87,7 @@ watch(pressed, () => {
 }
 
 .aside-resize {
-  @apply fixed h-full z99999;
+  @apply fixed h-full z99;
   border: 1px solid var(--el-border-color);
   width: 16px;
   height: 16px;
