@@ -1,4 +1,12 @@
 <script setup lang="ts">
+import { RedisConfig } from '@/types/redis'
+
+interface SubMenuTitleProps {
+  config: RedisConfig
+}
+
+defineProps<SubMenuTitleProps>()
+
 const handleClick = (event: MouseEvent) => {
   event.stopPropagation()
 }
@@ -6,7 +14,7 @@ const handleClick = (event: MouseEvent) => {
 
 <template>
   <div flex-1 flex justify-between items-center mr6>
-    <span>localhost</span>
+    <span>{{ config.name }}</span>
     <div flex items-center gap-x1>
       <i
         class="mdi:home w20px h20px hover:(text-[var(--el-menu-hover-text-color)])"

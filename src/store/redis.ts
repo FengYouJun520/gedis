@@ -20,6 +20,9 @@ export const useRedis = defineStore('redis', {
 
       this.configs.splice(index, 1)
     },
+    getConfig(id: string) {
+      return this.configs.find(c => c.id === id)
+    },
   },
   getters: {
     getConfigs: state => state.configs,

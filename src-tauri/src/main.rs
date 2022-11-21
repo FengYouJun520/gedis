@@ -31,6 +31,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             test_connection,
             connection,
+            is_connection,
+            ping,
             dis_connection,
             dis_connection_all,
             get_info,

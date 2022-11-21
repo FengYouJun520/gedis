@@ -31,10 +31,19 @@ pub async fn connection(state: State<'_, RedisState>, config: RedisConfig) -> Re
 
     let mut redis_state = state.0.lock().await;
 
-    info!(?config, "连接成功");
     redis_state.add_connection(con, config)?;
 
     Ok(())
+}
+
+/// 判断是否已连接
+#[tauri::command]
+pub async fn is_connection(state: State<'_, RedisState>, id: String) -> Result<bool> {
+    let redis_state = state.0.lock().await;
+    let is_connection = redis_state.is_connection(&id)?;
+
+    info!(?is_connection);
+    Ok(is_connection)
 }
 
 /// ping

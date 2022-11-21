@@ -28,20 +28,15 @@ impl Redis {
         con: redis::aio::Connection,
         config: RedisConfig,
     ) -> Result<()> {
-        self.connections
-            .insert(config.id.to_string(), con)
-            .context("添加redis连接失败")?;
-
-        self.configs
-            .insert(config.id.to_string(), config)
-            .context("添加配置失败")?;
+        self.connections.insert(config.id.to_string(), con);
+        self.configs.insert(config.id.to_string(), config);
 
         Ok(())
     }
 
     pub fn remove_connection(&mut self, id: &str) -> Result<()> {
-        self.connections.remove(id).context("断开连接失败")?;
-        self.configs.remove(id).context("删除配置失败")?;
+        self.connections.remove(id);
+        self.configs.remove(id);
         Ok(())
     }
 

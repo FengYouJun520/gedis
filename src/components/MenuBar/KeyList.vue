@@ -1,47 +1,116 @@
 <script setup lang="ts">
 interface Tree {
-  id: string
   label: string
   children?: Tree[]
 }
 
-const getKey = (prefix: string, id: number) => `${prefix}-${id}`
-
-const createData = (
-  maxDeep: number,
-  maxChildren: number,
-  minNodesNumber: number,
-  deep = 1,
-  key = 'node'
-): Tree[] => {
-  let id = 0
-  return Array.from({ length: minNodesNumber })
-    .fill(deep)
-    .map(() => {
-      const childrenNumber =
-        deep === maxDeep ? 0 : Math.round(Math.random() * maxChildren)
-      const nodeKey = getKey(key, ++id)
-      return {
-        id: nodeKey,
-        label: nodeKey,
-        children: childrenNumber
-          ? createData(maxDeep, maxChildren, childrenNumber, deep + 1, nodeKey)
-          : undefined,
-      }
-    })
+const handleNodeClick = (data: Tree) => {
+  console.log(data)
 }
 
-const props = {
-  value: 'id',
-  label: 'label',
+const data: Tree[] = [
+  {
+    label: 'Level one 1',
+    children: [
+      {
+        label: 'Level two 1-1',
+        children: [
+          {
+            label: 'Level three 1-1-1',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Level one 2',
+    children: [
+      {
+        label: 'Level two 2-1',
+        children: [
+          {
+            label: 'Level three 2-1-1',
+          },
+        ],
+      },
+      {
+        label: 'Level two 2-2',
+        children: [
+          {
+            label: 'Level three 2-2-1',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Level one 3',
+    children: [
+      {
+        label: 'Level two 3-1',
+        children: [
+          {
+            label: 'Level three 3-1-1',
+          },
+        ],
+      },
+      {
+        label: 'Level two 3-2',
+        children: [
+          {
+            label: 'Level three 3-2-1',
+          },
+        ],
+      },
+      {
+        label: 'Level two 3-3',
+        children: [
+          {
+            label: 'Level three 3-3-1',
+          },
+        ],
+      },
+      {
+        label: 'Level two 3-4',
+        children: [
+          {
+            label: 'Level three 3-4-1',
+          },
+        ],
+      },
+      {
+        label: 'Level two 3-5',
+        children: [
+          {
+            label: 'Level three 3-5-1',
+          },
+        ],
+      },
+      {
+        label: 'Level two 3-6',
+        children: [
+          {
+            label: 'Level three 3-6-1',
+          },
+        ],
+      },
+    ],
+  },
+]
+
+const defaultProps = {
   children: 'children',
+  label: 'label',
 }
-const data = createData(4, 30, 40)
 </script>
 
 <template>
   <div mt4>
-    <el-tree-v2 :data="data" :props="props" :height="208" />
+    <el-tree
+      :data="data"
+      :props="defaultProps"
+      @node-click="handleNodeClick"
+    />
   </div>
 </template>
 

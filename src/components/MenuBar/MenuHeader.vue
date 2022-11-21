@@ -35,7 +35,6 @@ const handleTestConnection = async () => {
     loading.value = true
     await invoke('test_connection', { config: configData.value })
     ElMessage.success('连接成功')
-    console.log('success')
   } catch (error) {
     ElMessage.error(error as string)
   } finally {
@@ -121,6 +120,7 @@ const handleCancel = () => {
             <el-form-item label="密码">
               <el-input
                 v-model="configData.password"
+                type="password"
                 placeholder="密码"
               />
             </el-form-item>

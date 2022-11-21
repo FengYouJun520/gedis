@@ -1,26 +1,13 @@
 <script setup lang="ts">
 import MenuHeader from '@/components/MenuBar/MenuHeader.vue'
-import SubMenuTitle from '@/components/MenuBar/SubMenuTitle.vue'
-import MenuOperation from '@/components/MenuBar/MenuOperation.vue'
-import KeyList from '@/components/MenuBar/KeyList.vue'
 import { useUiState } from '@/store/ui'
 import { useResizeAsideWidth } from './useResizeAsideWidth'
+import { useRedis } from '@/store/redis'
+import Connection from '@/components/MenuBar/Connection.vue'
 
 const uiState = useUiState()
-
+const redisState = useRedis()
 const resizeWidth = computed(() => `${uiState.asideWidth}px`)
-
-const handleOpen = (index: string, indexPath: string) => {
-  console.log(`open index: ${index}, indexPath: ${indexPath}`)
-}
-
-const handleclose = (index: string, indexPath: string) => {
-  console.log(`close index: ${index}, indexPath: ${indexPath}`)
-}
-
-const handleChange = (value: any) => {
-  console.log(value)
-}
 
 const resizeRef = ref<HTMLDivElement|null>(null)
 const handleMouse = (event: MouseEvent) => {
@@ -40,26 +27,8 @@ const { pressed } = useResizeAsideWidth({ target: resizeRef, touch: false }, han
       <!-- 头部 -->
       <MenuHeader />
       <!-- 内容 -->
-      <el-scrollbar flex-1>
-        <div v-for="i in 3" :key="i">
-          <el-menu
-            h-full
-            @select="handleChange"
-            @open="handleOpen"
-            @close="handleclose"
-          >
-            <el-sub-menu index="1">
-              <!-- 标题 -->
-              <template #title>
-                <SubMenuTitle />
-              </template>
-              <!-- 操作 -->
-              <MenuOperation />
-              <!-- key列表 -->
-              <KeyList />
-            </el-sub-menu>
-          </el-menu>
-        </div>
+      <el-scrollbar>
+        <Connection v-for="config in redisState.configs" :key="config.id" :config="config" />
       </el-scrollbar>
     </div>
 
@@ -72,10 +41,6 @@ const { pressed } = useResizeAsideWidth({ target: resizeRef, touch: false }, han
 </template>
 
 <style lang="css" scoped>
-.el-menu {
-  border-right: none;
-}
-
 .el-aside {
   border-right: solid 1px var(--el-menu-border-color)
 }

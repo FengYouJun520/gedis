@@ -4,6 +4,7 @@ interface TabsProps {
   db: number
   path: string
   icon?: string
+  query: Record<string, any>
 }
 
 interface TabsState {
