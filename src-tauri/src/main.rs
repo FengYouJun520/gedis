@@ -3,15 +3,45 @@
     windows_subsystem = "windows"
 )]
 
+use chrono::Local;
 use gedis::command::*;
+use tracing::Level;
+use tracing_subscriber::fmt::{format::Writer, time::FormatTime};
+
+struct LocalTimer;
+
+impl FormatTime for LocalTimer {
+    fn format_time(&self, w: &mut Writer<'_>) -> std::fmt::Result {
+        write!(w, "{}", Local::now().format("%Y-%m-%d %H:%M:%S"))
+    }
+}
+
+fn init_tracing_subscriber() {
+    tracing_subscriber::fmt()
+        .with_max_level(Level::DEBUG)
+        .with_timer(LocalTimer)
+        .init();
+}
 
 fn main() {
+    init_tracing_subscriber();
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             test_connection,
             connection,
             dis_connection,
-            dis_connection_all
+            dis_connection_all,
+            get_info,
+            del_key,
+            del_keys,
+            del_key_by_value,
+            clear_keys,
+            get_keys_by_db,
+            get_key_info,
+            rename_key,
+            set_key,
+            set_key_ttl
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
