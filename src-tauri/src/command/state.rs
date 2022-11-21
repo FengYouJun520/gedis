@@ -1,9 +1,7 @@
-use std::{collections::HashMap, fmt::Debug};
-
-use anyhow::Context;
-use tauri::async_runtime::Mutex;
-
 use crate::{config::RedisConfig, error::Result, redis_log::RedisLog};
+use anyhow::Context;
+use std::{collections::HashMap, fmt::Debug};
+use tauri::async_runtime::Mutex;
 
 #[derive(Default)]
 pub struct Redis {
@@ -21,7 +19,7 @@ impl Debug for Redis {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct RedisState(pub Mutex<Redis>);
 
 impl Redis {
@@ -29,7 +27,7 @@ impl Redis {
         &mut self,
         con: redis::aio::Connection,
         config: RedisConfig,
-    ) -> anyhow::Result<()> {
+    ) -> Result<()> {
         self.connections
             .insert(config.id.to_string(), con)
             .context("添加redis连接失败")?;
@@ -41,19 +39,19 @@ impl Redis {
         Ok(())
     }
 
-    pub fn remove_connection(&mut self, id: &str) -> anyhow::Result<()> {
+    pub fn remove_connection(&mut self, id: &str) -> Result<()> {
         self.connections.remove(id).context("断开连接失败")?;
         self.configs.remove(id).context("删除配置失败")?;
         Ok(())
     }
 
-    pub fn remove_connection_all(&mut self) -> anyhow::Result<()> {
+    pub fn remove_connection_all(&mut self) -> Result<()> {
         self.connections.clear();
         self.configs.clear();
         Ok(())
     }
 
-    pub fn is_connection(&self, id: &str) -> anyhow::Result<bool> {
+    pub fn is_connection(&self, id: &str) -> Result<bool> {
         if self.connections.contains_key(id) {
             Ok(true)
         } else {

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RedisConfig } from '@/types/redis'
 import { useRedis } from '@/store/redis'
-import { ElMessage } from 'element-plus'
 import { v4 } from 'uuid'
+import { invoke } from '@tauri-apps/api'
 
 const initConfig: RedisConfig = {
   id: '',
@@ -31,7 +31,16 @@ const handleNewConfigConfirm = () => {
 }
 
 const handleTestConnection = async () => {
-  console.log('test connection')
+  try {
+    loading.value = true
+    await invoke('test_connection', { config: configData.value })
+    ElMessage.success('连接成功')
+    console.log('success')
+  } catch (error) {
+    ElMessage.error(error as string)
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleCancel = () => {
@@ -145,7 +154,7 @@ const handleCancel = () => {
           items-center
         >
           <el-button
-            v-loading="loading"
+            :loading="loading"
             text
             bg
             @click="handleTestConnection"

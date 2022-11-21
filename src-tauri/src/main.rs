@@ -5,6 +5,7 @@
 
 use chrono::Local;
 use gedis::command::*;
+use gedis::RedisState;
 use tracing::Level;
 use tracing_subscriber::fmt::{format::Writer, time::FormatTime};
 
@@ -43,6 +44,7 @@ fn main() {
             set_key,
             set_key_ttl
         ])
+        .manage(RedisState::default())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

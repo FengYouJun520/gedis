@@ -1,18 +1,20 @@
-use std::collections::HashMap;
-
-use crate::{config::RedisConfig, error::Result};
-
-use super::RedisState;
-use anyhow::Context;
 use redis::InfoDict;
+use std::collections::HashMap;
 use tauri::State;
-use tracing::{info, instrument};
+use tracing::info;
+
+use crate::{config::RedisConfig, error::Result, RedisState};
 
 /// 测试连接
 #[tauri::command]
 pub async fn test_connection(config: RedisConfig) -> Result<()> {
-    let client = redis::Client::open(config.get_url())?;
-    client.get_async_connection().await.context("连接失败")?;
+    let url = config.get_url();
+    info!(?url);
+    let client = redis::Client::open(url)?;
+    let mut con = client.get_async_connection().await?;
+    redis::cmd("PING").query_async(&mut con).await?;
+
+    info!(?config, "连接成功");
     Ok(())
 }
 
@@ -20,36 +22,51 @@ pub async fn test_connection(config: RedisConfig) -> Result<()> {
 #[tauri::command]
 pub async fn connection(state: State<'_, RedisState>, config: RedisConfig) -> Result<()> {
     let client = redis::Client::open(config.get_url())?;
-    let con = client.get_async_connection().await.context("连接失败")?;
+    let mut con = client
+        .get_async_connection()
+        .await
+        .map_err(|err| anyhow::format_err!(err))?;
+
+    redis::cmd("PING").query_async(&mut con).await?;
 
     let mut redis_state = state.0.lock().await;
+
+    info!(?config, "连接成功");
     redis_state.add_connection(con, config)?;
 
     Ok(())
 }
 
+/// ping
+#[tauri::command]
+pub async fn ping(state: State<'_, RedisState>, id: String) -> Result<()> {
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id)?;
+
+    redis::cmd("PING").query_async(con).await?;
+
+    Ok(())
+}
+
 /// 断开连接
-#[instrument]
 #[tauri::command]
 pub async fn dis_connection(state: State<'_, RedisState>, id: String) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     redis_state.remove_connection(&id)?;
 
     let config = redis_state.get_config(&id)?;
-    info!(?config, "断开所有连接成功");
 
+    info!(?config, "断开所有连接成功");
     Ok(())
 }
 
 /// 断开所有连接
-#[instrument]
 #[tauri::command]
 pub async fn dis_connection_all(state: State<'_, RedisState>) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     redis_state.remove_connection_all()?;
 
     info!("断开所有连接成功");
-
     Ok(())
 }
 
@@ -75,5 +92,6 @@ pub async fn get_info(state: State<'_, RedisState>, id: String) -> Result<HashMa
         }
     }
 
+    info!(?info_result, "获取redis客户端信息");
     Ok(info_result)
 }

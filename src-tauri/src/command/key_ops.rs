@@ -1,17 +1,12 @@
-use std::collections::HashMap;
-
+use crate::{error::Result, model::*};
 use anyhow::Context;
 use redis::{AsyncCommands, AsyncIter};
 use serde_json::json;
+use std::collections::HashMap;
 use tauri::State;
 use tracing::{info, instrument};
 
-use crate::{
-    error::{Result, SerializeError},
-    model::*,
-};
-
-use super::RedisState;
+use super::state::RedisState;
 
 /// 删除该key的所有内容
 #[instrument]
@@ -32,7 +27,7 @@ pub async fn del_key(
         .del(&key)
         .query_async(conn)
         .await
-        .context("获取键类型失败")?;
+        .context(format!("获取键类型失败: {key}"))?;
 
     info!(key, "删除键成功: ");
 
@@ -98,7 +93,7 @@ pub async fn del_key_by_value(
         "zset" => conn.zrem(&key, &value).await,
         "hash" => conn.hdel(&key, &value).await,
         "stream" => conn.xdel(&key, &[value]).await,
-        _ => return Err(SerializeError::from(format!("不支持的类型: {}", typ))),
+        _ => return Err(format!("不支持的类型: {}", typ).into()),
     }?;
 
     info!(?key, "删除键成功: ");
@@ -266,12 +261,7 @@ pub async fn get_key_info(
             keyinfo.total = count;
             keyinfo.value = RedisValue::Stream(value);
         }
-        _ => {
-            return Err(SerializeError::from(format!(
-                "key不存在: {}, type: {}",
-                key, typ
-            )))
-        }
+        _ => return Err(format!("key不存在: {}, type: {}", key, typ).into()),
     };
 
     info!(?keyinfo, "获取key详细信息成功");
@@ -355,12 +345,7 @@ pub async fn set_key(
             )
             .await
         }
-        _ => {
-            return Err(SerializeError::from(format!(
-                "不支持的类型: {}",
-                keyinfo.r#type
-            )))
-        }
+        _ => return Err(format!("不支持的类型: {}", keyinfo.r#type).into()),
     }?;
 
     info!(?keyinfo, "设置key成功: ");

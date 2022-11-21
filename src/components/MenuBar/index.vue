@@ -4,6 +4,7 @@ import SubMenuTitle from '@/components/MenuBar/SubMenuTitle.vue'
 import MenuOperation from '@/components/MenuBar/MenuOperation.vue'
 import KeyList from '@/components/MenuBar/KeyList.vue'
 import { useUiState } from '@/store/ui'
+import { useResizeAsideWidth } from './useResizeAsideWidth'
 
 const uiState = useUiState()
 
@@ -20,20 +21,13 @@ const handleclose = (index: string, indexPath: string) => {
 const handleChange = (value: any) => {
   console.log(value)
 }
-const resizeRef = ref<HTMLDivElement|null>(null)
-const { pressed } = useMousePressed({ target: resizeRef, touch: false })
 
+const resizeRef = ref<HTMLDivElement|null>(null)
 const handleMouse = (event: MouseEvent) => {
   uiState.setAsideWidth(event.clientX)
 }
 
-watch(pressed, () => {
-  if (unref(pressed)) {
-    window.addEventListener('mousemove', handleMouse)
-  } else {
-    window.removeEventListener('mousemove', handleMouse)
-  }
-})
+const { pressed } = useResizeAsideWidth({ target: resizeRef, touch: false }, handleMouse)
 </script>
 
 <template>

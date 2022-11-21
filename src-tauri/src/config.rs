@@ -16,11 +16,17 @@ impl RedisConfig {
         match (&self.username, &self.password) {
             (Some(username), Some(password)) if !username.is_empty() && !password.is_empty() => {
                 format!(
-                    "redis://{}:{}@{}:{}",
+                    "redis://{}:{}@{}:{}/",
                     username, password, self.host, self.port
                 )
             }
-            _ => format!("redis://{}:{}", self.host, self.port),
+            (Some(username), Some(password)) if username.is_empty() && !password.is_empty() => {
+                format!("redis://:{}@{}:{}/", password, self.host, self.port)
+            }
+            (None, Some(password)) if !password.is_empty() => {
+                format!("redis://:{}@{}:{}/", password, self.host, self.port)
+            }
+            _ => format!("redis://{}:{}/", self.host, self.port),
         }
     }
 }
