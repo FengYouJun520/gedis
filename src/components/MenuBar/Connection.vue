@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SubMenuTitle from '@/components/MenuBar/SubMenuTitle.vue'
+import RightOpertions from '@/components/MenuBar/RightOpertions.vue'
 import MenuOperation from '@/components/MenuBar/MenuOperation.vue'
 import KeyList from '@/components/MenuBar/KeyList.vue'
 import { useRedis } from '@/store/redis'
@@ -19,19 +19,26 @@ const redisState = useRedis()
 const tabsState = useTabs()
 const menuRef = ref<InstanceType<typeof ElMenu>|null>(null)
 
-const isOpen = ref(false)
 const loading = ref(false)
+const isOpen = ref(false)
 
 const handleConnection = async (config: RedisConfig) => {
   try {
-    loading.value = true
+    // 是否连接
     const isConnection = await invoke<boolean>('is_connection', { id: config.id })
-    isOpen.value = isConnection
 
     if (!isConnection) {
+      loading.value = true
       await invoke('connection', { config })
     }
 
+    // 连接成功
+    // 获取客户端信息
+    const keys = await invoke<Record<string, string>>('get_info', { id: config.id })
+    console.log(keys)
+    isOpen.value = true
+
+    // 添加选项卡信息，该方法已过滤重复
     tabsState.addTab({
       key: config.id,
       name: config.name,
@@ -43,6 +50,7 @@ const handleConnection = async (config: RedisConfig) => {
       icon: 'emojione:rocket',
     })
 
+    // 第一次连接跳转到信息页
     if (!isConnection) {
       router.push({
         path: '/info',
@@ -54,6 +62,9 @@ const handleConnection = async (config: RedisConfig) => {
   } catch (error) {
     ElMessage.error(error as string)
     isOpen.value = false
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    menuRef.value?.close(config.id, [config.id])
   } finally {
     loading.value = false
   }
@@ -89,12 +100,19 @@ const handleChange = (value: any) => {
     >
       <!-- 标题 -->
       <template #title>
-        <SubMenuTitle :config="config" />
+        <div flex-1 flex justify-between items-center mr6>
+          <span>{{ config.name }}</span>
+          <i v-if="loading" class="uiw:loading animate-spin" />
+          <RightOpertions v-else :config="config" />
+        </div>
       </template>
-      <!-- 操作 -->
-      <MenuOperation />
-      <!-- key列表 -->
-      <KeyList />
+
+      <div v-if="isOpen">
+        <!-- 操作 -->
+        <MenuOperation />
+        <!-- key列表 -->
+        <KeyList />
+      </div>
     </el-sub-menu>
   </ElMenu>
 </template>
