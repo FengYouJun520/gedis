@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useTreeKeys } from './useTree'
+import { useConfig } from './useConfig'
 
-const treeKeysOps = useTreeKeys()
+const treeKeysOps = useConfig()
 const selectDB = ref(treeKeysOps?.db || 0)
 
 const createOptions = () => {

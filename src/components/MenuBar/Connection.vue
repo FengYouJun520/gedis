@@ -8,7 +8,7 @@ import { invoke } from '@tauri-apps/api'
 import { RedisConfig } from '@/types/redis'
 import type { ElMenu } from 'element-plus'
 import { keysToTree } from '@/util'
-import { createTreeKeysContext } from './useTree'
+import { createConfigContext } from './useConfig'
 
 interface ConnectionProps {
   config: RedisConfig
@@ -29,13 +29,6 @@ const selectDb = ref(0)
 const changeDb = (db: number) => {
   selectDb.value = db
 }
-
-createTreeKeysContext({
-  config: props.config,
-  db: selectDb,
-  treeKeys,
-  changeDb,
-})
 
 const handleConnection = async (config: RedisConfig) => {
   try {
@@ -64,6 +57,10 @@ const handleConnection = async (config: RedisConfig) => {
       icon: 'emojione:rocket',
     })
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    menuRef.value?.open?.(config.id, [config.id])
+
     // 第一次连接跳转到信息页
     if (!isConnection) {
       router.push({
@@ -84,6 +81,29 @@ const handleConnection = async (config: RedisConfig) => {
   }
 }
 
+const handleDisConnection = async (id: string) => {
+  try {
+    await invoke('dis_connection', { id })
+    isOpen.value = false
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    menuRef.value.close(id, [id])
+  } catch (error) {
+    ElMessage.error(error as string)
+  } finally {
+    loading.value = false
+  }
+}
+
+createConfigContext({
+  config: props.config,
+  db: selectDb,
+  treeKeys,
+  changeDb,
+  connection: handleConnection,
+  disConnection: handleDisConnection,
+})
+
 const handleOpen = async (index: string) => {
   const config = redisState.getConfig(index)
   if (config) {
@@ -103,11 +123,7 @@ const handleChange = (value: any) => {
 // 获取指定数据库的所有树型key列表
 const fetchTreeKeys = async (id: string, db: number): Promise<string[]> => {
   try {
-    const keys = await invoke<string[]>('get_keys_by_db', {
-      id,
-      db,
-    })
-
+    const keys = await invoke<string[]>('get_keys_by_db', { id, db })
     return keysToTree(keys)
   } catch (error) {
     ElMessage.error(error as string)
@@ -124,7 +140,6 @@ watch(selectDb, async () => {
 
     const keys = await fetchTreeKeys(props.config.id, unref(selectDb))
     treeKeys.value = keys
-    console.log(unref(keys))
   } catch (error) {
     ElMessage.error(error as string)
     isOpen.value = false
@@ -149,7 +164,7 @@ watch(selectDb, async () => {
         <div flex-1 flex justify-between items-center mr6>
           <span>{{ config.name }}</span>
           <i v-if="loading" class="uiw:loading animate-spin" />
-          <RightOpertions v-else :config="config" />
+          <RightOpertions v-else />
         </div>
       </template>
 

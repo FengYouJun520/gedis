@@ -1,14 +1,49 @@
 <script setup lang="ts">
-import { RedisConfig } from '@/types/redis'
+import { invoke } from '@tauri-apps/api'
+import { useConfig } from './useConfig'
 
-interface SubMenuTitleProps {
-  config: RedisConfig
+
+const router = useRouter()
+const configOps = useConfig()
+
+const handleClick = (_event: MouseEvent) => {
 }
 
-defineProps<SubMenuTitleProps>()
+const handleHome = async () => {
+  configOps?.connection(configOps.config)
+}
 
-const handleClick = (event: MouseEvent) => {
-  event.stopPropagation()
+const handleClose = () => {
+  ElMessageBox.confirm('确定要关闭连接吗?', '关闭连接', {
+    type: 'warning',
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+  }).then(async () => {
+    try {
+      await configOps?.disConnection(configOps.config.id)
+    } catch (error) {
+      ElMessage.error(error as string)
+    }
+  })
+    .catch(() => {})
+}
+
+const handleCommand = (command: string) => {
+  switch (command) {
+  case 'close':
+    handleClose()
+    break
+  case 'edit':
+    break
+  case 'delete':
+    break
+  case 'copy':
+    break
+  case 'deleteKeyAll':
+    break
+  default:
+    break
+  }
 }
 </script>
 
@@ -16,31 +51,38 @@ const handleClick = (event: MouseEvent) => {
   <div flex items-center gap-x1>
     <i
       class="mdi:home w20px h20px hover:(text-[var(--el-menu-hover-text-color)])"
-      @click="handleClick"
+      @click.stop="handleHome"
     />
     <i
       class="mdi:console w20px h20px hover:(text-[var(--el-menu-hover-text-color)])"
-      @click="handleClick"
+      @click.stop="handleClick"
     />
     <i
       class="material-symbols:refresh w20px h20px hover:(text-[var(--el-menu-hover-text-color)])"
-      @click="handleClick"
+      @click.stop="handleClick"
     />
-    <el-dropdown>
+    <el-dropdown @command="handleCommand">
       <i
         class="icon-park-twotone:more-app w16px h16px hover:(text-[var(--el-menu-hover-text-color)])"
-        @click="handleClick"
+        @click.stop="handleClick"
       />
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item>Action 1</el-dropdown-item>
-          <el-dropdown-item>Action 2</el-dropdown-item>
-          <el-dropdown-item>Action 3</el-dropdown-item>
-          <el-dropdown-item disabled>
-            Action 4
+          <el-dropdown-item command="close">
+            关闭连接
           </el-dropdown-item>
-          <el-dropdown-item divided>
-            Action 5
+          <el-dropdown-item command="edit">
+            编辑连接
+          </el-dropdown-item>
+          <el-dropdown-item command="delete">
+            删除连接
+          </el-dropdown-item>
+          <el-dropdown-item command="copy">
+            复制连接
+          </el-dropdown-item>
+          <el-dropdown-item command="" divided />
+          <el-dropdown-item command="deleteKeyAll">
+            删除所有键
           </el-dropdown-item>
         </el-dropdown-menu>
       </template>

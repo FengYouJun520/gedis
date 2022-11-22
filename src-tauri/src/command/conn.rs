@@ -31,6 +31,7 @@ pub async fn connection(state: State<'_, RedisState>, config: RedisConfig) -> Re
 
     let mut redis_state = state.0.lock().await;
 
+    info!(?config, "连接成功");
     redis_state.add_connection(con, config)?;
 
     Ok(())
@@ -42,7 +43,7 @@ pub async fn is_connection(state: State<'_, RedisState>, id: String) -> Result<b
     let redis_state = state.0.lock().await;
     let is_connection = redis_state.is_connection(&id)?;
 
-    info!(?is_connection);
+    info!(?is_connection, "是否已连接");
     Ok(is_connection)
 }
 
@@ -54,6 +55,7 @@ pub async fn ping(state: State<'_, RedisState>, id: String) -> Result<()> {
 
     redis::cmd("PING").query_async(con).await?;
 
+    info!("ping");
     Ok(())
 }
 
@@ -63,9 +65,7 @@ pub async fn dis_connection(state: State<'_, RedisState>, id: String) -> Result<
     let mut redis_state = state.0.lock().await;
     redis_state.remove_connection(&id)?;
 
-    let config = redis_state.get_config(&id)?;
-
-    info!(?config, "断开所有连接成功");
+    info!(?id, "断开连接成功");
     Ok(())
 }
 

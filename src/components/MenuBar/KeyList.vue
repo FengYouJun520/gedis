@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTabs } from '@/store/tabs'
-import { useTreeKeys } from './useTree'
+import { useConfig } from './useConfig'
 
 interface Tree {
   label: string
@@ -10,8 +10,8 @@ interface Tree {
 
 const router = useRouter()
 const tabsState = useTabs()
-const treeKeys = useTreeKeys()
-const treeList = computed(() => treeKeys?.treeKeys.value)
+const configOps = useConfig()
+const treeList = computed(() => configOps?.treeKeys.value)
 
 const handleNodeClick = (data: Tree) => {
   const isLeaf = !data.children
@@ -21,17 +21,17 @@ const handleNodeClick = (data: Tree) => {
   }
 
   const path = '/detail'
-  const key = `${treeKeys?.config.id}-${treeKeys?.db.value}-${data.value}`
+  const key = `${configOps?.config.id}-${configOps?.db.value}-${data.value}`
   const query = {
-    id: treeKeys?.config.id,
-    db: treeKeys?.db.value,
+    id: configOps?.config.id,
+    db: configOps?.db.value,
     key: data.value,
   }
 
   tabsState.addTab({
-    db: treeKeys?.db.value || 0,
+    db: configOps?.db.value || 0,
     key,
-    name: `${data.value} | ${treeKeys?.config.name} | DB${treeKeys?.db.value}`,
+    name: `${data.value} | ${configOps?.config.name} | DB${configOps?.db.value}`,
     path,
     query,
     icon: 'emojione-monotone:key',
