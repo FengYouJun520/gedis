@@ -38,6 +38,7 @@ export const useTabs = defineStore('tabs', {
 
       this.tabs.splice(index, 1, { ...tabsProps })
     },
+    // 删除当前选项卡
     removeTab(key: string) {
       const index = this.tabs.findIndex(t => t.key === key)
       const length = this.tabs.length
@@ -86,6 +87,20 @@ export const useTabs = defineStore('tabs', {
       } else if (this.tabs.length > 1) {
         this.currentActive = this.tabs[this.tabs.length - 1].key
       }
+    },
+    // 删除其他选项卡
+    removeOther(key: string) {
+      this.tabs = this.tabs.filter(t => t.key === key)
+    },
+    // 删除左侧选项卡
+    removeLeft(key: string) {
+      const index = this.tabs.findIndex(t => t.key === key)
+      this.tabs.splice(0, index)
+    },
+    // 删除右侧侧选项卡
+    removeRight(key: string) {
+      const index = this.tabs.findIndex(t => t.key === key)
+      this.tabs.splice(index + 1)
     },
     getTab(key: string) {
       return this.tabs.find(t => t.key === key)

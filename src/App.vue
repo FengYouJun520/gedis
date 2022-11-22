@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { useUiState } from './store/ui'
 
+onMounted(() => {
+  window.addEventListener('contextmenu', event => {
+    event.preventDefault()
+  })
+})
+
 const uiState = useUiState()
 
 watchEffect(() => {
