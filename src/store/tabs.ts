@@ -54,11 +54,15 @@ export const useTabs = defineStore('tabs', {
         this.currentActive = this.tabs[index - 1].key
       }
     },
+    getTab(key: string) {
+      return this.tabs.find(t => t.key === key)
+    },
     setActive(active: string) {
       this.currentActive = active
     },
   },
   getters: {
     getTabs: state => state.tabs,
+    exist: state => !!state.tabs.length,
   },
 })

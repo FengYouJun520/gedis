@@ -3,13 +3,30 @@ import { useTabs } from '@/store/tabs'
 import type { TabsPaneContext } from 'element-plus'
 
 const tabsState = useTabs()
+const router = useRouter()
 
-const handleClick = (pane: TabsPaneContext, event: MouseEvent) => {
+const handleClick = (pane: TabsPaneContext, _event: MouseEvent) => {
+  const tabItem = tabsState.getTab(pane.paneName?.toString() || '')
   tabsState.setActive(pane.paneName?.toString() || '')
+
+  router.push({
+    path: tabItem?.path,
+    query: tabItem?.query,
+  })
 }
 
 const handleRemove = (name: string) => {
+  const tabItem = tabsState.getTab(name)
   tabsState.removeTab(name)
+
+  if (!tabsState.exist) {
+    router.push('/')
+  } else {
+    router.push({
+      path: tabItem?.path,
+      query: tabItem?.query,
+    })
+  }
 }
 </script>
 

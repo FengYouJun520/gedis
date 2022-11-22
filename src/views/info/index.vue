@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { keysToTree } from '@/util'
 import { invoke } from '@tauri-apps/api'
 
 const route = useRoute()
@@ -7,7 +6,7 @@ const keyinfo = ref({})
 
 const id = route.query.id as string
 
-onMounted(async () => {
+const fetchInfo = async () => {
   const isConnection = await invoke<boolean>('is_connection', { id })
   if (!isConnection) {
     return
@@ -16,6 +15,10 @@ onMounted(async () => {
   // 获取客户端信息
   const info = await invoke<Record<string, string>>('get_info', { id })
   console.log(info)
+}
+
+onMounted(async () => {
+  await fetchInfo()
 })
 </script>
 

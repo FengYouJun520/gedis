@@ -10,7 +10,7 @@ const tabsState = useTabs()
   <el-container h-full>
     <MenuBar />
     <el-container direction="vertical">
-      <el-header v-if="tabsState.tabs.length">
+      <el-header v-if="tabsState.exist">
         <Header />
       </el-header>
       <el-main relative>

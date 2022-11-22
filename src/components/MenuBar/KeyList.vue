@@ -28,11 +28,6 @@ const handleNodeClick = (data: Tree) => {
     key: data.value,
   }
 
-  router.push({
-    path,
-    query,
-  })
-
   tabsState.addTab({
     db: treeKeys?.db.value || 0,
     key,
@@ -40,6 +35,11 @@ const handleNodeClick = (data: Tree) => {
     path,
     query,
     icon: 'emojione-monotone:key',
+  })
+
+  router.push({
+    path,
+    query,
   })
 }
 </script>
