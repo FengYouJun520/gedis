@@ -12,6 +12,14 @@ export const useRedis = defineStore('redis', {
     addConfig(config: RedisConfig) {
       this.configs.push({ ...config })
     },
+    editConfig(config: RedisConfig) {
+      const index = this.configs.findIndex(c => c.id === config.id)
+      if (index === -1) {
+        return
+      }
+
+      this.configs.splice(index, 1, { ...config })
+    },
     removeConfig(id: string) {
       const index = this.configs.findIndex(c => c.id === id)
       if (index === -1) {

@@ -28,6 +28,12 @@ const handleRemove = (name: string) => {
     })
   }
 }
+
+watchEffect(() => {
+  if (!tabsState.exist) {
+    router.push('/')
+  }
+})
 </script>
 
 <template>

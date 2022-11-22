@@ -27,6 +27,14 @@ export const useTabs = defineStore('tabs', {
 
       this.tabs.push({ ...tabsProps })
     },
+    editTab(tabsProps: TabsProps) {
+      const index = this.tabs.findIndex(t => t.key === tabsProps.key)
+      if (index === -1) {
+        return
+      }
+
+      this.tabs.splice(index, 1, { ...tabsProps })
+    },
     removeTab(key: string) {
       const index = this.tabs.findIndex(t => t.key === key)
       const length = this.tabs.length

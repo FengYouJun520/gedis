@@ -164,7 +164,7 @@ watch(selectDb, async () => {
         <div flex-1 flex justify-between items-center mr6>
           <span>{{ config.name }}</span>
           <i v-if="loading" class="uiw:loading animate-spin" />
-          <RightOpertions v-else />
+          <RightOpertions v-else :config="config" />
         </div>
       </template>
 
