@@ -38,10 +38,9 @@ export const useTabs = defineStore('tabs', {
 
       this.tabs.splice(index, 1, { ...tabsProps })
     },
-    // 删除当前选项卡
+    // 删除当前激活的选项卡
     removeTab(key: string) {
       const index = this.tabs.findIndex(t => t.key === key)
-      const length = this.tabs.length
       if (index === -1) {
         return
       }
@@ -93,6 +92,7 @@ export const useTabs = defineStore('tabs', {
     setActive(active: string) {
       this.currentActive = active
     },
+    // 删除激活的选项卡后，需要更新当前激活的key
     updateCurrentActive(key: string, index: number) {
       /// 如果删除的不是当前激活的选项卡,没必要重新设置
       if (this.currentActive !== key) {
