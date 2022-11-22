@@ -22,7 +22,12 @@ const handleHome = async () => {
   configOps?.connection(props.config)
 }
 
-const handleClose = () => {
+const handleClose = async () => {
+  const isConnection = await invoke<boolean>('is_connection', { id: props.config.id })
+  if (!isConnection) {
+    return
+  }
+
   ElMessageBox.confirm('确定要关闭连接吗?', '关闭连接', {
     type: 'warning',
     confirmButtonText: '确定',
@@ -30,6 +35,7 @@ const handleClose = () => {
   }).then(async () => {
     try {
       await configOps?.disConnection(props.config.id)
+      tabsState.removeTabById(props.config.id)
     } catch (error) {
       ElMessage.error(error as string)
     }
@@ -57,7 +63,7 @@ const visibleEditDialog = async () => {
     }).then(async () => {
       await configOps?.disConnection(props.config.id)
       configModel.value = { ...props.config }
-      tabsState.removeTab(props.config.id)
+      tabsState.removeTabById(props.config.id)
       visibleEdit.value = true
     })
       .catch(() => {})

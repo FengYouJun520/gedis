@@ -47,6 +47,7 @@ const handleConnection = async (config: RedisConfig) => {
 
     // 添加选项卡信息，该方法已过滤重复
     tabsState.addTab({
+      id: config.id,
       key: config.id,
       name: config.name,
       db: 0,
@@ -112,13 +113,18 @@ const handleOpen = async (index: string) => {
 }
 
 const handleclose = (index: string) => {
-  console.log(`close index: ${index}`)
+
 }
 
 const handleChange = (value: any) => {
   console.log(value)
 }
 
+watchEffect(() => {
+  if (!tabsState.exist) {
+    router.push('/')
+  }
+}, { flush: 'post' })
 
 // 获取指定数据库的所有树型key列表
 const fetchTreeKeys = async (id: string, db: number): Promise<string[]> => {

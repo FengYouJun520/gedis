@@ -4,6 +4,7 @@ import type { TabsPaneContext } from 'element-plus'
 
 const tabsState = useTabs()
 const router = useRouter()
+const route = useRoute()
 
 const handleClick = (pane: TabsPaneContext, _event: MouseEvent) => {
   const tabItem = tabsState.getTab(pane.paneName?.toString() || '')
@@ -28,12 +29,6 @@ const handleRemove = (name: string) => {
     })
   }
 }
-
-watchEffect(() => {
-  if (!tabsState.exist) {
-    router.push('/')
-  }
-})
 </script>
 
 <template>

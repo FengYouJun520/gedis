@@ -29,6 +29,7 @@ const handleNodeClick = (data: Tree) => {
   }
 
   tabsState.addTab({
+    id: configOps!.config.id,
     db: configOps?.db.value || 0,
     key,
     name: `${data.value} | ${configOps?.config.name} | DB${configOps?.db.value}`,
