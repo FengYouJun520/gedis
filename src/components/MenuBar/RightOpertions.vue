@@ -43,6 +43,26 @@ const handleClose = async () => {
     .catch(() => {})
 }
 
+const handleDelete = async () => {
+  ElMessageBox.confirm('确定要删除连接吗?', '删除连接', {
+    type: 'warning',
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+  }).then(async () => {
+    try {
+      const isConnection = await invoke<boolean>('is_connection', { id: props.config.id })
+      if (isConnection) {
+        await configOps?.disConnection(props.config.id)
+      }
+      tabsState.removeTabById(props.config.id)
+      configState.removeConfig(props.config.id)
+    } catch (error) {
+      ElMessage.error(error as string)
+    }
+  })
+    .catch(() => {})
+}
+
 const editLoading = ref(false)
 const configModel = ref<RedisConfig>({ ...props.config })
 const visibleEdit = ref(false)
@@ -105,6 +125,7 @@ const handleCommand = (command: string) => {
     visibleEditDialog()
     break
   case 'delete':
+    handleDelete()
     break
   case 'copy':
     break

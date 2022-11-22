@@ -112,10 +112,6 @@ const handleOpen = async (index: string) => {
   }
 }
 
-const handleclose = (index: string) => {
-
-}
-
 const handleChange = (value: any) => {
   console.log(value)
 }
@@ -160,7 +156,6 @@ watch(selectDb, async () => {
     ellipsis
     @select="handleChange"
     @open="handleOpen"
-    @close="handleclose"
   >
     <el-sub-menu
       :index="config.id"
