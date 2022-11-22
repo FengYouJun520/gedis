@@ -4,6 +4,7 @@
 <template>
   <div>
     detail
+    {{ $route.query }}
   </div>
 </template>
 

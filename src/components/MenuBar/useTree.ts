@@ -1,6 +1,8 @@
+import { RedisConfig } from '@/types/redis'
 import { InjectionKey, Ref } from 'vue'
 
 interface TreeKeystOps {
+  config: RedisConfig
   treeKeys: Ref<string[]>
   db: Ref<number>
   changeDb: (db: number) => void

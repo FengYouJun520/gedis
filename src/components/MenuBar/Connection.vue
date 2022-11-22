@@ -31,6 +31,7 @@ const changeDb = (db: number) => {
 }
 
 createTreeKeysContext({
+  config: props.config,
   db: selectDb,
   treeKeys,
   changeDb,
