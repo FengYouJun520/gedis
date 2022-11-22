@@ -101,6 +101,6 @@ pub async fn get_info(state: State<'_, RedisState>, id: String) -> Result<HashMa
         }
     }
 
-    info!(?info_result, "获取redis客户端信息");
+    info!("获取redis客户端信息: {}", id);
     Ok(info_result)
 }

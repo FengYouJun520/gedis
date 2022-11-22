@@ -7,20 +7,34 @@ import { useTabs } from '@/store/tabs'
 import { invoke } from '@tauri-apps/api'
 import { RedisConfig } from '@/types/redis'
 import type { ElMenu } from 'element-plus'
+import { keysToTree } from '@/util'
+import { createTreeKeysContext } from './useTree'
 
 interface ConnectionProps {
   config: RedisConfig
 }
 
-defineProps<ConnectionProps>()
+const props = defineProps<ConnectionProps>()
 
 const router = useRouter()
 const redisState = useRedis()
 const tabsState = useTabs()
+const treeKeys = ref<string[]>([])
 const menuRef = ref<InstanceType<typeof ElMenu>|null>(null)
 
 const loading = ref(false)
 const isOpen = ref(false)
+const selectDb = ref(0)
+
+const changeDb = (db: number) => {
+  selectDb.value = db
+}
+
+createTreeKeysContext({
+  db: selectDb,
+  treeKeys,
+  changeDb,
+})
 
 const handleConnection = async (config: RedisConfig) => {
   try {
@@ -32,10 +46,9 @@ const handleConnection = async (config: RedisConfig) => {
       await invoke('connection', { config })
     }
 
-    // 连接成功
-    // 获取客户端信息
-    const keys = await invoke<Record<string, string>>('get_info', { id: config.id })
-    console.log(keys)
+    // 获取所有key
+    treeKeys.value = await fetchTreeKeys(config.id, unref(selectDb))
+
     isOpen.value = true
 
     // 添加选项卡信息，该方法已过滤重复
@@ -84,6 +97,38 @@ const handleclose = (index: string) => {
 const handleChange = (value: any) => {
   console.log(value)
 }
+
+
+// 获取指定数据库的所有树型key列表
+const fetchTreeKeys = async (id: string, db: number): Promise<string[]> => {
+  try {
+    const keys = await invoke<string[]>('get_keys_by_db', {
+      id,
+      db,
+    })
+
+    return keysToTree(keys)
+  } catch (error) {
+    ElMessage.error(error as string)
+    isOpen.value = false
+    return []
+  }
+}
+
+watch(selectDb, async () => {
+  try {
+    if (!isOpen) {
+      return
+    }
+
+    const keys = await fetchTreeKeys(props.config.id, unref(selectDb))
+    treeKeys.value = keys
+    console.log(unref(keys))
+  } catch (error) {
+    ElMessage.error(error as string)
+    isOpen.value = false
+  }
+})
 </script>
 
 <template>
