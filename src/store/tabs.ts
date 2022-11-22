@@ -48,6 +48,52 @@ export const useTabs = defineStore('tabs', {
 
       this.tabs.splice(index, 1)
 
+      this.updateCurrentActive(key, index)
+    },
+    // 删除所有属于id的选项卡
+    removeTabById(id: string) {
+      this.tabs = this.tabs.filter(t => t.id !== id)
+
+      if (this.tabs.length === 1) {
+        this.currentActive = this.tabs[0].key
+      } else if (this.tabs.length > 1) {
+        this.currentActive = this.tabs[this.tabs.length - 1].key
+      }
+    },
+    // 删除其他选项卡
+    removeOther(key: string) {
+      this.tabs = this.tabs.filter(t => t.key === key)
+      if (this.currentActive !== key) {
+        this.setActive(key)
+      }
+    },
+    // 删除左侧选项卡
+    removeLeft(key: string) {
+      const index = this.tabs.findIndex(t => t.key === key)
+      const activeIndex = this.tabs.findIndex(t => t.key === this.currentActive)
+      this.tabs.splice(0, index)
+      // 如果当前选项卡在左侧（在要删除的列表中）
+      if (this.currentActive !== key && index > activeIndex) {
+        this.setActive(key)
+      }
+    },
+    // 删除右侧侧选项卡
+    removeRight(key: string) {
+      const index = this.tabs.findIndex(t => t.key === key)
+      const activeIndex = this.tabs.findIndex(t => t.key === this.currentActive)
+      this.tabs.splice(index + 1)
+      // 如果当前选项卡在右侧（在要删除的列表中）
+      if (this.currentActive !== key && activeIndex > index) {
+        this.setActive(key)
+      }
+    },
+    getTab(key: string) {
+      return this.tabs.find(t => t.key === key)
+    },
+    setActive(active: string) {
+      this.currentActive = active
+    },
+    updateCurrentActive(key: string, index: number) {
       /// 如果删除的不是当前激活的选项卡,没必要重新设置
       if (this.currentActive !== key) {
         return
@@ -77,36 +123,6 @@ export const useTabs = defineStore('tabs', {
         // 删除的是中间的选项卡
         this.currentActive = this.tabs[index - 1].key
       }
-    },
-    // 删除所有属于id的选项卡
-    removeTabById(id: string) {
-      this.tabs = this.tabs.filter(t => t.id !== id)
-
-      if (this.tabs.length === 1) {
-        this.currentActive = this.tabs[0].key
-      } else if (this.tabs.length > 1) {
-        this.currentActive = this.tabs[this.tabs.length - 1].key
-      }
-    },
-    // 删除其他选项卡
-    removeOther(key: string) {
-      this.tabs = this.tabs.filter(t => t.key === key)
-    },
-    // 删除左侧选项卡
-    removeLeft(key: string) {
-      const index = this.tabs.findIndex(t => t.key === key)
-      this.tabs.splice(0, index)
-    },
-    // 删除右侧侧选项卡
-    removeRight(key: string) {
-      const index = this.tabs.findIndex(t => t.key === key)
-      this.tabs.splice(index + 1)
-    },
-    getTab(key: string) {
-      return this.tabs.find(t => t.key === key)
-    },
-    setActive(active: string) {
-      this.currentActive = active
     },
   },
   getters: {

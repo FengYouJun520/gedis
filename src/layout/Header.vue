@@ -76,8 +76,13 @@ const handleCommand = (key: string, command: string) => {
             trigger="contextmenu"
             @command="(command: string) => handleCommand(tabItem.key, command)"
           >
-            <div inline-flex items-center space-x2>
-              <i :class="tabItem.icon " />
+            <div
+              inline-flex
+              items-center
+              space-x2
+              :class="{ 'tab--active': tabItem.key === tabsState.currentActive }"
+            >
+              <i :class="tabItem.icon" />
               <span>{{ tabItem.name }}</span>
             </div>
             <template #dropdown>
@@ -118,5 +123,9 @@ const handleCommand = (key: string, command: string) => {
 <style lang="css" scoped>
 :deep(.el-tabs__content) {
   display: none;
+}
+
+.tab--active {
+  color: var(--el-color-primary);
 }
 </style>
