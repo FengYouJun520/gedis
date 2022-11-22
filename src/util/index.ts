@@ -33,12 +33,14 @@ export function keysToTree(keys: string[], separator = ':') {
 
 
   // to tree format
-  return formatTreeData(tree, '', separator)
+  const result = formatTreeData(tree, '', separator)
+  sortKeysAndFolder(result)
+  return result
 }
 
 function formatTreeData(tree: any, previousKey = '', separator = ':') {
   return Object.keys(tree).map(key => {
-    const node: any = { label: key ? key : '[Empty]', key }
+    const node: any = { label: key ? key : '[Empty]' }
 
     // folder node
     if (!tree[key].isLeaf && Object.keys(tree[key]).length > 0) {

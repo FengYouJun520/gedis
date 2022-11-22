@@ -3,6 +3,7 @@ import { useTreeKeys } from './useTree'
 
 interface Tree {
   label: string
+  value: string
   children?: Tree[]
 }
 
@@ -11,12 +12,8 @@ const treeKeys = useTreeKeys()
 const treeList = computed(() => treeKeys?.treeKeys.value)
 
 const handleNodeClick = (data: Tree) => {
-  console.log(data)
-}
-
-const defaultProps = {
-  children: 'children',
-  label: 'label',
+  const isLeaf = !!data.children
+  console.log(`isLeaf: ${isLeaf}, data: ${data.value}`)
 }
 </script>
 
