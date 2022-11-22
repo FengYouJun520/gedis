@@ -41,7 +41,7 @@ const handleConnection = async (config: RedisConfig) => {
     }
 
     // 获取所有key
-    treeKeys.value = await fetchTreeKeys(config.id, unref(selectDb))
+    await fetchTreeKeys(config.id, unref(selectDb))
 
     isOpen.value = true
 
@@ -96,15 +96,6 @@ const handleDisConnection = async (id: string) => {
   }
 }
 
-createConfigContext({
-  config: props.config,
-  db: selectDb,
-  treeKeys,
-  changeDb,
-  connection: handleConnection,
-  disConnection: handleDisConnection,
-})
-
 const handleOpen = async (index: string) => {
   const config = redisState.getConfig(index)
   if (config) {
@@ -123,14 +114,13 @@ watchEffect(() => {
 }, { flush: 'post' })
 
 // 获取指定数据库的所有树型key列表
-const fetchTreeKeys = async (id: string, db: number): Promise<string[]> => {
+const fetchTreeKeys = async (id: string, db: number) => {
   try {
     const keys = await invoke<string[]>('get_keys_by_db', { id, db })
-    return keysToTree(keys)
+    treeKeys.value = keysToTree(keys)
   } catch (error) {
     ElMessage.error(error as string)
     isOpen.value = false
-    return []
   }
 }
 
@@ -140,12 +130,21 @@ watch(selectDb, async () => {
       return
     }
 
-    const keys = await fetchTreeKeys(props.config.id, unref(selectDb))
-    treeKeys.value = keys
+    await fetchTreeKeys(props.config.id, unref(selectDb))
   } catch (error) {
     ElMessage.error(error as string)
     isOpen.value = false
   }
+})
+
+createConfigContext({
+  config: props.config,
+  db: selectDb,
+  treeKeys,
+  changeDb,
+  fetchTreeKeys,
+  connection: handleConnection,
+  disConnection: handleDisConnection,
 })
 </script>
 

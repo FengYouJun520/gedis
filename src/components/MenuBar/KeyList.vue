@@ -11,7 +11,7 @@ interface Tree {
 const router = useRouter()
 const tabsState = useTabs()
 const configOps = useConfig()
-const treeList = computed(() => configOps?.treeKeys.value)
+const treeKeys = computed(() => configOps?.treeKeys.value)
 
 const handleNodeClick = (data: Tree) => {
   const isLeaf = !data.children
@@ -49,7 +49,7 @@ const handleNodeClick = (data: Tree) => {
   <div mt4>
     <el-scrollbar>
       <el-tree
-        :data="treeList"
+        :data="treeKeys"
         style="max-height: 400px"
         @node-click="handleNodeClick"
       />

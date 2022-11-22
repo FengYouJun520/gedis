@@ -37,7 +37,6 @@ const handleClose = async () => {
     try {
       await configOps?.disConnection(props.config.id)
       tabsState.removeTabById(props.config.id)
-      console.log(tabsState.getTabs)
     } catch (error) {
       ElMessage.error(error as string)
     }
@@ -137,6 +136,22 @@ const handleTestConnection = async () => {
   }
 }
 
+const handleClearKeys = async () => {
+  ElMessageBox.confirm('你确定要清空键吗?(该操作不可逆)', {
+    type: 'error',
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+  }).then(async () => {
+    try {
+      await invoke('clear_keys', { id: props.config.id, db: configOps?.db.value })
+      await configOps?.fetchTreeKeys(props.config.id, configOps.db.value)
+    } catch (error) {
+      ElMessage.error(error as string)
+    }
+  })
+    .catch(() => {})
+}
+
 const handleCommand = async (command: string) => {
   switch (command) {
   case 'close':
@@ -152,6 +167,7 @@ const handleCommand = async (command: string) => {
     await visibleDialog(false)
     break
   case 'deleteKeyAll':
+    await handleClearKeys()
     break
   default:
     break
@@ -181,20 +197,34 @@ const handleCommand = async (command: string) => {
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item command="close">
-            关闭连接
+            <div flex items-center>
+              <i class="grommet-icons:power-shutdown" />
+              <span>关闭连接</span>
+            </div>
           </el-dropdown-item>
           <el-dropdown-item command="edit">
-            编辑连接
+            <div flex items-center>
+              <i class="mdi:square-edit-outline" />
+              <span>编辑连接</span>
+            </div>
           </el-dropdown-item>
           <el-dropdown-item command="delete">
-            删除连接
+            <div flex items-center>
+              <i class="material-symbols:delete-outline" />
+              <span>删除连接</span>
+            </div>
           </el-dropdown-item>
           <el-dropdown-item command="copy">
-            复制连接
+            <div flex items-center>
+              <i class="material-symbols:content-copy-outline" />
+              <span>复制连接</span>
+            </div>
           </el-dropdown-item>
-          <el-dropdown-item command="" divided />
-          <el-dropdown-item command="deleteKeyAll">
-            删除所有键
+          <el-dropdown-item command="deleteKeyAll" divided>
+            <div flex items-center>
+              <i class="material-symbols:warning" />
+              <span>删除所有键</span>
+            </div>
           </el-dropdown-item>
         </el-dropdown-menu>
       </template>

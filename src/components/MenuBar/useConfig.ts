@@ -5,6 +5,7 @@ interface ConfigOps {
   config: RedisConfig
   treeKeys: Ref<string[]>
   db: Ref<number>,
+  fetchTreeKeys: (id: string, db: number) => Promise<void>,
   connection: (config: RedisConfig) => Promise<void>,
   disConnection: (id: string) => Promise<void>,
   changeDb: (db: number) => void
