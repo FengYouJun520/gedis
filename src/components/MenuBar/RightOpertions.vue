@@ -3,6 +3,7 @@ import { useRedis } from '@/store/redis'
 import { useTabs } from '@/store/tabs'
 import { RedisConfig } from '@/types/redis'
 import { invoke } from '@tauri-apps/api'
+import { v4 } from 'uuid'
 import { useConfig } from './useConfig'
 
 interface MenuOperationProps {
@@ -36,6 +37,7 @@ const handleClose = async () => {
     try {
       await configOps?.disConnection(props.config.id)
       tabsState.removeTabById(props.config.id)
+      console.log(tabsState.getTabs)
     } catch (error) {
       ElMessage.error(error as string)
     }
@@ -65,42 +67,61 @@ const handleDelete = async () => {
 
 const editLoading = ref(false)
 const configModel = ref<RedisConfig>({ ...props.config })
-const visibleEdit = ref(false)
-const visibleEditDialog = async () => {
+const visible = ref(false)
+const isEdit = ref(false)
+const visibleDialog = async (edit: boolean) => {
   try {
+    isEdit.value = edit
     const isConnection = await invoke('is_connection', { id: props.config.id })
-    if (!isConnection) {
-      visibleEdit.value = true
+    // 如果是编辑并且没有连接
+    if (!isConnection && unref(isEdit)) {
       configModel.value = { ...props.config }
       tabsState.removeTab(props.config.id)
+      visible.value = true
       return
     }
 
-    ElMessageBox.confirm('需要关闭当前连接才能进行编辑操作,是否继续?', {
-      type: 'warning',
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-    }).then(async () => {
-      await configOps?.disConnection(props.config.id)
+    if (unref(isEdit)) {
+      // 编辑连接
+      ElMessageBox.confirm('需要关闭当前连接才能进行编辑操作,是否继续?', {
+        type: 'warning',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(async () => {
+        await configOps?.disConnection(props.config.id)
+        configModel.value = { ...props.config }
+        tabsState.removeTabById(props.config.id)
+        visible.value = true
+      })
+        .catch(() => {})
+    } else {
+      // 复制连接
       configModel.value = { ...props.config }
-      tabsState.removeTabById(props.config.id)
-      visibleEdit.value = true
-    })
-      .catch(() => {})
+      visible.value = true
+    }
   } catch (error) {
     ElMessage.error(error as string)
   }
 }
 
-const handleEditConfigConfirm = () => {
-  configState.editConfig(unref(configModel.value))
-  visibleEdit.value = false
+const handleConfigConfirm = () => {
+  if (unref(isEdit)) {
+    // 编辑
+    configState.editConfig(unref(configModel))
+  } else {
+    // 复制
+    configModel.value.id = v4()
+    configState.addConfig(unref(configModel))
+  }
+  visible.value = false
   editLoading.value = false
+  isEdit.value = false
 }
 
 const handleCancel = () => {
-  visibleEdit.value = false
+  visible.value = false
   editLoading.value = false
+  isEdit.value = false
   configModel.value = { ...configOps!.config }
 }
 
@@ -116,18 +137,19 @@ const handleTestConnection = async () => {
   }
 }
 
-const handleCommand = (command: string) => {
+const handleCommand = async (command: string) => {
   switch (command) {
   case 'close':
-    handleClose()
+    await handleClose()
     break
   case 'edit':
-    visibleEditDialog()
+    await visibleDialog(true)
     break
   case 'delete':
-    handleDelete()
+    await handleDelete()
     break
   case 'copy':
+    await visibleDialog(false)
     break
   case 'deleteKeyAll':
     break
@@ -179,7 +201,7 @@ const handleCommand = (command: string) => {
     </el-dropdown>
 
     <el-dialog
-      v-model="visibleEdit"
+      v-model="visible"
       title="编辑连接"
       width="50%"
       append-to-body
@@ -278,7 +300,7 @@ const handleCommand = (command: string) => {
             </el-button>
             <el-button
               type="primary"
-              @click="handleEditConfigConfirm"
+              @click="handleConfigConfirm"
             >
               确认
             </el-button>

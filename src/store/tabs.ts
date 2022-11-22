@@ -1,3 +1,5 @@
+import { t } from '@tauri-apps/api/event-2a9960e7'
+
 interface TabsProps {
   id: string
   key: string
@@ -77,19 +79,13 @@ export const useTabs = defineStore('tabs', {
     },
     // 删除所有属于id的选项卡
     removeTabById(id: string) {
-      const removeIndex = this.tabs.filter(t => t.id === id).map((_, index) => index)
-      for (let i = removeIndex.length; i >= 0; i--) {
-        this.tabs.splice(removeIndex[i], 1)
-      }
+      this.tabs = this.tabs.filter(t => t.id !== id)
 
-      if (this.tabs.length === 0) {
-        return
-      } else if (this.tabs.length === 1) {
+      if (this.tabs.length === 1) {
         this.currentActive = this.tabs[0].key
-      } else {
+      } else if (this.tabs.length > 1) {
         this.currentActive = this.tabs[this.tabs.length - 1].key
       }
-      console.log(this.tabs)
     },
     getTab(key: string) {
       return this.tabs.find(t => t.key === key)
