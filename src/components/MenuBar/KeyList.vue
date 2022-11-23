@@ -67,10 +67,6 @@ const handleContextmenu = (event: MouseEvent, data: Tree, node: Node) => {
   contextmenuData.value = { event, data, node }
 }
 
-const handleAddKey = () => {
-  console.log('add-key')
-}
-
 const handleDeleteKey = () => {
   console.log('delete-key')
 }
@@ -81,9 +77,6 @@ const handleCopyKey = () => {
 
 const handleCommand = (command: string) => {
   switch (command) {
-  case 'add-key':
-    handleAddKey()
-    break
   case 'delete-key':
     handleDeleteKey()
     break
@@ -125,6 +118,7 @@ const handleCommand = (command: string) => {
           </template>
         </template>
       </el-tree>
+
       <!-- contextmenu -->
       <div
         v-show="showContextmenu"
@@ -212,6 +206,7 @@ const handleCommand = (command: string) => {
   background-color: var(--el-bg-color);
   border: 1px solid var(--el-border-color);
   padding: 12px 0;
+  border-radius: 4px;
 }
 
 .contextmenu-item {

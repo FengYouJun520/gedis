@@ -22,3 +22,12 @@ export interface TreeNode {
   value: string
   children?: TreeNode[]
 }
+
+export interface AddKeyInfo {
+  type: string
+  key: string
+  value: string
+  score?: number
+  field?: string
+  id?: string
+}
