@@ -8,10 +8,10 @@ import { useConfig } from './useConfig'
 
 interface MenuOperationProps {
   config: RedisConfig
+  db: number
 }
 
 const props = defineProps<MenuOperationProps>()
-const router = useRouter()
 const configState = useRedis()
 const configOps = useConfig()
 const tabsState = useTabs()
@@ -19,8 +19,36 @@ const tabsState = useTabs()
 const handleClick = (_event: MouseEvent) => {
 }
 
+const handleRefresh = async () => {
+  await configOps?.fetchTreeKeys(props.config.id, props.db)
+}
+
 const handleHome = async () => {
-  configOps?.connection(props.config)
+  await configOps?.connection(props.config)
+}
+
+const handleConsole = async () => {
+  const query = {
+    config: JSON.stringify(props.config),
+    db: props.db,
+  }
+
+  await configOps?.connection(
+    props.config,
+    {
+      id: props.config.id,
+      key: `${props.config.id}-${props.db}`,
+      name: `terminal | ${props.config.name}`,
+      db: 0,
+      path: '/terminal',
+      query,
+      icon: 'mdi:console',
+    },
+    {
+      path: '/terminal',
+      query,
+    }
+  )
 }
 
 const handleClose = async () => {
@@ -183,11 +211,11 @@ const handleCommand = async (command: string) => {
     />
     <i
       class="mdi:console w20px h20px hover:(text-[var(--el-menu-hover-text-color)])"
-      @click.stop="handleClick"
+      @click.stop="handleConsole"
     />
     <i
       class="material-symbols:refresh w20px h20px hover:(text-[var(--el-menu-hover-text-color)])"
-      @click.stop="handleClick"
+      @click.stop="handleRefresh"
     />
     <el-dropdown @command="handleCommand">
       <i

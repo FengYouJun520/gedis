@@ -24,6 +24,11 @@ const routes: RouteRecordRaw[] = [
         path: 'detail',
         component: () => import('@/views/detail/index.vue'),
       },
+      {
+        name: 'RedisCli',
+        path: 'terminal',
+        component: () => import('@/views/terminal/index.vue'),
+      },
     ],
   },
 ]

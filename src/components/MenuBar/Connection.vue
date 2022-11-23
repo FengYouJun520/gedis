@@ -3,12 +3,13 @@ import RightOpertions from '@/components/MenuBar/RightOpertions.vue'
 import MenuOperation from '@/components/MenuBar/MenuOperation.vue'
 import KeyList from '@/components/MenuBar/KeyList.vue'
 import { useRedis } from '@/store/redis'
-import { useTabs } from '@/store/tabs'
+import { TabsProps, useTabs } from '@/store/tabs'
 import { invoke } from '@tauri-apps/api'
 import { RedisConfig } from '@/types/redis'
 import type { ElMenu } from 'element-plus'
 import { keysToTree } from '@/util'
 import { createConfigContext } from './useConfig'
+import { RouteLocationRaw } from 'vue-router'
 
 interface ConnectionProps {
   config: RedisConfig
@@ -30,7 +31,7 @@ const changeDb = (db: number) => {
   selectDb.value = db
 }
 
-const handleConnection = async (config: RedisConfig) => {
+const handleConnection = async (config: RedisConfig, tabs?: TabsProps, route?: RouteLocationRaw) => {
   try {
     // 是否连接
     const isConnection = await invoke<boolean>('is_connection', { id: config.id })
@@ -46,24 +47,29 @@ const handleConnection = async (config: RedisConfig) => {
     isOpen.value = true
 
     // 添加选项卡信息，该方法已过滤重复
-    tabsState.addTab({
-      id: config.id,
-      key: config.id,
-      name: config.name,
-      db: 0,
-      path: '/info',
-      query: {
+    if (tabs) {
+      tabsState.addTab(tabs)
+    } else {
+      tabsState.addTab({
         id: config.id,
-      },
-      icon: 'emojione:rocket',
-    })
+        key: config.id,
+        name: config.name,
+        db: 0,
+        path: '/info',
+        query: {
+          id: config.id,
+        },
+        icon: 'emojione:rocket',
+      })
+    }
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     menuRef.value?.open?.(config.id, [config.id])
 
-    // 第一次连接跳转到信息页
-    if (!isConnection) {
+    if (route) {
+      router.push(route)
+    } else {
       router.push({
         path: '/info',
         query: {
@@ -97,9 +103,15 @@ const handleDisConnection = async (id: string) => {
 }
 
 const handleOpen = async (index: string) => {
-  const config = redisState.getConfig(index)
-  if (config) {
-    await handleConnection(config)
+  try {
+    const config = redisState.getConfig(index)
+
+    const isConnection = await invoke('is_connection', { id: config?.id })
+    if (config && !isConnection) {
+      await handleConnection(config)
+    }
+  } catch (error) {
+    ElMessage.error(error as string)
   }
 }
 
@@ -164,7 +176,7 @@ createConfigContext({
         <div flex-1 flex justify-between items-center mr6>
           <span>{{ config.name }}</span>
           <i v-if="loading" class="uiw:loading animate-spin" />
-          <RightOpertions v-else :config="config" />
+          <RightOpertions v-else :config="config" :db="selectDb" />
         </div>
       </template>
 

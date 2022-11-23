@@ -1,6 +1,4 @@
-import { t } from '@tauri-apps/api/event-2a9960e7'
-
-interface TabsProps {
+export interface TabsProps {
   id: string
   key: string
   name: string
