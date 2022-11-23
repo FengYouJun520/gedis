@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import router from '@/router'
+import { useTabs } from '@/store/tabs'
 import { AddKeyInfo } from '@/types/redis'
 import { invoke } from '@tauri-apps/api'
 import { useConfig } from './useConfig'
 
+const tabsState = useTabs()
 const treeKeysOps = useConfig()
 const selectDB = ref(treeKeysOps?.db || 0)
 
@@ -49,7 +52,31 @@ const handleConfirm = async () => {
       keyinfo: keyModel.value,
     })
 
-    await treeKeysOps?.fetchTreeKeys(treeKeysOps?.config.id, treeKeysOps?.db.value)
+    await treeKeysOps?.fetchTreeKeys(treeKeysOps.config.id, treeKeysOps.db.value)
+
+    // 添加新的选项卡并且跳转
+    if (treeKeysOps) {
+      const query = {
+        id: treeKeysOps.config.id,
+        db: treeKeysOps.db.value,
+        key: keyModel.value.key,
+      }
+
+      tabsState.addTab({
+        id: treeKeysOps.config.id,
+        db: treeKeysOps.db.value,
+        key: `${treeKeysOps.config.id}-${treeKeysOps.db.value}-${keyModel.value.key}`,
+        name: keyModel.value.key,
+        path: '/detail',
+        query,
+      })
+
+      router.push({
+        path: '/detail',
+        query,
+      })
+    }
+
     visibleDialog.value = false
   } catch (error) {
     ElMessage.error(error as string)
@@ -134,7 +161,9 @@ const handleCloseDialog = () => {
       </el-form>
 
       <template #footer>
-        <el-button>取消</el-button>
+        <el-button @click="handleCloseDialog">
+          取消
+        </el-button>
         <el-button type="primary" @click="handleConfirm">
           确定
         </el-button>

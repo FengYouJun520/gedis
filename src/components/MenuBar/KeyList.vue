@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useTabs } from '@/store/tabs'
+import { clipboard, invoke } from '@tauri-apps/api'
 import Node from 'element-plus/es/components/tree/src/model/node'
 import { useConfig } from './useConfig'
 
@@ -67,12 +68,29 @@ const handleContextmenu = (event: MouseEvent, data: Tree, node: Node) => {
   contextmenuData.value = { event, data, node }
 }
 
-const handleDeleteKey = () => {
-  console.log('delete-key')
+const handleDeleteKey = async () => {
+  try {
+    await invoke('del_key', {
+      id: configOps?.config.id,
+      db: configOps?.db.value,
+      keys: [contextmenuData.value?.data.value],
+    })
+
+    configOps?.fetchTreeKeys(configOps.config.id, configOps.db.value)
+    ElMessage.success(`删除键: ${contextmenuData.value?.data.value}成功`)
+    // 如果有选项卡，删除选项卡
+    tabsState.removeTab(
+      `${configOps?.config.id}-${configOps?.db.value}-${contextmenuData.value?.data.value}`
+    )
+  } catch (error) {
+    ElMessage.error(error as string)
+  }
 }
 
 const handleCopyKey = () => {
-  console.log('copy-key')
+  if (contextmenuData.value) {
+    clipboard.writeText(contextmenuData.value.data.value)
+  }
 }
 
 const handleCommand = (command: string) => {
