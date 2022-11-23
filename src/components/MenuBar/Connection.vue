@@ -106,7 +106,7 @@ const handleOpen = async (index: string) => {
   try {
     const config = redisState.getConfig(index)
 
-    const isConnection = await invoke('is_connection', { id: config?.id })
+    const isConnection = await invoke<boolean>('is_connection', { id: config?.id })
     if (config && !isConnection) {
       await handleConnection(config)
     }
