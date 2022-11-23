@@ -15,10 +15,11 @@ const tabsState = useTabs()
       </el-header>
       <el-main relative>
         <el-scrollbar view-style="height: 100%">
-          <router-view v-slot="{ Component }">
-            <keep-alive>
+          <router-view v-slot="{ Component, route }">
+            <keep-alive v-if="route.meta.keepalive">
               <component :is="Component" />
             </keep-alive>
+            <component :is="Component" v-else />
           </router-view>
         </el-scrollbar>
       </el-main>

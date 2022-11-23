@@ -13,11 +13,17 @@ const routes: RouteRecordRaw[] = [
         name: 'Home',
         path: 'home',
         component: () => import('@/views/home/index.vue'),
+        meta: {
+          keepalive: true,
+        },
       },
       {
         name: 'Info',
         path: 'info',
         component: () => import('@/views/info/index.vue'),
+        meta: {
+          keepalive: true,
+        },
       },
       {
         name: 'Detail',
