@@ -37,7 +37,6 @@ fn main() {
             dis_connection_all,
             get_info,
             del_key,
-            del_keys,
             del_key_by_value,
             clear_keys,
             get_keys_by_db,

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useTabs } from '@/store/tabs'
+import Node from 'element-plus/es/components/tree/src/model/node'
 import { useConfig } from './useConfig'
 
 interface Tree {
@@ -16,7 +17,6 @@ const treeKeys = computed(() => configOps?.treeKeys.value)
 const rendIcon = () => h('i', { class: 'bi:caret-right-fill w20px h20px' })
 
 const handleNodeClick = (data: Tree, node: any) => {
-  console.log(node)
   const isLeaf = !data.children
 
   if (!isLeaf) {
@@ -46,6 +46,56 @@ const handleNodeClick = (data: Tree, node: any) => {
     query,
   })
 }
+
+interface ContextmenuProps {
+  event: MouseEvent
+  data: Tree
+  node: Node
+}
+
+const contextmenuRef = ref<HTMLDivElement|null>(null)
+const showContextmenu = ref(false)
+const contextmenuData = ref<ContextmenuProps>()
+onClickOutside(contextmenuRef, () => {
+  showContextmenu.value = false
+})
+
+const handleContextmenu = (event: MouseEvent, data: Tree, node: Node) => {
+  showContextmenu.value = true
+  contextmenuRef.value!.style.left = `${event.clientX}px`
+  contextmenuRef.value!.style.top = `${event.clientY}px`
+  contextmenuData.value = { event, data, node }
+}
+
+const handleAddKey = () => {
+  console.log('add-key')
+}
+
+const handleDeleteKey = () => {
+  console.log('delete-key')
+}
+
+const handleCopyKey = () => {
+  console.log('copy-key')
+}
+
+const handleCommand = (command: string) => {
+  switch (command) {
+  case 'add-key':
+    handleAddKey()
+    break
+  case 'delete-key':
+    handleDeleteKey()
+    break
+  case 'copy-key':
+    handleCopyKey()
+    break
+  default:
+    break
+  }
+
+  showContextmenu.value = false
+}
 </script>
 
 <template>
@@ -53,9 +103,10 @@ const handleNodeClick = (data: Tree, node: any) => {
     <el-scrollbar>
       <el-tree
         :data="treeKeys"
-        style="max-height: 400px"
+        style="max-height: 400px;"
         :icon="rendIcon()"
         @node-click="handleNodeClick"
+        @node-contextmenu="handleContextmenu"
       >
         <template #default="{ node, data }">
           <template v-if="data.children">
@@ -74,6 +125,72 @@ const handleNodeClick = (data: Tree, node: any) => {
           </template>
         </template>
       </el-tree>
+      <!-- contextmenu -->
+      <div
+        v-show="showContextmenu"
+        ref="contextmenuRef"
+        class="tree-contextmenu-ops"
+      >
+        <div>
+          <!-- folder -->
+          <template v-if="!contextmenuData?.node.isLeaf">
+            <div
+              class="contextmenu-item"
+              flex
+              items-center
+              space-x2
+              justify-start
+              @click="handleCommand('add-key')"
+            >
+              <i class="material-symbols:content-copy-outline" />
+              <span>
+                添加键
+              </span>
+            </div>
+            <div
+              class="contextmenu-item"
+              flex
+              items-center
+              space-x2
+              justify-start
+              @click="handleCommand('delete-key')"
+            >
+              <i class="material-symbols:delete-outline" />
+              <span>
+                删除
+              </span>
+            </div>
+          </template>
+
+          <!-- key -->
+          <template v-else>
+            <div
+              class="contextmenu-item"
+              flex
+              items-center
+              space-x2
+              @click="handleCommand('copy-key')"
+            >
+              <i class="material-symbols:content-copy-outline" />
+              <span>
+                复制
+              </span>
+            </div>
+            <div
+              class="contextmenu-item"
+              flex
+              items-center
+              space-x2
+              @click="handleCommand('delete-key')"
+            >
+              <i class="material-symbols:delete-outline" />
+              <span>
+                删除
+              </span>
+            </div>
+          </template>
+        </div>
+      </div>
     </el-scrollbar>
   </div>
 </template>
@@ -86,5 +203,24 @@ const handleNodeClick = (data: Tree, node: any) => {
 :deep(.el-tree-node__expand-icon) {
   margin-right: 0;
   padding: 0;
+}
+
+.tree-contextmenu-ops {
+  position: fixed;
+  transition: .2s;
+  z-index: 999;
+  background-color: var(--el-bg-color);
+  border: 1px solid var(--el-border-color);
+  padding: 12px 0;
+}
+
+.contextmenu-item {
+  padding: 6px 12px;
+}
+
+.contextmenu-item:hover {
+  cursor: pointer;
+  color: var(--el-color-primary);
+  background-color: var(--el-color-primary-light-9);
 }
 </style>

@@ -8,36 +8,10 @@ use tracing::{info, instrument};
 
 use super::state::RedisState;
 
-/// 删除该key的所有内容
+/// 删除一个或多个键
 #[instrument]
 #[tauri::command]
 pub async fn del_key(
-    state: State<'_, RedisState>,
-    id: String,
-    db: usize,
-    key: String,
-) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let conn = client.get_con_mut(&id)?;
-
-    redis::pipe()
-        .atomic()
-        .cmd("SELECT")
-        .arg(db)
-        .del(&key)
-        .query_async(conn)
-        .await
-        .context(format!("获取键类型失败: {key}"))?;
-
-    info!(key, "删除键成功: ");
-
-    Ok(())
-}
-
-/// 删除多个指定的键
-#[instrument]
-#[tauri::command]
-pub async fn del_keys(
     state: State<'_, RedisState>,
     id: String,
     db: usize,
