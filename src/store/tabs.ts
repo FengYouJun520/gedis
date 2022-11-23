@@ -81,7 +81,7 @@ export const useTabs = defineStore('tabs', {
       const index = this.tabs.findIndex(t => t.key === key)
       const activeIndex = this.tabs.findIndex(t => t.key === this.currentActive)
       this.tabs.splice(index + 1)
-      // 如果当前选项卡在右侧（在要删除的列表中）
+      // 如果当前选项卡在`右侧（在要删除的列表中）
       if (this.currentActive !== key && activeIndex > index) {
         this.setActive(key)
       }
