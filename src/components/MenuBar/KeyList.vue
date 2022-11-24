@@ -112,7 +112,7 @@ const handleCommand = (command: string) => {
             <div flex items-center>
               <i v-if="node.expanded" class="mdi:folder-open w20px h20px" />
               <i v-else class="mdi:folder w20px h20px" />
-              <span ml1>{{ node.label }}</span>
+              <span ml1>{{ node.label }} ({{ data.children.length }})</span>
             </div>
           </template>
 

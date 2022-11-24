@@ -5,9 +5,9 @@ import KeyList from '@/components/MenuBar/KeyList.vue'
 import { useRedis } from '@/store/redis'
 import { TabsProps, useTabs } from '@/store/tabs'
 import { invoke } from '@tauri-apps/api'
-import { RedisConfig } from '@/types/redis'
+import { Keyspace, RedisConfig } from '@/types/redis'
 import type { ElMenu } from 'element-plus'
-import { keysToTree } from '@/util'
+import { keysToTree, parseKeyspaces } from '@/util'
 import { createConfigContext } from './useConfig'
 
 interface ConnectionProps {
@@ -19,6 +19,7 @@ const props = defineProps<ConnectionProps>()
 const redisState = useRedis()
 const tabsState = useTabs()
 const treeKeys = ref<string[]>([])
+const keyspaces = ref<Keyspace[]>([])
 const menuRef = ref<InstanceType<typeof ElMenu>|null>(null)
 
 const loading = ref(false)
@@ -38,6 +39,9 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
       loading.value = true
       await invoke('connection', { config })
     }
+
+    const info = await invoke<Record<string, string>>('get_info', { id: config.id })
+    keyspaces.value = parseKeyspaces(info)
 
     // 获取所有key
     await fetchTreeKeys(config.id, unref(selectDb))
@@ -132,6 +136,7 @@ createConfigContext({
   config: props.config,
   db: selectDb,
   treeKeys,
+  keyspaces,
   changeDb,
   fetchTreeKeys,
   connection: handleConnection,

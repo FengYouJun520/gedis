@@ -1,10 +1,11 @@
 import { TabsProps } from '@/store/tabs'
-import { RedisConfig } from '@/types/redis'
+import { Keyspace, RedisConfig } from '@/types/redis'
 import { InjectionKey, Ref } from 'vue'
 
 interface ConfigOps {
   config: RedisConfig
   treeKeys: Ref<string[]>
+  keyspaces: Ref<Keyspace[]>,
   db: Ref<number>,
   fetchTreeKeys: (id: string, db: number) => Promise<void>,
   connection: (config: RedisConfig, tabs?: TabsProps) => Promise<void>,

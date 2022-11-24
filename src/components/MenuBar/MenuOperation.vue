@@ -94,9 +94,9 @@ const handleCloseDialog = () => {
         @change="handleChange"
       >
         <el-option
-          v-for="item in options"
+          v-for="(item, index) in options"
           :key="item.value"
-          :label="item.label"
+          :label="`${item.label} (${treeKeysOps?.keyspaces.value[index].len || 0})`"
           :value="item.value"
         />
       </el-select>
