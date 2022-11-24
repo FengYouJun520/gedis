@@ -1,34 +1,22 @@
 <script setup lang="ts">
 import { useTabs } from '@/store/tabs'
 import type { TabsPaneContext } from 'element-plus'
+import Home from '@/views/home/index.vue'
+import Info from '@/views/info/index.vue'
+import Detail from '@/views/detail/index.vue'
+import Terminal from '@/views/terminal/index.vue'
 
 const tabsState = useTabs()
-const router = useRouter()
-const route = useRoute()
 
 const handleClick = (pane: TabsPaneContext, _event: MouseEvent) => {
   const tabItem = tabsState.getTab(pane.paneName?.toString() || '')
   tabsState.setActive(pane.paneName?.toString() || '')
-
-  router.push({
-    path: tabItem?.path,
-    query: tabItem?.query,
-  })
 }
 
 const handleRemove = (name: string) => {
   tabsState.removeTab(name)
-
-  const tabItem = tabsState.getTab(tabsState.currentActive)
-  if (!tabsState.exist) {
-    router.push('/')
-  } else {
-    router.push({
-      path: tabItem?.path,
-      query: tabItem?.query,
-    })
-  }
 }
+
 
 const handleCommand = (key: string, command: string) => {
   switch (command) {
@@ -54,22 +42,34 @@ const handleCommand = (key: string, command: string) => {
   <div
     h-full
     w-full
-    py4
   >
     <el-tabs
       v-model="tabsState.currentActive"
       type="border-card"
       w-full
-      closable
+      h-full
       @tab-click="handleClick"
       @tab-remove="handleRemove"
     >
       <el-tab-pane
         v-for="tabItem in tabsState.tabs"
         :key="tabItem.key"
-        :label="tabItem.name"
         :name="tabItem.key"
+        :closable="tabItem.type !== 'home'"
       >
+        <Home v-if="tabItem.type === 'home'" />
+        <Info
+          v-if="tabItem.type === 'info'"
+          :tab-item="tabItem"
+        />
+        <Detail
+          v-if="tabItem.type === 'detail'"
+          :tab-item="tabItem"
+        />
+        <Terminal
+          v-if="tabItem.type === 'terminal'"
+          :tab-item="tabItem"
+        />
         <template #label>
           <el-dropdown
             h-full
@@ -121,10 +121,16 @@ const handleCommand = (key: string, command: string) => {
 </template>
 
 <style lang="css" scoped>
+.el-tabs {
+  @apply flex flex-col;
+}
 :deep(.el-tabs__content) {
-  display: none;
+  flex: 1;
 }
 
+.el-tab-pane {
+  height: 100%;
+}
 .tab--active {
   color: var(--el-color-primary);
 }

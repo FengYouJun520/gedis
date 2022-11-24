@@ -1,14 +1,13 @@
 import { TabsProps } from '@/store/tabs'
 import { RedisConfig } from '@/types/redis'
 import { InjectionKey, Ref } from 'vue'
-import { RouteLocationRaw } from 'vue-router'
 
 interface ConfigOps {
   config: RedisConfig
   treeKeys: Ref<string[]>
   db: Ref<number>,
   fetchTreeKeys: (id: string, db: number) => Promise<void>,
-  connection: (config: RedisConfig, tabs?: TabsProps, route?: RouteLocationRaw) => Promise<void>,
+  connection: (config: RedisConfig, tabs?: TabsProps) => Promise<void>,
   disConnection: (id: string) => Promise<void>,
   changeDb: (db: number) => void
 }

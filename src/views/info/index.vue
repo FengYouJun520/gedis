@@ -1,19 +1,23 @@
 <script setup lang="ts">
+import { TabsProps } from '@/store/tabs'
 import { invoke } from '@tauri-apps/api'
 
-const route = useRoute()
+interface InfoProps {
+  tabItem: TabsProps
+}
+
+const props = defineProps<InfoProps>()
 const keyinfo = ref({})
 
-const id = route.query.id as string
 
 const fetchInfo = async () => {
-  const isConnection = await invoke<boolean>('is_connection', { id })
+  const isConnection = await invoke<boolean>('is_connection', { id: props.tabItem.id })
   if (!isConnection) {
     return
   }
   // 连接成功
   // 获取客户端信息
-  const info = await invoke<Record<string, string>>('get_info', { id })
+  const info = await invoke<Record<string, string>>('get_info', { id: props.tabItem.id })
   console.log(info)
 }
 
@@ -24,7 +28,7 @@ onMounted(async () => {
 
 <template>
   <div>
-    info id: {{ $route.query.id }}
+    info
     {{ keyinfo }}
   </div>
 </template>

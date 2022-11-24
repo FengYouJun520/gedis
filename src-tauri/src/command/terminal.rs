@@ -12,7 +12,7 @@ pub async fn terminal(
     db: usize,
     values: Option<Vec<String>>,
 ) -> Result<String> {
-    info!(?values, "发送命令");
+    info!(?values);
 
     let mut client = state.0.lock().await;
     let con = client.get_con_mut(&id)?;
@@ -32,8 +32,7 @@ pub async fn terminal(
         cmd.arg(&arg);
     }
 
-    let res: String = cmd.query_async(con).await?;
+    let res: Option<String> = cmd.query_async(con).await?;
 
-    info!(res);
-    Ok(res)
+    Ok(res.unwrap_or_default())
 }

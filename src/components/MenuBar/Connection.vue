@@ -9,7 +9,6 @@ import { RedisConfig } from '@/types/redis'
 import type { ElMenu } from 'element-plus'
 import { keysToTree } from '@/util'
 import { createConfigContext } from './useConfig'
-import { RouteLocationRaw } from 'vue-router'
 
 interface ConnectionProps {
   config: RedisConfig
@@ -17,7 +16,6 @@ interface ConnectionProps {
 
 const props = defineProps<ConnectionProps>()
 
-const router = useRouter()
 const redisState = useRedis()
 const tabsState = useTabs()
 const treeKeys = ref<string[]>([])
@@ -31,7 +29,7 @@ const changeDb = (db: number) => {
   selectDb.value = db
 }
 
-const handleConnection = async (config: RedisConfig, tabs?: TabsProps, route?: RouteLocationRaw) => {
+const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
   try {
     // 是否连接
     const isConnection = await invoke<boolean>('is_connection', { id: config.id })
@@ -53,12 +51,10 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps, route?: R
       tabsState.addTab({
         id: config.id,
         key: config.id,
+        value: config.id,
         name: config.name,
         db: 0,
-        path: '/info',
-        query: {
-          id: config.id,
-        },
+        type: 'info',
         icon: 'emojione:rocket',
       })
     }
@@ -66,17 +62,6 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps, route?: R
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     menuRef.value?.open?.(config.id, [config.id])
-
-    if (route) {
-      router.push(route)
-    } else {
-      router.push({
-        path: '/info',
-        query: {
-          id: config.id,
-        },
-      })
-    }
   } catch (error) {
     ElMessage.error(error as string)
     isOpen.value = false
@@ -118,12 +103,6 @@ const handleOpen = async (index: string) => {
 const handleChange = (value: any) => {
   console.log(value)
 }
-
-watchEffect(() => {
-  if (!tabsState.exist) {
-    router.push('/')
-  }
-}, { flush: 'post' })
 
 // 获取指定数据库的所有树型key列表
 const fetchTreeKeys = async (id: string, db: number) => {

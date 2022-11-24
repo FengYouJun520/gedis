@@ -1,11 +1,13 @@
+import { RedisConfig } from '@/types/redis'
+
 export interface TabsProps {
   id: string
   key: string
   name: string
+  value: string
   db: number
-  path: string
+  type: 'home'| 'info' | 'detail' | 'terminal'
   icon?: string
-  query: Record<string, any>
 }
 
 interface TabsState {
@@ -15,8 +17,16 @@ interface TabsState {
 
 export const useTabs = defineStore('tabs', {
   state: () : TabsState => ({
-    tabs: [],
-    currentActive: '',
+    tabs: [{
+      id: 'home',
+      db: 0,
+      key: 'home',
+      value: '',
+      name: '首页',
+      type: 'home',
+      icon: 'mdi:home',
+    }],
+    currentActive: 'home',
   }),
   actions: {
     addTab(tabsProps: TabsProps) {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useUiState } from './store/ui'
+import Layout from '@/layout/index.vue'
 
 onMounted(() => {
   window.addEventListener('contextmenu', event => {
@@ -29,7 +30,7 @@ watchEffect(() => {
 </script>
 
 <template>
-  <router-view />
+  <Layout />
 </template>
 
 <style scoped>

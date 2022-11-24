@@ -1,63 +1,63 @@
 <script setup lang="ts">
-import { useTabs } from '@/store/tabs'
-import { RedisConfig } from '@/types/redis'
+import { TabsProps, useTabs } from '@/store/tabs'
 import { EventMessage } from '@/types/vue-web-terminal'
 import { invoke } from '@tauri-apps/api'
 import Terminal from 'vue-web-terminal'
 
-const route = useRoute()
-const router = useRouter()
-const tabsState = useTabs()
-const db = parseInt(route.query.db as string)
-const config = JSON.parse(route.query.config as string) as RedisConfig
+interface TerminalProps {
+  tabItem: TabsProps
+}
 
-onMounted(() => {
-  Terminal.$api.focus()
-})
+const props = defineProps<TerminalProps>()
+
+const tabsState = useTabs()
+
+const handleInitComplete = () => {
+  Terminal.$api.focus(props.tabItem.id)
+}
 
 const onExecCmd = async (key: string, command: string, success: EventMessage, failed: EventMessage) => {
   if (key === 'exit') {
-    await invoke('dis_connection', { id: config.id })
-    tabsState.removeTab(`${config.id}-${db}`)
-    const tab = tabsState.getTab(tabsState.currentActive)
-    router.push({
-      path: tab?.path,
-      query: tab?.query,
-    })
+    await invoke('dis_connection', { id: props.tabItem.id })
+    tabsState.removeTab(`${props.tabItem.id}-${props.tabItem.db}`)
     return
   }
 
-
   invoke<string>('terminal', {
-    id: config.id,
-    db: parseInt(route.query.db as string),
+    id: props.tabItem.id,
+    db: props.tabItem.db,
     values: command.split(' '),
   }).then(res => {
-    console.log(res)
-
     success({
       type: 'normal',
       content: res,
     })
   })
     .catch(error => {
-      console.log(error)
-      success({
-        type: 'normal',
-        content: error,
-      })
+      failed(error)
     })
+
+  Terminal.$api.focus(props.tabItem.id)
 }
 </script>
 
 <template>
   <Terminal
-    :name="config.id"
-    :title="config.name"
-    :context="config.name"
+    :name="tabItem.id"
+    :title="tabItem.name"
+    :context="tabItem.name"
+    :show-header="false"
+    :auto-help="false"
+    :enable-example-hint="false"
+    :init-complete="handleInitComplete"
     @exec-cmd="onExecCmd"
-  />
+  >
+    <template #header />
+  </Terminal>
 </template>
 
 <style lang="css" scoped>
+:deep(.t-window) {
+  background-color: var(--el-bg-color-overlay);
+}
 </style>

@@ -38,15 +38,11 @@ const handleConsole = async () => {
     {
       id: props.config.id,
       key: `${props.config.id}-${props.db}`,
-      name: `terminal | ${props.config.name}`,
+      value: props.config.id,
+      name: `${props.config.name} | redis-cli: ${props.config.port}`,
       db: 0,
-      path: '/terminal',
-      query,
+      type: 'terminal',
       icon: 'mdi:console',
-    },
-    {
-      path: '/terminal',
-      query,
     }
   )
 }

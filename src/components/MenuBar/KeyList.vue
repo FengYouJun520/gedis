@@ -10,7 +10,6 @@ interface Tree {
   children?: Tree[]
 }
 
-const router = useRouter()
 const tabsState = useTabs()
 const configOps = useConfig()
 const treeKeys = computed(() => configOps?.treeKeys.value)
@@ -24,27 +23,16 @@ const handleNodeClick = (data: Tree, node: any) => {
     return
   }
 
-  const path = '/detail'
   const key = `${configOps?.config.id}-${configOps?.db.value}-${data.value}`
-  const query = {
-    id: configOps?.config.id,
-    db: configOps?.db.value,
-    key: data.value,
-  }
 
   tabsState.addTab({
     id: configOps!.config.id,
     db: configOps?.db.value || 0,
+    type: 'detail',
     key,
+    value: data.value,
     name: `${data.value} | ${configOps?.config.name} | DB${configOps?.db.value}`,
-    path,
-    query,
     icon: 'emojione-monotone:key',
-  })
-
-  router.push({
-    path,
-    query,
   })
 }
 

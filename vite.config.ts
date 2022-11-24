@@ -42,7 +42,7 @@ export default defineConfig({
       ],
     }),
     AutoImport({
-      imports: ['vue', 'vue-router', 'pinia', '@vueuse/core'],
+      imports: ['vue', 'pinia', '@vueuse/core'],
       dts: resolve(__dirname, 'src/types/auto-import.d.ts'),
       resolvers: [ElementPlusResolver()],
       eslintrc: {

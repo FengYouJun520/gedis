@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import router from '@/router'
 import { useTabs } from '@/store/tabs'
 import { AddKeyInfo } from '@/types/redis'
 import { invoke } from '@tauri-apps/api'
@@ -56,24 +55,13 @@ const handleConfirm = async () => {
 
     // 添加新的选项卡并且跳转
     if (treeKeysOps) {
-      const query = {
-        id: treeKeysOps.config.id,
-        db: treeKeysOps.db.value,
-        key: keyModel.value.key,
-      }
-
       tabsState.addTab({
         id: treeKeysOps.config.id,
         db: treeKeysOps.db.value,
+        type: 'detail',
         key: `${treeKeysOps.config.id}-${treeKeysOps.db.value}-${keyModel.value.key}`,
+        value: keyModel.value.key,
         name: keyModel.value.key,
-        path: '/detail',
-        query,
-      })
-
-      router.push({
-        path: '/detail',
-        query,
       })
     }
 
