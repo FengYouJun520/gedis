@@ -21,9 +21,7 @@
     "uuid": "^9.0.0",
     "vue": "^3.2.37",
     "vue-router": "^4.1.6",
-    "xterm": "^5.0.0",
-    "xterm-addon-attach": "^0.7.0",
-    "xterm-addon-fit": "^0.6.0"
+    "vue-web-terminal": "3"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.2.0",

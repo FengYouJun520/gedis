@@ -1,56 +1,62 @@
 <script setup lang="ts">
+import { useTabs } from '@/store/tabs'
 import { RedisConfig } from '@/types/redis'
-import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
-import { AttachAddon } from 'xterm-addon-attach'
+import { EventMessage } from '@/types/vue-web-terminal'
+import { invoke } from '@tauri-apps/api'
+import Terminal from 'vue-web-terminal'
 
 const route = useRoute()
-console.log(JSON.parse(route.query.config as string))
+const router = useRouter()
+const tabsState = useTabs()
+const db = parseInt(route.query.db as string)
 const config = JSON.parse(route.query.config as string) as RedisConfig
 
-const terminalRef = ref<HTMLDivElement|null>(null)
-const fitAddon = new FitAddon()
-const websocket = useWebSocket('ws://127.0.0.1:8848', {
-  onError: (ws, event) => {
-    ElMessageBox.confirm('websocket连接失败，请检查网络设置', {
-      type: 'error',
-      title: 'websocket连接',
-      confirmButtonText: '确定',
-      showCancelButton: false,
-    })
-  },
-})
-const attachAddon = new AttachAddon(websocket.ws.value!, {})
-
-const term = new Terminal({
-  tabStopWidth: 4,
-  cursorBlink: true,
-  cursorStyle: 'block',
-  theme: {
-    background: '#141414',
-  },
-  windowOptions: {
-  },
-})
-
 onMounted(() => {
-  if (terminalRef.value) {
-    term.loadAddon(fitAddon)
-    term.loadAddon(attachAddon)
-    term.open(terminalRef.value)
-    term.focus()
-    fitAddon.fit()
-    term.write(`\x1B[1;3;31m${config.name}\x1B[0m $ `)
-  }
+  Terminal.$api.focus()
 })
 
-onUnmounted(() => {
-  term.dispose()
-})
+const onExecCmd = async (key: string, command: string, success: EventMessage, failed: EventMessage) => {
+  if (key === 'exit') {
+    await invoke('dis_connection', { id: config.id })
+    tabsState.removeTab(`${config.id}-${db}`)
+    const tab = tabsState.getTab(tabsState.currentActive)
+    router.push({
+      path: tab?.path,
+      query: tab?.query,
+    })
+    return
+  }
+
+
+  invoke<string>('terminal', {
+    id: config.id,
+    db: parseInt(route.query.db as string),
+    values: command.split(' '),
+  }).then(res => {
+    console.log(res)
+
+    success({
+      type: 'normal',
+      content: res,
+    })
+  })
+    .catch(error => {
+      console.log(error)
+      success({
+        type: 'normal',
+        content: error,
+      })
+    })
+}
 </script>
 
 <template>
-  <div ref="terminalRef" />
+  <Terminal
+    :name="config.id"
+    :title="config.name"
+    :context="config.name"
+    @exec-cmd="onExecCmd"
+  />
 </template>
 
 <style lang="css" scoped>

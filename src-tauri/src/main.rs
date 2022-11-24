@@ -43,7 +43,8 @@ fn main() {
             get_key_info,
             rename_key,
             set_key,
-            set_key_ttl
+            set_key_ttl,
+            terminal
         ])
         .manage(RedisState::default())
         .run(tauri::generate_context!())
