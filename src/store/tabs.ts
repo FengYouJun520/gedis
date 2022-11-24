@@ -48,6 +48,9 @@ export const useTabs = defineStore('tabs', {
     },
     // 删除当前激活的选项卡
     removeTab(key: string) {
+      if (key === 'home') {
+        return
+      }
       const index = this.tabs.findIndex(t => t.key === key)
       if (index === -1) {
         return

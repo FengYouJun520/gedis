@@ -6,6 +6,14 @@ onMounted(() => {
   window.addEventListener('contextmenu', event => {
     event.preventDefault()
   })
+
+  window.addEventListener('keydown', event => {
+    if (event.key === 'F5' ||
+     event.ctrlKey && event.key === 'r' ||
+     event.ctrlKey && event.key === 'F5') {
+      event.preventDefault()
+    }
+  })
 })
 
 const uiState = useUiState()

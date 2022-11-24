@@ -124,74 +124,74 @@ const handleCommand = (command: string) => {
           </template>
         </template>
       </el-tree>
-
-      <!-- contextmenu -->
-      <div
-        v-show="showContextmenu"
-        ref="contextmenuRef"
-        class="tree-contextmenu-ops"
-      >
-        <div>
-          <!-- folder -->
-          <template v-if="!contextmenuData?.node.isLeaf">
-            <div
-              class="contextmenu-item"
-              flex
-              items-center
-              space-x2
-              justify-start
-              @click="handleCommand('add-key')"
-            >
-              <i class="material-symbols:content-copy-outline" />
-              <span>
-                添加键
-              </span>
-            </div>
-            <div
-              class="contextmenu-item"
-              flex
-              items-center
-              space-x2
-              justify-start
-              @click="handleCommand('delete-key')"
-            >
-              <i class="material-symbols:delete-outline" />
-              <span>
-                删除
-              </span>
-            </div>
-          </template>
-
-          <!-- key -->
-          <template v-else>
-            <div
-              class="contextmenu-item"
-              flex
-              items-center
-              space-x2
-              @click="handleCommand('copy-key')"
-            >
-              <i class="material-symbols:content-copy-outline" />
-              <span>
-                复制
-              </span>
-            </div>
-            <div
-              class="contextmenu-item"
-              flex
-              items-center
-              space-x2
-              @click="handleCommand('delete-key')"
-            >
-              <i class="material-symbols:delete-outline" />
-              <span>
-                删除
-              </span>
-            </div>
-          </template>
-        </div>
-      </div>
     </el-scrollbar>
+
+    <!-- contextmenu -->
+    <div
+      v-show="showContextmenu"
+      ref="contextmenuRef"
+      class="tree-contextmenu-ops"
+    >
+      <div>
+        <!-- folder -->
+        <template v-if="!contextmenuData?.node.isLeaf">
+          <div
+            class="contextmenu-item"
+            flex
+            items-center
+            space-x2
+            justify-start
+            @click="handleCommand('add-key')"
+          >
+            <i class="material-symbols:content-copy-outline" />
+            <span>
+              添加键
+            </span>
+          </div>
+          <div
+            class="contextmenu-item"
+            flex
+            items-center
+            space-x2
+            justify-start
+            @click="handleCommand('delete-key')"
+          >
+            <i class="material-symbols:delete-outline" />
+            <span>
+              删除
+            </span>
+          </div>
+        </template>
+
+        <!-- key -->
+        <template v-else>
+          <div
+            class="contextmenu-item"
+            flex
+            items-center
+            space-x2
+            @click="handleCommand('copy-key')"
+          >
+            <i class="material-symbols:content-copy-outline" />
+            <span>
+              复制
+            </span>
+          </div>
+          <div
+            class="contextmenu-item"
+            flex
+            items-center
+            space-x2
+            @click="handleCommand('delete-key')"
+          >
+            <i class="material-symbols:delete-outline" />
+            <span>
+              删除
+            </span>
+          </div>
+        </template>
+      </div>
+    </div>
   </div>
 </template>
 

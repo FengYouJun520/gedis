@@ -17,6 +17,15 @@ const handleRemove = (name: string) => {
   tabsState.removeTab(name)
 }
 
+onMounted(async () => {
+  window.addEventListener('keydown', event => {
+    event.stopPropagation()
+    if (event.ctrlKey && event.key === 'w') {
+      tabsState.removeTab(tabsState.currentActive)
+    }
+  })
+})
+
 
 const handleCommand = (key: string, command: string) => {
   switch (command) {
