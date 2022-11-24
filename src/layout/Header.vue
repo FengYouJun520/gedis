@@ -17,9 +17,9 @@ const handleClick = (pane: TabsPaneContext, _event: MouseEvent) => {
 }
 
 const handleRemove = (name: string) => {
-  const tabItem = tabsState.getTab(name)
   tabsState.removeTab(name)
 
+  const tabItem = tabsState.getTab(tabsState.currentActive)
   if (!tabsState.exist) {
     router.push('/')
   } else {
