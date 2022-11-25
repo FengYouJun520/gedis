@@ -32,7 +32,7 @@ export interface TerminalProps {
 export interface Message {
   // 必填，消息内容，不同消息格式的内容格式不一样，具体规则见下文
   // string、json、object、array
-  content: string | Record<string, any> | any[]
+  content: string | Record<string, any> | any[] | any
   // 消息格式类型，默认值为normal
   type?: string
   // 消息级别，仅类型为normal有效, success、error、system、info、warning

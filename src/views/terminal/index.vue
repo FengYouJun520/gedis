@@ -10,6 +10,7 @@ interface TerminalProps {
 
 const props = defineProps<TerminalProps>()
 
+const argsRegex = /[\s*]|"(.*)"/
 const tabsState = useTabs()
 
 const handleInitComplete = () => {
@@ -17,21 +18,35 @@ const handleInitComplete = () => {
 }
 
 const onExecCmd = async (key: string, command: string, success: EventMessage, failed: EventMessage) => {
+  const args = command.split(argsRegex).filter(arg => arg && arg !== '')
+
   if (key === 'exit') {
     await invoke('dis_connection', { id: props.tabItem.id })
     tabsState.removeTab(`${props.tabItem.id}-${props.tabItem.db}`)
     return
   }
 
-  invoke<string>('terminal', {
+  invoke<string| any[] | any[][]>('terminal', {
     id: props.tabItem.id,
-    db: props.tabItem.db,
-    values: command.split(' '),
+    args,
   }).then(res => {
-    success({
-      type: 'normal',
-      content: res,
-    })
+    if (typeof res === 'string') {
+      success({
+        type: 'normal',
+        content: res,
+      })
+    } else {
+      success({
+        type: 'normal',
+        content: res[0],
+      })
+      for (const item of res[1] as string[]) {
+        success({
+          type: 'normal',
+          content: item,
+        })
+      }
+    }
   })
     .catch(error => {
       failed(error)
