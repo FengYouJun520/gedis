@@ -6,7 +6,7 @@ use tauri::async_runtime::Mutex;
 #[derive(Default)]
 pub struct Redis {
     configs: HashMap<String, RedisConfig>,
-    connections: HashMap<String, redis::aio::Connection>,
+    connections: HashMap<String, redis::aio::MultiplexedConnection>,
     logs: HashMap<String, RedisLog>,
 }
 
@@ -25,7 +25,7 @@ pub struct RedisState(pub Mutex<Redis>);
 impl Redis {
     pub fn add_connection(
         &mut self,
-        con: redis::aio::Connection,
+        con: redis::aio::MultiplexedConnection,
         config: RedisConfig,
     ) -> Result<()> {
         self.connections.insert(config.id.to_string(), con);
@@ -54,12 +54,12 @@ impl Redis {
         }
     }
 
-    pub fn get_con(&self, id: &str) -> Result<&redis::aio::Connection> {
+    pub fn get_con(&self, id: &str) -> Result<&redis::aio::MultiplexedConnection> {
         let res = self.connections.get(id).context("该连接不存在")?;
         Ok(res)
     }
 
-    pub fn get_con_mut(&mut self, id: &str) -> Result<&mut redis::aio::Connection> {
+    pub fn get_con_mut(&mut self, id: &str) -> Result<&mut redis::aio::MultiplexedConnection> {
         let res = self.connections.get_mut(id).context("该连接不存在")?;
         Ok(res)
     }

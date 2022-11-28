@@ -11,7 +11,7 @@ pub async fn test_connection(config: RedisConfig) -> Result<()> {
     let url = config.get_url();
     info!(?url);
     let client = redis::Client::open(url)?;
-    let mut con = client.get_async_connection().await?;
+    let mut con = client.get_multiplexed_async_connection().await?;
     redis::cmd("PING").query_async(&mut con).await?;
 
     info!(?config, "连接成功");
@@ -23,7 +23,7 @@ pub async fn test_connection(config: RedisConfig) -> Result<()> {
 pub async fn connection(state: State<'_, RedisState>, config: RedisConfig) -> Result<()> {
     let client = redis::Client::open(config.get_url())?;
     let mut con = client
-        .get_async_connection()
+        .get_multiplexed_async_connection()
         .await
         .map_err(|err| anyhow::format_err!(err))?;
 
@@ -93,11 +93,8 @@ pub async fn get_info(state: State<'_, RedisState>, id: String) -> Result<HashMa
     let mut info_result: HashMap<String, String> = HashMap::new();
 
     for entry in info.iter() {
-        match redis::from_redis_value(&entry.1) {
-            Ok(val) => {
-                info_result.insert(entry.0.to_string(), val);
-            }
-            Err(_) => {}
+        if let Ok(val) = redis::from_redis_value(entry.1) {
+            info_result.insert(entry.0.to_string(), val);
         }
     }
 

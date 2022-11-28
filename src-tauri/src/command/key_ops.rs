@@ -60,7 +60,7 @@ pub async fn del_key_by_value(
         .await
         .map_err(|err| format!("获取键类型失败: {}", err))?;
 
-    let _: () = match typ.as_str() {
+    match typ.as_str() {
         "string" => conn.del(&key).await,
         "list" => conn.lrem(&key, 1, &value).await,
         "set" => conn.srem(&key, &value).await,
@@ -314,7 +314,7 @@ pub async fn set_key(
             let value: Vec<(String, String)> = Vec::from_iter(value.into_iter());
             conn.xadd(
                 &keyinfo.key,
-                keyinfo.id.clone().unwrap_or("*".to_string()),
+                keyinfo.id.clone().unwrap_or_else(|| "*".to_string()),
                 &value,
             )
             .await

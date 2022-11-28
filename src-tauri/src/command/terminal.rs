@@ -60,7 +60,8 @@ pub async fn terminal(
                 };
                 result.push(val);
             }
-            return Ok(json!(result));
+
+            Ok(json!(result))
         }
         redis::Value::Status(status) => Ok(json!(status)),
         redis::Value::Okay => Ok(json!("OK")),
