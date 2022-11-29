@@ -17,8 +17,8 @@ pub async fn del_key(
     db: usize,
     keys: Vec<String>,
 ) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let conn = client.get_con_mut(&id)?;
+    let client = state.0.lock().await;
+    let mut con = client.get_con(&id).await?;
 
     redis::pipe()
         .atomic()
@@ -26,7 +26,7 @@ pub async fn del_key(
         .arg(db)
         .ignore()
         .del(&keys)
-        .query_async(conn)
+        .query_async(&mut con)
         .await
         .context(format!("删除多个键失败, id: {id}"))?;
 
@@ -47,8 +47,8 @@ pub async fn del_key_by_value(
     let value = value.unwrap_or_default();
     info!(?key, ?value);
 
-    let mut client = state.0.lock().await;
-    let conn = client.get_con_mut(&id)?;
+    let client = state.0.lock().await;
+    let mut con = client.get_con(&id).await?;
 
     let (_, typ): ((), String) = redis::pipe()
         .atomic()
@@ -56,17 +56,17 @@ pub async fn del_key_by_value(
         .arg(db)
         .cmd("type")
         .arg(&key)
-        .query_async(conn)
+        .query_async(&mut con)
         .await
         .map_err(|err| format!("获取键类型失败: {}", err))?;
 
     match typ.as_str() {
-        "string" => conn.del(&key).await,
-        "list" => conn.lrem(&key, 1, &value).await,
-        "set" => conn.srem(&key, &value).await,
-        "zset" => conn.zrem(&key, &value).await,
-        "hash" => conn.hdel(&key, &value).await,
-        "stream" => conn.xdel(&key, &[value]).await,
+        "string" => con.del(&key).await,
+        "list" => con.lrem(&key, 1, &value).await,
+        "set" => con.srem(&key, &value).await,
+        "zset" => con.zrem(&key, &value).await,
+        "hash" => con.hdel(&key, &value).await,
+        "stream" => con.xdel(&key, &[value]).await,
         _ => return Err(format!("不支持的类型: {}", typ).into()),
     }?;
 
@@ -79,8 +79,8 @@ pub async fn del_key_by_value(
 #[instrument]
 #[tauri::command]
 pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: usize) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let conn = client.get_con_mut(&id)?;
+    let client = state.0.lock().await;
+    let mut con = client.get_con(&id).await?;
 
     redis::pipe()
         .atomic()
@@ -88,7 +88,7 @@ pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: usize) -> 
         .arg(db)
         .ignore()
         .cmd("FLUSHDB")
-        .query_async(conn)
+        .query_async(&mut con)
         .await
         .context(format!("清空键失败, id: {id}"))?;
 
@@ -104,16 +104,16 @@ pub async fn get_keys_by_db(
     id: String,
     db: usize,
 ) -> Result<Vec<String>> {
-    let mut client = state.0.lock().await;
-    let conn = client.get_con_mut(&id)?;
+    let client = state.0.lock().await;
+    let mut con = client.get_con(&id).await?;
 
     redis::cmd("SELECT")
         .arg(db)
-        .query_async(conn)
+        .query_async(&mut con)
         .await
         .map_err(|err| err.to_string())?;
 
-    let mut iter: AsyncIter<'_, String> = conn.scan().await.map_err(|err| err.to_string())?;
+    let mut iter: AsyncIter<'_, String> = con.scan().await.map_err(|err| err.to_string())?;
 
     let mut keys = vec![];
     while let Some(val) = iter.next_item().await.to_owned() {
@@ -132,12 +132,12 @@ pub async fn get_key_info(
     db: i32,
     key: String,
 ) -> Result<KeyInfo> {
-    let mut client = state.0.lock().await;
-    let conn = client.get_con_mut(&id)?;
+    let client = state.0.lock().await;
+    let mut con = client.get_con(&id).await?;
 
     redis::cmd("SELECT")
         .arg(db)
-        .query_async(conn)
+        .query_async(&mut con)
         .await
         .map_err(|err| err.to_string())?;
 
@@ -146,7 +146,7 @@ pub async fn get_key_info(
         .cmd("type")
         .arg(&key)
         .ttl(&key)
-        .query_async(conn)
+        .query_async(&mut con)
         .await
         .map_err(|err| err.to_string())?;
 
@@ -160,12 +160,12 @@ pub async fn get_key_info(
 
     match typ.as_str() {
         "string" => {
-            let val = conn.get(&key).await.map_err(|err| err.to_string())?;
+            let val = con.get(&key).await.map_err(|err| err.to_string())?;
             keyinfo.value = RedisValue::String(val);
         }
         "list" => {
-            let count: usize = conn.llen(&key).await.map_err(|err| err.to_string())?;
-            let values: Vec<String> = conn
+            let count: usize = con.llen(&key).await.map_err(|err| err.to_string())?;
+            let values: Vec<String> = con
                 .lrange(&key, 0, (count as isize) - 1)
                 .await
                 .map_err(|err| err.to_string())?;
@@ -173,8 +173,8 @@ pub async fn get_key_info(
             keyinfo.value = RedisValue::List(values);
         }
         "set" => {
-            let count: usize = conn.scard(&key).await.map_err(|err| err.to_string())?;
-            let mut iter: AsyncIter<'_, String> = conn
+            let count: usize = con.scard(&key).await.map_err(|err| err.to_string())?;
+            let mut iter: AsyncIter<'_, String> = con
                 .sscan_match(&key, "*")
                 .await
                 .map_err(|err| err.to_string())?;
@@ -186,8 +186,8 @@ pub async fn get_key_info(
             keyinfo.value = RedisValue::Set(values);
         }
         "zset" => {
-            let count: usize = conn.zcard(&key).await.map_err(|err| err.to_string())?;
-            let data: Vec<(String, f64)> = conn
+            let count: usize = con.zcard(&key).await.map_err(|err| err.to_string())?;
+            let data: Vec<(String, f64)> = con
                 .zrange_withscores(&key, 0, (count as isize) - 1)
                 .await
                 .map_err(|err| err.to_string())?;
@@ -199,8 +199,8 @@ pub async fn get_key_info(
             keyinfo.value = RedisValue::ZSet(values);
         }
         "hash" => {
-            let count: usize = conn.hlen(&key).await.map_err(|err| err.to_string())?;
-            let mut iter: AsyncIter<'_, (String, String)> = conn
+            let count: usize = con.hlen(&key).await.map_err(|err| err.to_string())?;
+            let mut iter: AsyncIter<'_, (String, String)> = con
                 .hscan_match(&key, "*")
                 .await
                 .map_err(|err| err.to_string())?;
@@ -213,8 +213,8 @@ pub async fn get_key_info(
             keyinfo.value = RedisValue::Hash(values);
         }
         "stream" => {
-            let count: usize = conn.xlen(&key).await.map_err(|err| err.to_string())?;
-            let replay: redis::streams::StreamRangeReply = conn
+            let count: usize = con.xlen(&key).await.map_err(|err| err.to_string())?;
+            let replay: redis::streams::StreamRangeReply = con
                 .xrevrange_count(&key, "+", "-", 200)
                 .await
                 .map_err(|err| err.to_string())?;
@@ -253,15 +253,15 @@ pub async fn rename_key(
     key: String,
     new_key: String,
 ) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let conn = client.get_con_mut(&id)?;
+    let client = state.0.lock().await;
+    let mut con = client.get_con(&id).await?;
 
     redis::pipe()
         .atomic()
         .cmd("SELECT")
         .arg(db)
         .rename_nx(&key, &new_key)
-        .query_async(conn)
+        .query_async(&mut con)
         .await
         .map_err(|err| err.to_string())?;
 
@@ -279,21 +279,21 @@ pub async fn set_key(
     db: i32,
     keyinfo: AddKeyInfo,
 ) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let conn = client.get_con_mut(&id)?;
+    let client = state.0.lock().await;
+    let mut con = client.get_con(&id).await?;
 
     redis::cmd("SELECT")
         .arg(db)
-        .query_async(conn)
+        .query_async(&mut con)
         .await
         .map_err(|err| err.to_string())?;
 
     match keyinfo.r#type.as_str() {
-        "string" => conn.set(&keyinfo.key, &keyinfo.value).await,
-        "list" => conn.lpush(&keyinfo.key, &keyinfo.value).await,
-        "set" => conn.sadd(&keyinfo.key, &keyinfo.value).await,
+        "string" => con.set(&keyinfo.key, &keyinfo.value).await,
+        "list" => con.lpush(&keyinfo.key, &keyinfo.value).await,
+        "set" => con.sadd(&keyinfo.key, &keyinfo.value).await,
         "zset" => {
-            conn.zadd(
+            con.zadd(
                 &keyinfo.key,
                 &keyinfo.value,
                 keyinfo.score.unwrap_or_default(),
@@ -301,7 +301,7 @@ pub async fn set_key(
             .await
         }
         "hash" => {
-            conn.hset_nx(
+            con.hset_nx(
                 &keyinfo.key,
                 keyinfo.field.clone().unwrap_or_default(),
                 &keyinfo.value,
@@ -312,7 +312,7 @@ pub async fn set_key(
             let value: HashMap<String, String> =
                 serde_json::from_str(&keyinfo.value).map_err(|err| err.to_string())?;
             let value: Vec<(String, String)> = Vec::from_iter(value.into_iter());
-            conn.xadd(
+            con.xadd(
                 &keyinfo.key,
                 keyinfo.id.clone().unwrap_or_else(|| "*".to_string()),
                 &value,
@@ -336,17 +336,17 @@ pub async fn set_key_ttl(
     key: String,
     ttl: i64,
 ) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let conn = client.get_con_mut(&id)?;
+    let client = state.0.lock().await;
+    let mut con = client.get_con(&id).await?;
 
     redis::cmd("SELECT")
         .arg(db)
-        .query_async(conn)
+        .query_async(&mut con)
         .await
         .map_err(|err| err.to_string())?;
 
     let mut iter: AsyncIter<'_, String> =
-        conn.scan_match(&key).await.map_err(|err| err.to_string())?;
+        con.scan_match(&key).await.map_err(|err| err.to_string())?;
 
     let mut keys = vec![];
     while let Some(val) = iter.next_item().await {
@@ -355,9 +355,9 @@ pub async fn set_key_ttl(
 
     for key in keys {
         if ttl == -1 {
-            conn.persist(key).await.map_err(|err| err.to_string())?;
+            con.persist(key).await.map_err(|err| err.to_string())?;
         } else {
-            conn.expire(key, ttl as usize)
+            con.expire(key, ttl as usize)
                 .await
                 .map_err(|err| err.to_string())?;
         }

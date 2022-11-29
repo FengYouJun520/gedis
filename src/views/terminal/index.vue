@@ -2,6 +2,7 @@
 import { TabsProps, useTabs } from '@/store/tabs'
 import { EventMessage } from '@/types/vue-web-terminal'
 import { invoke } from '@tauri-apps/api'
+import { ar } from 'element-plus/es/locale'
 import Terminal from 'vue-web-terminal'
 
 interface TerminalProps {
@@ -9,6 +10,7 @@ interface TerminalProps {
 }
 
 const props = defineProps<TerminalProps>()
+const db = ref(props.tabItem.db)
 
 const argsRegex = /[\s*]|"(.*)"/
 const tabsState = useTabs()
@@ -26,8 +28,13 @@ const onExecCmd = async (key: string, command: string, success: EventMessage, fa
     return
   }
 
+  if (args.length > 1 && args[0].toLowerCase() === 'select') {
+    db.value = parseInt(args[1])
+  }
+
   invoke<string| any[] | any[][]>('terminal', {
     id: props.tabItem.id,
+    db: unref(db),
     args,
   }).then(res => {
     if (typeof res === 'string') {

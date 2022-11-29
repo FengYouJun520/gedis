@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import MenuBar from '@/components/MenuBar/index.vue'
-import { useTabs } from '@/store/tabs'
 import Tabs from './Tabs.vue'
-
-const tabsState = useTabs()
 </script>
 
 <template>

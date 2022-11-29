@@ -9,7 +9,6 @@ import Terminal from '@/views/terminal/index.vue'
 const tabsState = useTabs()
 
 const handleClick = (pane: TabsPaneContext, _event: MouseEvent) => {
-  const tabItem = tabsState.getTab(pane.paneName?.toString() || '')
   tabsState.setActive(pane.paneName?.toString() || '')
 }
 
