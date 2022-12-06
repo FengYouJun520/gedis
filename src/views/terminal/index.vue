@@ -2,7 +2,6 @@
 import { TabsProps, useTabs } from '@/store/tabs'
 import { EventMessage } from '@/types/vue-web-terminal'
 import { invoke } from '@tauri-apps/api'
-import { ar } from 'element-plus/es/locale'
 import Terminal from 'vue-web-terminal'
 
 interface TerminalProps {

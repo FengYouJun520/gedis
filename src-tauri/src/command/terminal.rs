@@ -1,3 +1,4 @@
+use redis::FromRedisValue;
 use serde_json::json;
 use tauri::State;
 use tracing::info;
@@ -51,10 +52,7 @@ pub async fn terminal(
                         json!(String::from_utf8(data.to_owned()).unwrap_or_default())
                     }
                     redis::Value::Bulk(ref data) => {
-                        let mut result: Vec<String> = vec![];
-                        for val in data {
-                            result.push(redis::from_redis_value(val).unwrap_or_default());
-                        }
+                        let result: Vec<String> = FromRedisValue::from_redis_values(&data)?;
                         json!(result)
                     }
                     redis::Value::Status(status) => json!(status),
