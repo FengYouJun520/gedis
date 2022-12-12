@@ -6,7 +6,7 @@ use tauri::async_runtime::Mutex;
 #[derive(Default)]
 pub struct Redis {
     configs: HashMap<String, RedisConfig>,
-    connections: HashMap<String, redis::Client>,
+    connections: HashMap<String, redis::aio::MultiplexedConnection>,
     logs: HashMap<String, RedisLog>,
 }
 
@@ -23,20 +23,24 @@ impl Debug for Redis {
 pub struct RedisState(pub Mutex<Redis>);
 
 impl Redis {
-    pub fn add_client(&mut self, client: redis::Client, config: RedisConfig) -> Result<()> {
+    pub fn add_con(
+        &mut self,
+        client: redis::aio::MultiplexedConnection,
+        config: RedisConfig,
+    ) -> Result<()> {
         self.connections.insert(config.id.to_string(), client);
         self.configs.insert(config.id.to_string(), config);
 
         Ok(())
     }
 
-    pub fn remove_client(&mut self, id: &str) -> Result<()> {
+    pub fn remove_con(&mut self, id: &str) -> Result<()> {
         self.connections.remove(id);
         self.configs.remove(id);
         Ok(())
     }
 
-    pub fn remove_client_all(&mut self) -> Result<()> {
+    pub fn remove_con_all(&mut self) -> Result<()> {
         self.connections.clear();
         self.configs.clear();
         Ok(())
@@ -50,9 +54,11 @@ impl Redis {
         }
     }
 
-    pub async fn get_con(&self, id: &str) -> Result<redis::aio::Connection> {
-        let client = self.connections.get(id).context("该连接不存在")?;
-        let con = client.get_async_connection().await?;
+    pub async fn get_con_mut(
+        &mut self,
+        id: &str,
+    ) -> Result<&mut redis::aio::MultiplexedConnection> {
+        let con = self.connections.get_mut(id).context("该连接不存在")?;
         Ok(con)
     }
 

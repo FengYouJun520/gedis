@@ -18,7 +18,6 @@ const fetchInfo = async () => {
   // 连接成功
   // 获取客户端信息
   const info = await invoke<Record<string, string>>('get_info', { id: props.tabItem.id })
-  console.log(info)
 }
 
 onMounted(async () => {

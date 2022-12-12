@@ -28,11 +28,6 @@ const handleHome = async () => {
 }
 
 const handleConsole = async () => {
-  const query = {
-    config: JSON.stringify(props.config),
-    db: props.db,
-  }
-
   await configOps?.connection(
     props.config,
     {

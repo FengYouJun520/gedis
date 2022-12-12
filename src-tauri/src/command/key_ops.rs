@@ -17,8 +17,8 @@ pub async fn del_key(
     db: usize,
     keys: Vec<String>,
 ) -> Result<()> {
-    let client = state.0.lock().await;
-    let mut con = client.get_con(&id).await?;
+    let mut client = state.0.lock().await;
+    let con = client.get_con_mut(&id).await?;
 
     redis::pipe()
         .atomic()
@@ -26,7 +26,7 @@ pub async fn del_key(
         .arg(db)
         .ignore()
         .del(&keys)
-        .query_async(&mut con)
+        .query_async(con)
         .await
         .context(format!("删除多个键失败, id: {id}"))?;
 
@@ -47,8 +47,8 @@ pub async fn del_key_by_value(
     let value = value.unwrap_or_default();
     info!(?key, ?value);
 
-    let client = state.0.lock().await;
-    let mut con = client.get_con(&id).await?;
+    let mut client = state.0.lock().await;
+    let con = client.get_con_mut(&id).await?;
 
     let (_, typ): ((), String) = redis::pipe()
         .atomic()
@@ -56,7 +56,7 @@ pub async fn del_key_by_value(
         .arg(db)
         .cmd("type")
         .arg(&key)
-        .query_async(&mut con)
+        .query_async(con)
         .await
         .map_err(|err| format!("获取键类型失败: {}", err))?;
 
@@ -79,8 +79,8 @@ pub async fn del_key_by_value(
 #[instrument]
 #[tauri::command]
 pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: usize) -> Result<()> {
-    let client = state.0.lock().await;
-    let mut con = client.get_con(&id).await?;
+    let mut client = state.0.lock().await;
+    let con = client.get_con_mut(&id).await?;
 
     redis::pipe()
         .atomic()
@@ -88,7 +88,7 @@ pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: usize) -> 
         .arg(db)
         .ignore()
         .cmd("FLUSHDB")
-        .query_async(&mut con)
+        .query_async(con)
         .await
         .context(format!("清空键失败, id: {id}"))?;
 
@@ -104,12 +104,12 @@ pub async fn get_keys_by_db(
     id: String,
     db: usize,
 ) -> Result<Vec<String>> {
-    let client = state.0.lock().await;
-    let mut con = client.get_con(&id).await?;
+    let mut client = state.0.lock().await;
+    let con = client.get_con_mut(&id).await?;
 
     redis::cmd("SELECT")
         .arg(db)
-        .query_async(&mut con)
+        .query_async(con)
         .await
         .map_err(|err| err.to_string())?;
 
@@ -132,12 +132,12 @@ pub async fn get_key_info(
     db: i32,
     key: String,
 ) -> Result<KeyInfo> {
-    let client = state.0.lock().await;
-    let mut con = client.get_con(&id).await?;
+    let mut client = state.0.lock().await;
+    let con = client.get_con_mut(&id).await?;
 
     redis::cmd("SELECT")
         .arg(db)
-        .query_async(&mut con)
+        .query_async(con)
         .await
         .map_err(|err| err.to_string())?;
 
@@ -146,7 +146,7 @@ pub async fn get_key_info(
         .cmd("type")
         .arg(&key)
         .ttl(&key)
-        .query_async(&mut con)
+        .query_async(con)
         .await
         .map_err(|err| err.to_string())?;
 
@@ -253,15 +253,15 @@ pub async fn rename_key(
     key: String,
     new_key: String,
 ) -> Result<()> {
-    let client = state.0.lock().await;
-    let mut con = client.get_con(&id).await?;
+    let mut client = state.0.lock().await;
+    let con = client.get_con_mut(&id).await?;
 
     redis::pipe()
         .atomic()
         .cmd("SELECT")
         .arg(db)
         .rename_nx(&key, &new_key)
-        .query_async(&mut con)
+        .query_async(con)
         .await
         .map_err(|err| err.to_string())?;
 
@@ -279,12 +279,12 @@ pub async fn set_key(
     db: i32,
     keyinfo: AddKeyInfo,
 ) -> Result<()> {
-    let client = state.0.lock().await;
-    let mut con = client.get_con(&id).await?;
+    let mut client = state.0.lock().await;
+    let con = client.get_con_mut(&id).await?;
 
     redis::cmd("SELECT")
         .arg(db)
-        .query_async(&mut con)
+        .query_async(con)
         .await
         .map_err(|err| err.to_string())?;
 
@@ -336,12 +336,12 @@ pub async fn set_key_ttl(
     key: String,
     ttl: i64,
 ) -> Result<()> {
-    let client = state.0.lock().await;
-    let mut con = client.get_con(&id).await?;
+    let mut client = state.0.lock().await;
+    let con = client.get_con_mut(&id).await?;
 
     redis::cmd("SELECT")
         .arg(db)
-        .query_async(&mut con)
+        .query_async(con)
         .await
         .map_err(|err| err.to_string())?;
 

@@ -79,7 +79,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          xterm: ['xterm'],
         },
       },
     },

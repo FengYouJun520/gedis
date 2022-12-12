@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTabs } from '@/store/tabs'
-import type { TabsPaneContext } from 'element-plus'
+import type { TabPaneName, TabsPaneContext } from 'element-plus'
 import Home from '@/views/home/index.vue'
 import Info from '@/views/info/index.vue'
 import Detail from '@/views/detail/index.vue'
@@ -8,12 +8,14 @@ import Terminal from '@/views/terminal/index.vue'
 
 const tabsState = useTabs()
 
-const handleClick = (pane: TabsPaneContext, _event: MouseEvent) => {
+const handleClick = (pane: TabsPaneContext, _event: Event) => {
+  console.log(toRaw(pane))
+
   tabsState.setActive(pane.paneName?.toString() || '')
 }
 
-const handleRemove = (name: string) => {
-  tabsState.removeTab(name)
+const handleRemove = (name: TabPaneName) => {
+  tabsState.removeTab(name.toString())
 }
 
 onMounted(async () => {
