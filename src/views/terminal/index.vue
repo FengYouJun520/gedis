@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { TabsProps, useTabs } from '@/store/tabs'
 import { invoke } from '@tauri-apps/api'
-import type { ElInput, ElScrollbar } from 'element-plus'
+import type { ElAutocomplete, ElScrollbar } from 'element-plus'
 import { v4 } from 'uuid'
 
 interface TerminalProps {
@@ -17,6 +17,7 @@ const props = defineProps<TerminalProps>()
 const db = ref(props.tabItem.db)
 const scrollRef = ref<InstanceType<typeof ElScrollbar> | null>(null)
 const divRef = ref<InstanceType<typeof HTMLDivElement> | null>(null)
+const autoRef = ref<InstanceType<typeof ElAutocomplete> | null>(null)
 
 const argsRegex = /[\s*]|"(.*)"/
 const tabsState = useTabs()
@@ -31,6 +32,21 @@ const clearContent = () => {
   content.value = ''
 }
 
+onMounted(() => {
+  nextTick(()=>{
+    autoRef.value?.focus()
+  })
+})
+
+const handleFetchSuggestions = (query: string, cb: Function) => {
+  cb([{ value: 'get KEY ...' }])
+}
+const backBottom = () => {
+  nextTick(() => {
+    scrollRef.value?.scrollTo({ top: divRef.value?.scrollHeight })
+  })
+}
+
 
 const onExecCmd = async () => {
   switch (unref(content)) {
@@ -38,18 +54,12 @@ const onExecCmd = async () => {
     await invoke('dis_connection', { id: props.tabItem.id })
     tabsState.removeTab(`${props.tabItem.id}-${props.tabItem.db}`)
     clearContent()
-    nextTick(() => {
-      console.log(scrollRef.value)
-      scrollRef.value?.scrollTo({ top: divRef.value?.scrollHeight })
-    })
+    backBottom()
     return
   case 'clear':
     messages.value = []
     clearContent()
-    nextTick(() => {
-      console.log(scrollRef.value)
-      scrollRef.value?.scrollTo({ top: divRef.value?.scrollHeight })
-    })
+    backBottom()
     return
   default:
     break
@@ -76,18 +86,12 @@ const onExecCmd = async () => {
         messages.value.push({ type: 'normal', content: item })
       }
     }
-
-    nextTick(() => {
-      console.log(scrollRef.value)
-      scrollRef.value?.scrollTo({ top: divRef.value?.scrollHeight })
-    })
   })
     .catch(error => {
       messages.value.push({ type: 'error', content: error as string })
-      nextTick(() => {
-        console.log(scrollRef.value)
-        scrollRef.value?.scrollTo({ top: divRef.value?.scrollHeight })
-      })
+    })
+    .finally(()=>{
+      backBottom()
     })
 }
 </script>
@@ -102,7 +106,17 @@ const onExecCmd = async () => {
       </div>
     </ElScrollbar>
     <div relative>
-      <ElInput v-model="content" autofocus @keydown.enter="onExecCmd" />
+      <ElAutocomplete
+        ref="autoRef"
+        v-model="content"
+        autocomplete="off"
+        :trigger-on-focus="false"
+        class="auto-complete"
+        :fetch-suggestions="handleFetchSuggestions"
+        :debounce="10"
+        @select="autoRef?.focus()"
+        @keydown.enter="onExecCmd"
+      />
     </div>
   </div>
 </template>
@@ -113,5 +127,8 @@ const onExecCmd = async () => {
 }
 .content--error {
   color: var(--el-color-danger);
+}
+:deep(.el-autocomplete) {
+  width: 100%;
 }
 </style>
