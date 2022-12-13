@@ -3,6 +3,7 @@ import { RedisConfig } from '@/types/redis'
 import { useRedis } from '@/store/redis'
 import { v4 } from 'uuid'
 import { invoke } from '@tauri-apps/api'
+import { useUiState } from '@/store/ui'
 
 const initConfig: RedisConfig = {
   id: '',
@@ -12,6 +13,7 @@ const initConfig: RedisConfig = {
   split: ':',
 }
 
+const uiState = useUiState()
 const configState = useRedis()
 
 const visible = ref(false)
@@ -47,6 +49,14 @@ const handleCancel = () => {
   loading.value = false
   configData.value = { ...initConfig }
 }
+
+const settingVisible = ref(false)
+const handleSettingBtn = () => {
+  settingVisible.value = true
+}
+const handleSettingCancel = () => {
+  settingVisible.value = false
+}
 </script>
 
 <template>
@@ -63,7 +73,7 @@ const handleCancel = () => {
       <span class="text-base">新建连接</span>
     </el-button>
     <el-space>
-      <el-button size="small" text bg>
+      <el-button size="small" text bg @click="handleSettingBtn">
         <template #icon>
           <i class="material-symbols:settings" />
         </template>
@@ -183,6 +193,53 @@ const handleCancel = () => {
             </el-button>
           </div>
         </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="settingVisible"
+      title="设置"
+      width="50%"
+      append-to-body
+      @close="handleCancel"
+    >
+      <div flex items-center space-x-4 justify-around>
+        <div
+          :class="{ 'bg-[var(--el-border-color)]': uiState.theme === 'system' }"
+          p4 hover="bg-[var(--el-border-color)] cursor-pointer"
+          rounded
+          transition-all
+          duration-200
+          @click="uiState.changeTheme('system')"
+        >
+          <i class="material-symbols:brightness-auto-outline" w80px h80px />
+        </div>
+        <div
+          :class="{ 'bg-[var(--el-border-color)]': uiState.theme === 'dark' }"
+          p4 hover="bg-[var(--el-border-color)] cursor-pointer"
+          rounded
+          transition-all
+          duration-200
+          @click="uiState.changeTheme('dark')"
+        >
+          <i class="bi:moon-stars-fill" w80px h80px />
+        </div>
+        <div
+          :class="{ 'bg-[var(--el-border-color)]': uiState.theme === 'light' }"
+          p4 hover="bg-[var(--el-border-color)] cursor-pointer"
+          rounded
+          transition-all
+          duration-200
+          @click="uiState.changeTheme('light')"
+        >
+          <i class="material-symbols:sunny" w80px h80px />
+        </div>
+      </div>
+
+      <template #footer>
+        <el-button type="primary" @click="settingVisible = false">
+          确定
+        </el-button>
       </template>
     </el-dialog>
   </div>

@@ -87,7 +87,7 @@ export const useTabs = defineStore('tabs', {
     },
     // 删除其他选项卡
     removeOther(key: string) {
-      this.tabs = this.tabs.filter(t => t.key === key)
+      this.tabs = this.tabs.filter((t, idx) => idx === 0 || t.key === key)
       if (this.currentActive !== key) {
         this.setActive(key)
       }
@@ -96,10 +96,12 @@ export const useTabs = defineStore('tabs', {
     removeLeft(key: string) {
       const index = this.tabs.findIndex(t => t.key === key)
       const activeIndex = this.tabs.findIndex(t => t.key === this.currentActive)
-      this.tabs.splice(0, index)
+      this.tabs.splice(1, index)
       // 如果当前选项卡在左侧（在要删除的列表中）
       if (this.currentActive !== key && index > activeIndex) {
         this.setActive(key)
+      } else {
+        this.setActive(this.tabs[this.tabs.length - 1].key)
       }
     },
     // 删除右侧侧选项卡
