@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { TabsProps, useTabs } from '@/store/tabs'
-import { invoke } from '@tauri-apps/api'
+import { invoke, shell } from '@tauri-apps/api'
 import type { ElAutocomplete, ElScrollbar } from 'element-plus'
 import { v4 } from 'uuid'
 import { Histroy } from './histroy'
@@ -123,6 +123,18 @@ const onExecCmd = async () => {
     return
   default:
     break
+  }
+
+  if (unref(content).includes('help')) {
+    // https://redis.io/commands/${command}/
+    const values = content.value.split(' ')
+    if (values.length === 2 && commands.allCommands[values[1].toUpperCase() as CommandType]) {
+      const url = `https://redis.io/commands/${values[1]}/`
+      shell.open(url)
+      addHistroy(unref(content))
+      clearContent()
+      return
+    }
   }
 
   const args = content.value.split(argsRegex).filter(arg => arg && arg !== '')
