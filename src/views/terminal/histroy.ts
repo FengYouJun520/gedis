@@ -4,9 +4,12 @@ export class Histroy<T = string> {
 
   current: number
 
-  constructor() {
+  depth?: number
+
+  constructor(depth?: number) {
     this.histroys = []
     this.current = 0
+    this.depth = depth
   }
 
   isEmpty() {
@@ -14,6 +17,9 @@ export class Histroy<T = string> {
   }
 
   push(value: T) {
+    if (this.histroys.length === this.depth) {
+      return
+    }
     const index = this.histroys.findIndex(t => t === value)
     if (index !== -1) {
       this.histroys.splice(index, 1)

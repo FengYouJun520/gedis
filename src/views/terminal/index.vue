@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api'
 import type { ElAutocomplete, ElScrollbar } from 'element-plus'
 import { v4 } from 'uuid'
 import { Histroy } from './histroy'
+import commands, { CommandType } from './commands'
 
 interface TerminalProps {
   tabItem: TabsProps
@@ -28,25 +29,49 @@ const messages = ref<Message[]>([{
   type: 'success',
   content: `${props.tabItem.name} connected!`,
 }])
+const messageDepth = 2000
 
-let histroy = new Histroy()
+const addMessage = (message: string | Message) => {
+  if (unref(messages).length === messageDepth) {
+    messages.value.splice(0, messageDepth / 2)
+  }
+
+  if (typeof message === 'string') {
+    messages.value.push({ type: 'normal', content: message })
+  } else {
+    messages.value.push(message)
+  }
+}
+
+let histroy = new Histroy(500)
 
 const addHistroy = (value: string) => {
   histroy.push(value)
 }
 
 const changePrev = () => {
+  console.log(autoRef.value?.activated)
+
+  if (autoRef.value?.activated) {
+    return
+  }
+
   const value = histroy.prevHistroy()
   content.value = value
 }
 
 const changeNext = () => {
+  if (autoRef.value?.activated) {
+    return
+  }
+
   const value = histroy.nextHistroy()
   content.value = value
 }
 
 const clearContent = () => {
   content.value = ''
+  autoRef.value?.close()
 }
 
 
@@ -57,7 +82,16 @@ onMounted(() => {
 })
 
 const handleFetchSuggestions = (query: string, cb: Function) => {
-  cb([{ value: 'get KEY ...' }])
+  if (!query.trim()) {
+    cb([])
+    return
+  }
+
+  const result = Object.keys(commands.allCommands)
+    .filter(key => key.includes(query.trim().toUpperCase()))
+    .map(key => ({ value: commands.allCommands[key as CommandType] }))
+
+  cb(result)
 }
 const backBottom = () => {
   nextTick(() => {
@@ -68,7 +102,7 @@ const backBottom = () => {
 
 const onExecCmd = async () => {
   if (!unref(content)) {
-    messages.value.push({ type: 'normal', content: '>> ' })
+    addMessage('>> ')
     backBottom()
     return
   }
@@ -92,7 +126,7 @@ const onExecCmd = async () => {
   }
 
   const args = content.value.split(argsRegex).filter(arg => arg && arg !== '')
-  messages.value.push({ type: 'normal', content: `>> ${content.value}` })
+  addMessage(`>> ${content.value}`)
   addHistroy(unref(content))
   clearContent()
 
@@ -106,16 +140,16 @@ const onExecCmd = async () => {
     args,
   }).then(res => {
     if (typeof res === 'string') {
-      messages.value.push({ type: 'normal', content: res })
+      addMessage(res)
     } else {
-      messages.value.push(res[0])
+      addMessage(res[0])
       for (const item of res[1] as string[]) {
-        messages.value.push({ type: 'normal', content: item })
+        addMessage(item)
       }
     }
   })
     .catch(error => {
-      messages.value.push({ type: 'error', content: error as string })
+      addMessage({ type: 'error', content: error as string })
     })
     .finally(()=>{
       backBottom()
@@ -138,13 +172,12 @@ const onExecCmd = async () => {
         v-model="content"
         autocomplete="off"
         :trigger-on-focus="false"
-        class="auto-complete"
         :fetch-suggestions="handleFetchSuggestions"
         :debounce="10"
         @select="autoRef?.focus()"
-        @keydown.enter="onExecCmd"
-        @keydown.up="changePrev"
-        @keydown.down="changeNext"
+        @keyup.enter.stop="onExecCmd"
+        @keyup.up.stop="changePrev"
+        @keyup.down.stop="changeNext"
       />
     </div>
   </div>
