@@ -10,14 +10,13 @@ use crate::{error::Result, RedisState};
 pub async fn terminal(
     state: State<'_, RedisState>,
     id: String,
-    db: i32,
+    db: u8,
     args: Option<Vec<String>>,
 ) -> Result<serde_json::Value> {
     info!(?args);
 
-    let mut client = state.0.lock().await;
-    let con = client.get_con_mut(&id).await?;
-    redis::cmd("SELECT").arg(db).query_async(con).await?;
+    let client = state.0.lock().await;
+    let mut con = client.get_async_con(&id, db).await?;
 
     let Some(args) = args else {
         return Ok(json!(""));
@@ -36,7 +35,7 @@ pub async fn terminal(
 
     let res: redis::Value = redis::cmd(cmd_name.as_ref())
         .arg(args)
-        .query_async(con)
+        .query_async(&mut con)
         .await?;
     match res {
         redis::Value::Nil => Ok(json!("")),

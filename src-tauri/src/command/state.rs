@@ -1,12 +1,13 @@
 use crate::{config::RedisConfig, error::Result, redis_log::RedisLog};
 use anyhow::Context;
+use redis::ConnectionLike;
 use std::{collections::HashMap, fmt::Debug};
 use tauri::async_runtime::Mutex;
 
 #[derive(Default)]
 pub struct Redis {
     configs: HashMap<String, RedisConfig>,
-    connections: HashMap<String, redis::aio::MultiplexedConnection>,
+    clients: HashMap<String, redis::Client>,
     logs: HashMap<String, RedisLog>,
 }
 
@@ -23,42 +24,36 @@ impl Debug for Redis {
 pub struct RedisState(pub Mutex<Redis>);
 
 impl Redis {
-    pub fn add_con(
-        &mut self,
-        client: redis::aio::MultiplexedConnection,
-        config: RedisConfig,
-    ) -> Result<()> {
-        self.connections.insert(config.id.to_string(), client);
+    pub fn add_client(&mut self, client: redis::Client, config: RedisConfig) -> Result<()> {
+        self.clients.insert(config.id.to_string(), client);
         self.configs.insert(config.id.to_string(), config);
 
         Ok(())
     }
 
-    pub fn remove_con(&mut self, id: &str) -> Result<()> {
-        self.connections.remove(id);
+    pub fn remove_client(&mut self, id: &str) -> Result<()> {
+        self.clients.remove(id);
         self.configs.remove(id);
         Ok(())
     }
 
-    pub fn remove_con_all(&mut self) -> Result<()> {
-        self.connections.clear();
+    pub fn remove_client_all(&mut self) -> Result<()> {
+        self.clients.clear();
         self.configs.clear();
         Ok(())
     }
 
     pub fn is_connection(&self, id: &str) -> Result<bool> {
-        if self.connections.contains_key(id) {
-            Ok(true)
-        } else {
-            Ok(false)
+        match self.clients.get(id) {
+            Some(client) => Ok(client.is_open()),
+            None => Ok(false),
         }
     }
 
-    pub async fn get_con_mut(
-        &mut self,
-        id: &str,
-    ) -> Result<&mut redis::aio::MultiplexedConnection> {
-        let con = self.connections.get_mut(id).context("该连接不存在")?;
+    pub async fn get_async_con(&self, id: &str, db: u8) -> Result<redis::aio::Connection> {
+        let client = self.clients.get(id).context("客户端未连接")?;
+        let mut con = client.get_async_connection().await?;
+        redis::cmd("SELECT").arg(db).query_async(&mut con).await?;
         Ok(con)
     }
 

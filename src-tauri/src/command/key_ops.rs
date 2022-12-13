@@ -14,19 +14,13 @@ use super::state::RedisState;
 pub async fn del_key(
     state: State<'_, RedisState>,
     id: String,
-    db: usize,
+    db: u8,
     keys: Vec<String>,
 ) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let con = client.get_con_mut(&id).await?;
+    let client = state.0.lock().await;
+    let mut con = client.get_async_con(&id, db).await?;
 
-    redis::pipe()
-        .atomic()
-        .cmd("SELECT")
-        .arg(db)
-        .ignore()
-        .del(&keys)
-        .query_async(con)
+    con.del(&keys)
         .await
         .context(format!("删除多个键失败, id: {id}"))?;
 
@@ -40,25 +34,17 @@ pub async fn del_key(
 pub async fn del_key_by_value(
     state: State<'_, RedisState>,
     id: String,
-    db: usize,
+    db: u8,
     key: String,
     value: Option<String>,
 ) -> Result<()> {
     let value = value.unwrap_or_default();
     info!(?key, ?value);
 
-    let mut client = state.0.lock().await;
-    let con = client.get_con_mut(&id).await?;
+    let client = state.0.lock().await;
+    let mut con = client.get_async_con(&id, db).await?;
 
-    let (_, typ): ((), String) = redis::pipe()
-        .atomic()
-        .cmd("SELECT")
-        .arg(db)
-        .cmd("type")
-        .arg(&key)
-        .query_async(con)
-        .await
-        .map_err(|err| format!("获取键类型失败: {}", err))?;
+    let typ: String = redis::cmd("TYPE").arg(&key).query_async(&mut con).await?;
 
     match typ.as_str() {
         "string" => con.del(&key).await,
@@ -78,19 +64,11 @@ pub async fn del_key_by_value(
 /// 清空所有键
 #[instrument]
 #[tauri::command]
-pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: usize) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let con = client.get_con_mut(&id).await?;
+pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: u8) -> Result<()> {
+    let client = state.0.lock().await;
+    let mut con = client.get_async_con(&id, db).await?;
 
-    redis::pipe()
-        .atomic()
-        .cmd("SELECT")
-        .arg(db)
-        .ignore()
-        .cmd("FLUSHDB")
-        .query_async(con)
-        .await
-        .context(format!("清空键失败, id: {id}"))?;
+    redis::cmd("FLUSHDB").query_async(&mut con).await?;
 
     info!("清空所有key成功");
     Ok(())
@@ -102,18 +80,12 @@ pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: usize) -> 
 pub async fn get_keys_by_db(
     state: State<'_, RedisState>,
     id: String,
-    db: usize,
+    db: u8,
 ) -> Result<Vec<String>> {
-    let mut client = state.0.lock().await;
-    let con = client.get_con_mut(&id).await?;
+    let client = state.0.lock().await;
+    let mut con = client.get_async_con(&id, db).await?;
 
-    redis::cmd("SELECT")
-        .arg(db)
-        .query_async(con)
-        .await
-        .map_err(|err| err.to_string())?;
-
-    let mut iter: AsyncIter<'_, String> = con.scan().await.map_err(|err| err.to_string())?;
+    let mut iter: AsyncIter<'_, String> = con.scan().await?;
 
     let mut keys = vec![];
     while let Some(val) = iter.next_item().await.to_owned() {
@@ -129,26 +101,19 @@ pub async fn get_keys_by_db(
 pub async fn get_key_info(
     state: State<'_, RedisState>,
     id: String,
-    db: i32,
+    db: u8,
     key: String,
 ) -> Result<KeyInfo> {
-    let mut client = state.0.lock().await;
-    let con = client.get_con_mut(&id).await?;
-
-    redis::cmd("SELECT")
-        .arg(db)
-        .query_async(con)
-        .await
-        .map_err(|err| err.to_string())?;
+    let client = state.0.lock().await;
+    let mut con = client.get_async_con(&id, db).await?;
 
     let (typ, ttl): (String, i64) = redis::pipe()
         .atomic()
-        .cmd("type")
+        .cmd("TYPE")
         .arg(&key)
         .ttl(&key)
-        .query_async(con)
-        .await
-        .map_err(|err| err.to_string())?;
+        .query_async(&mut con)
+        .await?;
 
     let mut keyinfo = KeyInfo {
         key: key.clone(),
@@ -160,24 +125,18 @@ pub async fn get_key_info(
 
     match typ.as_str() {
         "string" => {
-            let val = con.get(&key).await.map_err(|err| err.to_string())?;
+            let val = con.get(&key).await?;
             keyinfo.value = RedisValue::String(val);
         }
         "list" => {
-            let count: usize = con.llen(&key).await.map_err(|err| err.to_string())?;
-            let values: Vec<String> = con
-                .lrange(&key, 0, (count as isize) - 1)
-                .await
-                .map_err(|err| err.to_string())?;
+            let count: usize = con.llen(&key).await?;
+            let values: Vec<String> = con.lrange(&key, 0, (count as isize) - 1).await?;
             keyinfo.total = count;
             keyinfo.value = RedisValue::List(values);
         }
         "set" => {
-            let count: usize = con.scard(&key).await.map_err(|err| err.to_string())?;
-            let mut iter: AsyncIter<'_, String> = con
-                .sscan_match(&key, "*")
-                .await
-                .map_err(|err| err.to_string())?;
+            let count: usize = con.scard(&key).await?;
+            let mut iter: AsyncIter<'_, String> = con.sscan_match(&key, "*").await?;
             let mut values = vec![];
             while let Some(val) = iter.next_item().await {
                 values.push(val);
@@ -186,11 +145,9 @@ pub async fn get_key_info(
             keyinfo.value = RedisValue::Set(values);
         }
         "zset" => {
-            let count: usize = con.zcard(&key).await.map_err(|err| err.to_string())?;
-            let data: Vec<(String, f64)> = con
-                .zrange_withscores(&key, 0, (count as isize) - 1)
-                .await
-                .map_err(|err| err.to_string())?;
+            let count: usize = con.zcard(&key).await?;
+            let data: Vec<(String, f64)> =
+                con.zrange_withscores(&key, 0, (count as isize) - 1).await?;
 
             let length = data.len();
             let values: Vec<Z> = data.into_iter().map(|d| Z::new(d.1, d.0)).collect();
@@ -199,11 +156,8 @@ pub async fn get_key_info(
             keyinfo.value = RedisValue::ZSet(values);
         }
         "hash" => {
-            let count: usize = con.hlen(&key).await.map_err(|err| err.to_string())?;
-            let mut iter: AsyncIter<'_, (String, String)> = con
-                .hscan_match(&key, "*")
-                .await
-                .map_err(|err| err.to_string())?;
+            let count: usize = con.hlen(&key).await?;
+            let mut iter: AsyncIter<'_, (String, String)> = con.hscan_match(&key, "*").await?;
             let mut values = vec![];
             while let Some((key, value)) = iter.next_item().await {
                 values.push(HashResult::new(key, value));
@@ -213,11 +167,9 @@ pub async fn get_key_info(
             keyinfo.value = RedisValue::Hash(values);
         }
         "stream" => {
-            let count: usize = con.xlen(&key).await.map_err(|err| err.to_string())?;
-            let replay: redis::streams::StreamRangeReply = con
-                .xrevrange_count(&key, "+", "-", 200)
-                .await
-                .map_err(|err| err.to_string())?;
+            let count: usize = con.xlen(&key).await?;
+            let replay: redis::streams::StreamRangeReply =
+                con.xrevrange_count(&key, "+", "-", 200).await?;
 
             let value = replay
                 .ids
@@ -249,21 +201,14 @@ pub async fn get_key_info(
 pub async fn rename_key(
     state: State<'_, RedisState>,
     id: String,
-    db: i32,
+    db: u8,
     key: String,
     new_key: String,
 ) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let con = client.get_con_mut(&id).await?;
+    let client = state.0.lock().await;
+    let mut con = client.get_async_con(&id, db).await?;
 
-    redis::pipe()
-        .atomic()
-        .cmd("SELECT")
-        .arg(db)
-        .rename_nx(&key, &new_key)
-        .query_async(con)
-        .await
-        .map_err(|err| err.to_string())?;
+    con.rename_nx(&key, &new_key).await?;
 
     info!("重命名key成功, key: {}, new_key: {}", key, new_key);
 
@@ -276,17 +221,11 @@ pub async fn rename_key(
 pub async fn set_key(
     state: State<'_, RedisState>,
     id: String,
-    db: i32,
+    db: u8,
     keyinfo: AddKeyInfo,
 ) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let con = client.get_con_mut(&id).await?;
-
-    redis::cmd("SELECT")
-        .arg(db)
-        .query_async(con)
-        .await
-        .map_err(|err| err.to_string())?;
+    let client = state.0.lock().await;
+    let mut con = client.get_async_con(&id, db).await?;
 
     match keyinfo.r#type.as_str() {
         "string" => con.set(&keyinfo.key, &keyinfo.value).await,
@@ -309,8 +248,7 @@ pub async fn set_key(
             .await
         }
         "stream" => {
-            let value: HashMap<String, String> =
-                serde_json::from_str(&keyinfo.value).map_err(|err| err.to_string())?;
+            let value: HashMap<String, String> = serde_json::from_str(&keyinfo.value)?;
             let value: Vec<(String, String)> = Vec::from_iter(value.into_iter());
             con.xadd(
                 &keyinfo.key,
@@ -332,21 +270,14 @@ pub async fn set_key(
 pub async fn set_key_ttl(
     state: State<'_, RedisState>,
     id: String,
-    db: usize,
+    db: u8,
     key: String,
     ttl: i64,
 ) -> Result<()> {
-    let mut client = state.0.lock().await;
-    let con = client.get_con_mut(&id).await?;
+    let client = state.0.lock().await;
+    let mut con = client.get_async_con(&id, db).await?;
 
-    redis::cmd("SELECT")
-        .arg(db)
-        .query_async(con)
-        .await
-        .map_err(|err| err.to_string())?;
-
-    let mut iter: AsyncIter<'_, String> =
-        con.scan_match(&key).await.map_err(|err| err.to_string())?;
+    let mut iter: AsyncIter<'_, String> = con.scan_match(&key).await?;
 
     let mut keys = vec![];
     while let Some(val) = iter.next_item().await {
@@ -355,11 +286,9 @@ pub async fn set_key_ttl(
 
     for key in keys {
         if ttl == -1 {
-            con.persist(key).await.map_err(|err| err.to_string())?;
+            con.persist(key).await?;
         } else {
-            con.expire(key, ttl as usize)
-                .await
-                .map_err(|err| err.to_string())?;
+            con.expire(key, ttl as usize).await?;
         }
     }
 

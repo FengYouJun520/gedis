@@ -125,7 +125,16 @@ const onExecCmd = async () => {
     break
   }
 
-  if (unref(content).includes('help')) {
+  if (unref(content).toLowerCase()
+    .includes('select')) {
+    const values = content.value.split(' ')
+    if (values.length === 2 && commands.allCommands[values[1].toUpperCase() as CommandType]) {
+      db.value = parseInt(values[1]) || db.value
+    }
+  }
+
+  if (unref(content).toLowerCase()
+    .includes('help')) {
     // https://redis.io/commands/${command}/
     const values = content.value.split(' ')
     if (values.length === 2 && commands.allCommands[values[1].toUpperCase() as CommandType]) {
