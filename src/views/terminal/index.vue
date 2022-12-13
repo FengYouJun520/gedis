@@ -3,6 +3,7 @@ import { TabsProps, useTabs } from '@/store/tabs'
 import { invoke } from '@tauri-apps/api'
 import type { ElAutocomplete, ElScrollbar } from 'element-plus'
 import { v4 } from 'uuid'
+import { Histroy } from './histroy'
 
 interface TerminalProps {
   tabItem: TabsProps
@@ -28,9 +29,26 @@ const messages = ref<Message[]>([{
   content: `${props.tabItem.name} connected!`,
 }])
 
+let histroy = new Histroy()
+
+const addHistroy = (value: string) => {
+  histroy.push(value)
+}
+
+const changePrev = () => {
+  const value = histroy.prevHistroy()
+  content.value = value
+}
+
+const changeNext = () => {
+  const value = histroy.nextHistroy()
+  content.value = value
+}
+
 const clearContent = () => {
   content.value = ''
 }
+
 
 onMounted(() => {
   nextTick(()=>{
@@ -49,6 +67,12 @@ const backBottom = () => {
 
 
 const onExecCmd = async () => {
+  if (!unref(content)) {
+    messages.value.push({ type: 'normal', content: '>> ' })
+    backBottom()
+    return
+  }
+
   switch (unref(content)) {
   case 'exit':
     await invoke('dis_connection', { id: props.tabItem.id })
@@ -58,6 +82,8 @@ const onExecCmd = async () => {
     return
   case 'clear':
     messages.value = []
+    addHistroy(unref(content))
+
     clearContent()
     backBottom()
     return
@@ -67,6 +93,7 @@ const onExecCmd = async () => {
 
   const args = content.value.split(argsRegex).filter(arg => arg && arg !== '')
   messages.value.push({ type: 'normal', content: `>> ${content.value}` })
+  addHistroy(unref(content))
   clearContent()
 
   if (args.length > 1 && args[0].toLowerCase() === 'select') {
@@ -116,6 +143,8 @@ const onExecCmd = async () => {
         :debounce="10"
         @select="autoRef?.focus()"
         @keydown.enter="onExecCmd"
+        @keydown.up="changePrev"
+        @keydown.down="changeNext"
       />
     </div>
   </div>
