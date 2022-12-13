@@ -3,8 +3,8 @@ import { TabsProps, useTabs } from '@/store/tabs'
 import { invoke, shell } from '@tauri-apps/api'
 import type { ElAutocomplete, ElScrollbar } from 'element-plus'
 import { v4 } from 'uuid'
-import { Histroy } from './histroy'
-import commands, { CommandType } from './commands'
+import { History } from './history'
+import { allCommands, CommandType } from './command'
 
 interface TerminalProps {
   tabItem: TabsProps
@@ -12,7 +12,7 @@ interface TerminalProps {
 
 interface Message {
   type: 'normal' | 'error' | 'success'
-  content: string
+  content: string | number
 }
 
 const props = defineProps<TerminalProps>()
@@ -31,22 +31,22 @@ const messages = ref<Message[]>([{
 }])
 const messageDepth = 2000
 
-const addMessage = (message: string | Message) => {
+const addMessage = (message: string|number | Message) => {
   if (unref(messages).length === messageDepth) {
     messages.value.splice(0, messageDepth / 2)
   }
 
-  if (typeof message === 'string') {
+  if (typeof message === 'string' || typeof message === 'number') {
     messages.value.push({ type: 'normal', content: message })
   } else {
     messages.value.push(message)
   }
 }
 
-let histroy = new Histroy(500)
+let history = new History(500)
 
 const addHistroy = (value: string) => {
-  histroy.push(value)
+  history.push(value)
 }
 
 const changePrev = () => {
@@ -56,7 +56,7 @@ const changePrev = () => {
     return
   }
 
-  const value = histroy.prevHistroy()
+  const value = history.prevHistroy()
   content.value = value
 }
 
@@ -65,7 +65,7 @@ const changeNext = () => {
     return
   }
 
-  const value = histroy.nextHistroy()
+  const value = history.nextHistroy()
   content.value = value
 }
 
@@ -87,9 +87,10 @@ const handleFetchSuggestions = (query: string, cb: Function) => {
     return
   }
 
-  const result = Object.keys(commands.allCommands)
-    .filter(key => key.includes(query.trim().toUpperCase()))
-    .map(key => ({ value: commands.allCommands[key as CommandType] }))
+  const result = Object.keys(allCommands)
+    .filter(key => key.includes(query.trim().toUpperCase()
+      .split(' ')[0]))
+    .map(key => ({ value: allCommands[key as CommandType] }))
 
   cb(result)
 }
@@ -128,7 +129,7 @@ const onExecCmd = async () => {
   if (unref(content).toLowerCase()
     .includes('select')) {
     const values = content.value.split(' ')
-    if (values.length === 2 && commands.allCommands[values[1].toUpperCase() as CommandType]) {
+    if (values.length === 2 && allCommands[values[1].toUpperCase() as CommandType]) {
       db.value = parseInt(values[1]) || db.value
     }
   }
@@ -137,7 +138,7 @@ const onExecCmd = async () => {
     .includes('help')) {
     // https://redis.io/commands/${command}/
     const values = content.value.split(' ')
-    if (values.length === 2 && commands.allCommands[values[1].toUpperCase() as CommandType]) {
+    if (values.length === 2 && allCommands[values[1].toUpperCase() as CommandType]) {
       const url = `https://redis.io/commands/${values[1]}/`
       shell.open(url)
       addHistroy(unref(content))
@@ -155,19 +156,12 @@ const onExecCmd = async () => {
     db.value = parseInt(args[1])
   }
 
-  invoke<string| any[] | any[][]>('terminal', {
+  invoke('terminal', {
     id: props.tabItem.id,
     db: unref(db),
     args,
   }).then(res => {
-    if (typeof res === 'string') {
-      addMessage(res)
-    } else {
-      addMessage(res[0])
-      for (const item of res[1] as string[]) {
-        addMessage(item)
-      }
-    }
+    parseResult(res)
   })
     .catch(error => {
       addMessage({ type: 'error', content: error as string })
@@ -175,6 +169,16 @@ const onExecCmd = async () => {
     .finally(()=>{
       backBottom()
     })
+}
+
+const parseResult = (result: any) => {
+  if (typeof result === 'object' && Array.isArray(result)) {
+    for (const item of result) {
+      parseResult(item)
+    }
+  } else {
+    addMessage(result)
+  }
 }
 </script>
 

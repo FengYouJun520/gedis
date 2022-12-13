@@ -1,4 +1,4 @@
-const adminCMD = {
+const adminCommand = {
   'ACL': ['ACL CAT [categoryname]', 'ACL DELUSER username [username ...]', 'ACL DRYRUN username command [arg [arg ...]]', 'ACL GENPASS [bits]', 'ACL GETUSER username', 'ACL LIST', 'ACL LOAD', 'ACL LOG [count|RESET]', 'ACL SAVE', 'ACL SETUSER username [rule [rule ...]]', 'ACL USERS', 'ACL WHOAMI'],
   'BGREWRITEAOF': 'BGREWRITEAOF',
   'BGSAVE': 'BGSAVE',
@@ -22,7 +22,7 @@ const adminCMD = {
   'SYNC': 'SYNC',
 }
 
-const readCMD = {
+const readCommand = {
   'AUTH': 'AUTH password',
   'BITCOUNT': 'BITCOUNT key [start] [end]',
   'BITOP': 'BITOP operation destkey key [key ...]',
@@ -106,7 +106,7 @@ const readCMD = {
   'XPENDING': 'XPENDING key group [start end count] [consumer]',
 }
 
-const writeCMD = {
+const writeCommand = {
   'APPEND': 'APPEND key value',
   'BLMOVE': 'BLMOVE source destination LEFT|RIGHT LEFT|RIGHT timeout',
   'BLPOP': 'BLPOP key [key ...] timeout',
@@ -194,9 +194,7 @@ const writeCMD = {
   'ZUNIONSTORE': 'ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]',
 }
 
-export default {
-  allCommands: { ...readCMD, ...writeCMD, ...adminCMD },
-  writeCommands: writeCMD,
-}
 
-export type CommandType = keyof typeof readCMD|keyof typeof writeCMD|keyof typeof adminCMD
+export const allCommands = { ...readCommand, ...writeCommand, ...adminCommand }
+
+export type CommandType = keyof typeof readCommand|keyof typeof writeCommand|keyof typeof adminCommand

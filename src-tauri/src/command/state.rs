@@ -1,6 +1,5 @@
 use crate::{config::RedisConfig, error::Result, redis_log::RedisLog};
 use anyhow::Context;
-use redis::ConnectionLike;
 use std::{collections::HashMap, fmt::Debug};
 use tauri::async_runtime::Mutex;
 
@@ -8,14 +7,14 @@ use tauri::async_runtime::Mutex;
 pub struct Redis {
     configs: HashMap<String, RedisConfig>,
     clients: HashMap<String, redis::Client>,
-    logs: HashMap<String, RedisLog>,
+    histories: HashMap<String, RedisLog>,
 }
 
 impl Debug for Redis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Redis")
             .field("configs", &self.configs)
-            .field("logs", &self.logs)
+            .field("histories", &self.histories)
             .finish()
     }
 }
@@ -43,11 +42,8 @@ impl Redis {
         Ok(())
     }
 
-    pub fn is_connection(&self, id: &str) -> Result<bool> {
-        match self.clients.get(id) {
-            Some(client) => Ok(client.is_open()),
-            None => Ok(false),
-        }
+    pub fn is_connection(&self, id: &str) -> bool {
+        self.clients.get(id).is_some()
     }
 
     pub async fn get_async_con(&self, id: &str, db: u8) -> Result<redis::aio::Connection> {
@@ -58,7 +54,7 @@ impl Redis {
     }
 
     pub fn get_log(&self, id: &str) -> Result<&RedisLog> {
-        let log = self.logs.get(id).context("获取日志信息失败")?;
+        let log = self.histories.get(id).context("获取日志信息失败")?;
         Ok(log)
     }
 

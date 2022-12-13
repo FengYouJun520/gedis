@@ -1,4 +1,3 @@
-use redis::FromRedisValue;
 use serde_json::json;
 use tauri::State;
 use tracing::info;
@@ -37,32 +36,27 @@ pub async fn terminal(
         .arg(args)
         .query_async(&mut con)
         .await?;
-    match res {
-        redis::Value::Nil => Ok(json!("")),
-        redis::Value::Int(val) => Ok(json!(val)),
-        redis::Value::Data(data) => Ok(json!(String::from_utf8(data).unwrap_or_default())),
-        redis::Value::Bulk(ref data) => {
-            let mut result: Vec<serde_json::Value> = vec![];
-            for val in data {
-                let val = match val {
-                    redis::Value::Nil => json!(""),
-                    redis::Value::Int(val) => json!(val),
-                    redis::Value::Data(data) => {
-                        json!(String::from_utf8_lossy(data))
-                    }
-                    redis::Value::Bulk(ref data) => {
-                        let result: Vec<String> = FromRedisValue::from_redis_values(&data)?;
-                        json!(result)
-                    }
-                    redis::Value::Status(status) => json!(status),
-                    redis::Value::Okay => json!("OK"),
-                };
-                result.push(val);
-            }
 
-            Ok(json!(result))
+    let json_result = parse_result(res);
+
+    Ok(json_result)
+}
+
+/// 解析redis命令返回的结果
+fn parse_result(res: redis::Value) -> serde_json::Value {
+    match res {
+        redis::Value::Nil => json!(""),
+        redis::Value::Int(val) => json!(val),
+        redis::Value::Data(ref data) => json!(String::from_utf8_lossy(data)),
+        redis::Value::Bulk(data) => {
+            let mut result = vec![];
+            for val in data {
+                info!(?val);
+                result.push(json!(parse_result(val)));
+            }
+            json!(result)
         }
-        redis::Value::Status(status) => Ok(json!(status)),
-        redis::Value::Okay => Ok(json!("OK")),
+        redis::Value::Status(status) => json!(status),
+        redis::Value::Okay => json!("Ok"),
     }
 }

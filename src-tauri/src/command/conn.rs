@@ -37,7 +37,7 @@ pub async fn connection(state: State<'_, RedisState>, config: RedisConfig) -> Re
 #[tauri::command]
 pub async fn is_connection(state: State<'_, RedisState>, id: String) -> Result<bool> {
     let redis_state = state.0.lock().await;
-    let is_connection = redis_state.is_connection(&id)?;
+    let is_connection = redis_state.is_connection(&id);
 
     info!(?is_connection, "是否已连接");
     Ok(is_connection)
