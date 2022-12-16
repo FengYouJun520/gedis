@@ -43,7 +43,7 @@ impl Redis {
     }
 
     pub fn is_connection(&self, id: &str) -> bool {
-        self.clients.get(id).is_some()
+        self.clients.contains_key(id)
     }
 
     pub async fn get_async_con(&self, id: &str, db: u8) -> Result<redis::aio::Connection> {

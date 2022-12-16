@@ -2,7 +2,6 @@
 import RightOpertions from '@/components/MenuBar/RightOpertions.vue'
 import MenuOperation from '@/components/MenuBar/MenuOperation.vue'
 import KeyList from '@/components/MenuBar/KeyList.vue'
-import { useRedis } from '@/store/redis'
 import { TabsProps, useTabs } from '@/store/tabs'
 import { invoke } from '@tauri-apps/api'
 import { Keyspace, RedisConfig } from '@/types/redis'
@@ -16,7 +15,6 @@ interface ConnectionProps {
 
 const props = defineProps<ConnectionProps>()
 
-const redisState = useRedis()
 const tabsState = useTabs()
 const treeKeys = ref<string[]>([])
 const keyspaces = ref<Keyspace[]>([])
@@ -63,9 +61,11 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
       })
     }
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    menuRef.value?.open?.(config.id, [config.id])
+    await nextTick(() => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      menuRef.value?.open?.(config.id, [config.id])
+    })
   } catch (error) {
     ElMessage.error(error as string)
     isOpen.value = false
@@ -91,21 +91,17 @@ const handleDisConnection = async (id: string) => {
   }
 }
 
-const handleOpen = async (index: string) => {
+const handleOpen = async () => {
   try {
-    const config = redisState.getConfig(index)
-
-    const isConnection = await invoke<boolean>('is_connection', { id: config?.id })
-    if (config && !isConnection) {
-      await handleConnection(config)
+    const isConnection = await invoke<boolean>('is_connection', { id: props.config.id })
+    if (isConnection) {
+      return
     }
+
+    await handleConnection(props.config)
   } catch (error) {
     ElMessage.error(error as string)
   }
-}
-
-const handleChange = (value: any) => {
-  console.log(value)
 }
 
 // 获取指定数据库的所有树型key列表
@@ -119,13 +115,13 @@ const fetchTreeKeys = async (id: string, db: number) => {
   }
 }
 
-watch(selectDb, async () => {
+watch(selectDb, async db => {
   try {
     if (!isOpen) {
       return
     }
 
-    await fetchTreeKeys(props.config.id, unref(selectDb))
+    await fetchTreeKeys(props.config.id, db)
   } catch (error) {
     ElMessage.error(error as string)
     isOpen.value = false
@@ -149,7 +145,6 @@ createConfigContext({
     ref="menuRef"
     :key="config.id"
     ellipsis
-    @select="handleChange"
     @open="handleOpen"
   >
     <el-sub-menu
@@ -157,7 +152,7 @@ createConfigContext({
     >
       <!-- 标题 -->
       <template #title>
-        <div flex-1 flex justify-between items-center mr6>
+        <div flex-1 flex justify-between items-center>
           <span>{{ config.name }}</span>
           <i v-if="loading" class="uiw:loading animate-spin" />
           <RightOpertions v-else :config="config" :db="selectDb" />

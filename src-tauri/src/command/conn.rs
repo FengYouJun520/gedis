@@ -1,12 +1,13 @@
 use redis::InfoDict;
 use std::{collections::HashMap, time::Duration};
 use tauri::State;
-use tracing::info;
+use tracing::{info, instrument};
 
 use crate::{config::RedisConfig, error::Result, RedisState};
 
 /// 测试连接
 #[tauri::command]
+#[instrument(skip_all, fields(name=config.name, host=config.host, port=config.port))]
 pub async fn test_connection(config: RedisConfig) -> Result<()> {
     let url = config.get_url();
     info!(?url);
@@ -14,12 +15,13 @@ pub async fn test_connection(config: RedisConfig) -> Result<()> {
     let mut con = client.get_connection_with_timeout(Duration::from_secs(10))?;
     redis::cmd("PING").query(&mut con)?;
 
-    info!(?config, "连接成功");
+    info!(?config, "测试连接成功");
     Ok(())
 }
 
 /// redis连接
 #[tauri::command]
+#[instrument(skip_all, fields(id=config.id, host=config.host, port=config.port))]
 pub async fn connection(state: State<'_, RedisState>, config: RedisConfig) -> Result<()> {
     let client = redis::Client::open(config.get_url())?;
     let mut con = client.get_connection_with_timeout(Duration::from_secs(10))?;
@@ -35,6 +37,7 @@ pub async fn connection(state: State<'_, RedisState>, config: RedisConfig) -> Re
 
 /// 判断是否已连接
 #[tauri::command]
+#[instrument(skip(state))]
 pub async fn is_connection(state: State<'_, RedisState>, id: String) -> Result<bool> {
     let redis_state = state.0.lock().await;
     let is_connection = redis_state.is_connection(&id);
@@ -45,6 +48,8 @@ pub async fn is_connection(state: State<'_, RedisState>, id: String) -> Result<b
 
 /// ping
 #[tauri::command]
+#[instrument]
+#[instrument(skip(state))]
 pub async fn ping(state: State<'_, RedisState>, id: String) -> Result<()> {
     let redis_state = state.0.lock().await;
     let mut con = redis_state.get_async_con(&id, 0).await?;
@@ -57,6 +62,7 @@ pub async fn ping(state: State<'_, RedisState>, id: String) -> Result<()> {
 
 /// 断开连接
 #[tauri::command]
+#[instrument(skip(state))]
 pub async fn dis_connection(state: State<'_, RedisState>, id: String) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     redis_state.remove_client(&id)?;
@@ -67,6 +73,7 @@ pub async fn dis_connection(state: State<'_, RedisState>, id: String) -> Result<
 
 /// 断开所有连接
 #[tauri::command]
+#[instrument(skip(state))]
 pub async fn dis_connection_all(state: State<'_, RedisState>) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     redis_state.remove_client_all()?;
@@ -77,6 +84,7 @@ pub async fn dis_connection_all(state: State<'_, RedisState>) -> Result<()> {
 
 /// 获取redis客户端信息
 #[tauri::command]
+#[instrument(skip(state))]
 pub async fn get_info(state: State<'_, RedisState>, id: String) -> Result<HashMap<String, String>> {
     let clients = state.0.lock().await;
     let mut con = clients.get_async_con(&id, 0).await?;

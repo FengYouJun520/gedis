@@ -75,8 +75,8 @@ pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: u8) -> Res
 }
 
 /// 获取指定数据库中的所有键
-#[instrument]
 #[tauri::command]
+#[instrument(skip(state))]
 pub async fn get_keys_by_db(
     state: State<'_, RedisState>,
     id: String,
@@ -96,8 +96,8 @@ pub async fn get_keys_by_db(
 }
 
 /// 获取键对应的详细信息
-#[instrument]
 #[tauri::command]
+#[instrument(skip(state))]
 pub async fn get_key_info(
     state: State<'_, RedisState>,
     id: String,
@@ -196,8 +196,8 @@ pub async fn get_key_info(
 }
 
 /// 重命名键
-#[instrument]
 #[tauri::command]
+#[instrument(skip(state))]
 pub async fn rename_key(
     state: State<'_, RedisState>,
     id: String,
@@ -216,8 +216,8 @@ pub async fn rename_key(
 }
 
 /// 设置key
-#[instrument]
 #[tauri::command]
+#[instrument(skip(state))]
 pub async fn set_key(
     state: State<'_, RedisState>,
     id: String,
@@ -265,8 +265,8 @@ pub async fn set_key(
 }
 
 /// 设置键的过期时间
-#[instrument]
 #[tauri::command]
+#[instrument(skip(state))]
 pub async fn set_key_ttl(
     state: State<'_, RedisState>,
     id: String,

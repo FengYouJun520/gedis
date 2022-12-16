@@ -110,7 +110,6 @@ const onExecCmd = async () => {
 
   switch (unref(content)) {
   case 'exit':
-    await invoke('dis_connection', { id: props.tabItem.id })
     tabsState.removeTab(`${props.tabItem.id}-${props.tabItem.db}`)
     clearContent()
     backBottom()

@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import { useTabs } from '@/store/tabs'
+import { TreeNode } from '@/types/redis'
 import { clipboard, invoke } from '@tauri-apps/api'
 import Node from 'element-plus/es/components/tree/src/model/node'
 import { useConfig } from './useConfig'
-
-interface Tree {
-  label: string
-  value: string
-  children?: Tree[]
-}
 
 const tabsState = useTabs()
 const configOps = useConfig()
@@ -16,7 +11,7 @@ const treeKeys = computed(() => configOps?.treeKeys.value)
 
 const rendIcon = () => h('i', { class: 'bi:caret-right-fill w20px h20px' })
 
-const handleNodeClick = (data: Tree, node: any) => {
+const handleNodeClick = (data: TreeNode, node: any) => {
   const isLeaf = !data.children
 
   if (!isLeaf) {
@@ -38,7 +33,7 @@ const handleNodeClick = (data: Tree, node: any) => {
 
 interface ContextmenuProps {
   event: MouseEvent
-  data: Tree
+  data: TreeNode
   node: Node
 }
 
@@ -49,7 +44,7 @@ onClickOutside(contextmenuRef, () => {
   showContextmenu.value = false
 })
 
-const handleContextmenu = (event: MouseEvent, data: Tree, node: Node) => {
+const handleContextmenu = (event: MouseEvent, data: TreeNode, node: Node) => {
   showContextmenu.value = true
   contextmenuRef.value!.style.left = `${event.clientX}px`
   contextmenuRef.value!.style.top = `${event.clientY}px`
@@ -102,7 +97,7 @@ const handleCommand = (command: string) => {
     <el-scrollbar>
       <el-tree
         :data="treeKeys"
-        style="max-height: 400px;"
+        style="max-height: 500px;"
         :icon="rendIcon()"
         @node-click="handleNodeClick"
         @node-contextmenu="handleContextmenu"

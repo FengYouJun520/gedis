@@ -1,11 +1,12 @@
 use serde_json::json;
 use tauri::State;
-use tracing::info;
+use tracing::{info, instrument};
 
 use crate::{error::Result, RedisState};
 
 /// 在终端执行执行
 #[tauri::command]
+#[instrument(skip(state))]
 pub async fn terminal(
     state: State<'_, RedisState>,
     id: String,
