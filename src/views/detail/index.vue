@@ -6,6 +6,7 @@ interface DetailProps {
 }
 
 const props = defineProps<DetailProps>()
+console.log(toRaw(unref(props.tabItem)))
 </script>
 
 <template>
