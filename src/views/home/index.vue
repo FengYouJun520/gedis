@@ -3,13 +3,15 @@
 </script>
 
 <template>
-  <div relative h-full w-full>
+  <div h-full w-full>
     <div
       class="absolute left-[50%] top-[50%] -translate-[50%]"
       flex
       flex-col
       gap-y-4
       w-full
+      h-full
+      justify-center
       items-center
     >
       <i

@@ -6,8 +6,8 @@ import Tabs from './Tabs.vue'
 <template>
   <el-container h-full>
     <MenuBar />
-    <el-container direction="vertical">
-      <el-main relative>
+    <el-container>
+      <el-main>
         <Tabs />
       </el-main>
     </el-container>

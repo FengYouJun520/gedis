@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { TabsProps } from '@/store/tabs'
+import { Keyspace } from '@/types/redis'
+import { parseKeyspaces } from '@/util'
 import { invoke } from '@tauri-apps/api'
 
 interface InfoProps {
@@ -9,6 +11,7 @@ interface InfoProps {
 const props = defineProps<InfoProps>()
 const info = ref<Record<string, string>>({})
 const autoRefresh = ref(false)
+const keyspaces = ref<Keyspace[]>([])
 
 
 const fetchInfo = async () => {
@@ -20,6 +23,7 @@ const fetchInfo = async () => {
   // 获取客户端信息
   const redisInfo = await invoke<Record<string, string>>('get_info', { id: props.tabItem.id })
   info.value = redisInfo
+  keyspaces.value = parseKeyspaces(redisInfo)
   console.log(redisInfo)
 }
 
@@ -37,12 +41,22 @@ watchEffect(async () => {
 onUnmounted(() => {
   clearInterval(timer)
 })
+
+const keyspaceData = computed(() => keyspaces.value.filter(key => key.len !== 0))
+const infoData = computed(() => Object.keys(unref(info)).map(key => ({ key, value: info.value[key] })))
 </script>
 
 <template>
-  <div>
+  <div flex flex-col gap-y-6 overflow-hidden>
+    <!-- 自动刷新 -->
+    <el-space>
+      <el-tag>
+        自动刷新
+      </el-tag>
+      <el-switch v-model="autoRefresh" />
+    </el-space>
     <!-- 状态信息 -->
-    <el-row :gutter="16">
+    <el-row :gutter="24">
       <el-col :span="8">
         <el-card>
           <template #header>
@@ -144,6 +158,43 @@ onUnmounted(() => {
               </el-tag>
             </el-space>
           </el-space>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-row>
+      <el-col>
+        <el-card>
+          <template #header>
+            <el-space>
+              <i class="carbon:text-link-analysis" />
+              <p>键值统计</p>
+            </el-space>
+          </template>
+          <el-table :data="keyspaceData">
+            <el-table-column label="DB" prop="db" sortable />
+            <el-table-column label="Keys" prop="len" sortable />
+            <el-table-column label="Expires" prop="expires" sortable />
+            <el-table-column label="Avg TTL" prop="avg_ttl" sortable />
+          </el-table>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-row>
+      <el-col>
+        <el-card>
+          <template #header>
+            <el-space>
+              <i class="mdi:information" />
+              <p>Redis信息集合</p>
+            </el-space>
+          </template>
+
+          <el-table :data="infoData">
+            <el-table-column label="Key" prop="key" sortable />
+            <el-table-column label="Value" prop="value" sortable />
+          </el-table>
         </el-card>
       </el-col>
     </el-row>
