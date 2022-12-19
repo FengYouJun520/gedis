@@ -49,10 +49,7 @@ const handleCommand = (key: string, command: string) => {
 </script>
 
 <template>
-  <div
-    h-full
-    w-full
-  >
+  <div h-full w-full>
     <el-tabs
       v-model="tabsState.currentActive"
       type="border-card"

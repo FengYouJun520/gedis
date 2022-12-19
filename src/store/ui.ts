@@ -1,5 +1,5 @@
 
-const MIN_WIDTH = 240
+const MIN_WIDTH = 350
 const MAX_WIDTH = 800
 
 interface UIState {
@@ -9,7 +9,7 @@ interface UIState {
 
 export const useUiState = defineStore('ui-state', {
   state: () : UIState => ({
-    asideWidth: 300,
+    asideWidth: MIN_WIDTH,
     theme: 'system',
   }),
   actions: {

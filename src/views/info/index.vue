@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { TabsProps } from '@/store/tabs'
+import { useUiState } from '@/store/ui'
 import { Keyspace } from '@/types/redis'
 import { parseKeyspaces } from '@/util'
 import { invoke } from '@tauri-apps/api'
@@ -9,6 +10,7 @@ interface InfoProps {
 }
 
 const props = defineProps<InfoProps>()
+const uiState = useUiState()
 const info = ref<Record<string, string>>({})
 const autoRefresh = ref(false)
 const keyspaces = ref<Keyspace[]>([])
@@ -75,10 +77,10 @@ const infoData = computed(() => Object.keys(unref(info)).map(key => ({ key, valu
                 {{ info.redis_version }}
               </el-tag>
             </el-space>
-            <el-space>
+            <el-space overflow-hidden>
               <el-tag>OS:</el-tag>
               <el-tag type="success" size="large">
-                <el-tooltip :content="info.os">
+                <el-tooltip :content="info.os" :effect="uiState.theme === 'dark' ? 'light' : 'dark'">
                   {{ info.os }}
                 </el-tooltip>
               </el-tag>
