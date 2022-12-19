@@ -64,7 +64,7 @@ const filterData = computed(() => Object.keys(unref(info))
     </el-space>
     <!-- 状态信息 -->
     <el-row :gutter="24">
-      <el-col :span="8">
+      <el-col :span="24" :md="12" :lg="8">
         <el-card>
           <template #header>
             <el-space>
@@ -78,13 +78,13 @@ const filterData = computed(() => Object.keys(unref(info))
           <el-space direction="vertical" alignment="start">
             <el-space>
               <el-tag>Redis版本:</el-tag>
-              <el-tag type="success" size="large">
+              <el-tag type="success">
                 {{ info.redis_version }}
               </el-tag>
             </el-space>
             <el-space overflow-hidden>
               <el-tag>OS:</el-tag>
-              <el-tag type="success" size="large">
+              <el-tag type="success">
                 <el-tooltip :content="info.os" :effect="uiState.theme === 'dark' ? 'light' : 'dark'">
                   {{ info.os }}
                 </el-tooltip>
@@ -100,7 +100,7 @@ const filterData = computed(() => Object.keys(unref(info))
         </el-card>
       </el-col>
 
-      <el-col :span="8">
+      <el-col :span="24" :md="12" :lg="8">
         <el-card>
           <template #header>
             <el-space>
@@ -114,13 +114,13 @@ const filterData = computed(() => Object.keys(unref(info))
           <el-space direction="vertical" alignment="start">
             <el-space>
               <el-tag>已用内存:</el-tag>
-              <el-tag type="success" size="large">
+              <el-tag type="success">
                 {{ info.used_memory_human }}
               </el-tag>
             </el-space>
             <el-space>
               <el-tag>内存占用峰值:</el-tag>
-              <el-tag type="success" size="large">
+              <el-tag type="success">
                 {{ info.used_memory_peak_human }}
               </el-tag>
             </el-space>
@@ -134,7 +134,7 @@ const filterData = computed(() => Object.keys(unref(info))
         </el-card>
       </el-col>
 
-      <el-col :span="8">
+      <el-col :span="24" :md="12" :lg="8">
         <el-card>
           <template #header>
             <el-space>
@@ -148,13 +148,13 @@ const filterData = computed(() => Object.keys(unref(info))
           <el-space direction="vertical" alignment="start">
             <el-space>
               <el-tag>客户端连接数:</el-tag>
-              <el-tag type="success" size="large">
+              <el-tag type="success">
                 {{ info.connected_clients }}
               </el-tag>
             </el-space>
             <el-space>
               <el-tag>历史连接数:</el-tag>
-              <el-tag type="success" size="large">
+              <el-tag type="success">
                 {{ info.total_connections_received }}
               </el-tag>
             </el-space>

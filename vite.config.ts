@@ -40,6 +40,9 @@ export default defineConfig({
       ],
       rules: [
       ],
+      preprocess(matcher) {
+        return matcher.startsWith('el-') ? undefined : matcher
+      },
     }),
     AutoImport({
       imports: ['vue', 'pinia', '@vueuse/core'],
