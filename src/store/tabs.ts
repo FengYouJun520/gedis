@@ -4,6 +4,7 @@ export interface TabsProps {
   id: string
   key: string
   name: string
+  label: string
   value: string
   db: number
   type: 'home'| 'info' | 'detail' | 'terminal'
@@ -22,7 +23,8 @@ export const useTabs = defineStore('tabs', {
       db: 0,
       key: 'home',
       value: '',
-      name: '首页',
+      name: 'localhost',
+      label: '首页',
       type: 'home',
       icon: 'mdi:home',
     }],
@@ -38,8 +40,9 @@ export const useTabs = defineStore('tabs', {
 
       this.tabs.push({ ...tabsProps })
     },
-    editTab(tabsProps: TabsProps) {
-      const index = this.tabs.findIndex(t => t.key === tabsProps.key)
+    editTab(key: string, tabsProps: TabsProps) {
+      const index = this.tabs.findIndex(t => t.key === key)
+
       if (index === -1) {
         return
       }

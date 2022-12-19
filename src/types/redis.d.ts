@@ -31,3 +31,12 @@ export interface AddKeyInfo {
   field?: string
   id?: string
 }
+
+export interface KeyInfo {
+  key: string
+  label: string
+  type: string
+  ttl: number
+  total: number
+  value: any
+}

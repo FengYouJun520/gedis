@@ -92,6 +92,8 @@ pub async fn get_keys_by_db(
         keys.push(val);
     }
 
+    info!("获取指定数据库key列表信息成功");
+
     Ok(keys)
 }
 
@@ -118,6 +120,7 @@ pub async fn get_key_info(
     let mut keyinfo = KeyInfo {
         key: key.clone(),
         r#type: typ.clone(),
+        label: typ[0..1].to_uppercase() + &typ[1..],
         total: 0,
         ttl,
         value: RedisValue::String("".into()),

@@ -26,7 +26,8 @@ const handleNodeClick = (data: TreeNode, node: any) => {
     type: 'detail',
     key,
     value: data.value,
-    name: `${data.value} | ${configOps?.config.name} | DB${configOps?.db.value}`,
+    name: configOps!.config.name,
+    label: `${data.value} | ${configOps?.config.name} | DB${configOps?.db.value}`,
     icon: 'emojione-monotone:key',
   })
 }

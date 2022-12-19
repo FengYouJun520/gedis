@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useUiState } from './store/ui'
 import Layout from '@/layout/index.vue'
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 
 onMounted(() => {
   window.addEventListener('contextmenu', event => {
@@ -38,7 +39,9 @@ watchEffect(() => {
 </script>
 
 <template>
-  <Layout />
+  <el-config-provider :locale="zhCn">
+    <Layout />
+  </el-config-provider>
 </template>
 
 <style scoped>

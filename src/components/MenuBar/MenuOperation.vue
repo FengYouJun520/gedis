@@ -5,8 +5,8 @@ import { invoke } from '@tauri-apps/api'
 import { useConfig } from './useConfig'
 
 const tabsState = useTabs()
-const treeKeysOps = useConfig()
-const selectDB = ref(treeKeysOps?.db || 0)
+const configOps = useConfig()
+const selectDB = ref(configOps?.db || 0)
 
 const createOptions = () => {
   const result = []
@@ -23,7 +23,7 @@ const createOptions = () => {
 const options = createOptions()
 
 const handleChange = (val: number) => {
-  treeKeysOps?.changeDb(val)
+  configOps?.changeDb(val)
 }
 
 const visibleDialog = ref(false)
@@ -46,22 +46,23 @@ const handleConfirm = async () => {
       keyModel.value.value = '{"New key": "New value"}'
     }
     await invoke('set_key', {
-      id: treeKeysOps?.config.id,
-      db: treeKeysOps?.db.value,
+      id: configOps?.config.id,
+      db: configOps?.db.value,
       keyinfo: keyModel.value,
     })
 
-    await treeKeysOps?.fetchTreeKeys(treeKeysOps.config.id, treeKeysOps.db.value)
+    await configOps?.fetchTreeKeys(configOps.config.id, configOps.db.value)
 
     // 添加新的选项卡并且跳转
-    if (treeKeysOps) {
+    if (configOps) {
       tabsState.addTab({
-        id: treeKeysOps.config.id,
-        db: treeKeysOps.db.value,
+        id: configOps.config.id,
+        db: configOps.db.value,
         type: 'detail',
-        key: `${treeKeysOps.config.id}-${treeKeysOps.db.value}-${keyModel.value.key}`,
+        key: `${configOps.config.id}-${configOps.db.value}-${keyModel.value.key}`,
         value: keyModel.value.key,
-        name: keyModel.value.key,
+        name: configOps.config.name,
+        label: keyModel.value.key,
       })
     }
 
@@ -96,7 +97,7 @@ const handleCloseDialog = () => {
         <el-option
           v-for="(item, index) in options"
           :key="item.value"
-          :label="`${item.label} (${treeKeysOps?.keyspaces.value[index].len || 0})`"
+          :label="`${item.label} (${configOps?.keyspaces.value[index].len || 0})`"
           :value="item.value"
         />
       </el-select>

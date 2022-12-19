@@ -91,7 +91,7 @@ const handleCommand = (key: string, command: string) => {
                 :class="{ 'tab--active': tabItem.key === tabsState.currentActive }"
               >
                 <i :class="tabItem.icon" />
-                <span>{{ tabItem.name }}</span>
+                <span>{{ tabItem.label }}</span>
               </div>
               <template #dropdown>
                 <el-dropdown-menu>

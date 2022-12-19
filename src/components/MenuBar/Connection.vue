@@ -8,6 +8,7 @@ import { Keyspace, RedisConfig } from '@/types/redis'
 import type { ElMenu } from 'element-plus'
 import { keysToTree, parseKeyspaces } from '@/util'
 import { createConfigContext } from './useConfig'
+import { useMitt } from '@/useMitt'
 
 interface ConnectionProps {
   config: RedisConfig
@@ -15,6 +16,7 @@ interface ConnectionProps {
 
 const props = defineProps<ConnectionProps>()
 
+const mitt = useMitt()
 const tabsState = useTabs()
 const treeKeys = ref<string[]>([])
 const keyspaces = ref<Keyspace[]>([])
@@ -26,6 +28,19 @@ const selectDb = ref(0)
 
 const changeDb = (db: number) => {
   selectDb.value = db
+  mitt.emit('changeDb', db)
+}
+
+mitt.on('fetchInfo', id=> fetchInfo(id))
+mitt.on('fetchTreeKeys', ({ id, db }) => fetchTreeKeys(id, db))
+
+const fetchInfo = async (id: string) => {
+  try {
+    const info = await invoke<Record<string, string>>('get_info', { id })
+    keyspaces.value = parseKeyspaces(info)
+  } catch (error) {
+    ElMessage.error(error as string)
+  }
 }
 
 const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
@@ -38,8 +53,8 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
       await invoke('connection', { config })
     }
 
-    const info = await invoke<Record<string, string>>('get_info', { id: config.id })
-    keyspaces.value = parseKeyspaces(info)
+
+    await fetchInfo(props.config.id)
 
     // 获取所有key
     await fetchTreeKeys(config.id, unref(selectDb))
@@ -55,6 +70,7 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
         key: config.id,
         value: config.id,
         name: config.name,
+        label: config.name,
         db: 0,
         type: 'info',
         icon: 'emojione:rocket',

@@ -52,6 +52,7 @@ impl StreamResult {
 pub struct KeyInfo {
     pub key: String,
     pub r#type: String,
+    pub label: String,
     pub ttl: i64,
     pub total: usize,
     pub value: RedisValue,
