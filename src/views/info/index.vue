@@ -17,16 +17,18 @@ const keyspaces = ref<Keyspace[]>([])
 const search = ref('')
 
 const fetchInfo = async () => {
-  const isConnection = await invoke<boolean>('is_connection', { id: props.tabItem.id })
-  if (!isConnection) {
-    return
+  try {
+    const isConnection = await invoke<boolean>('is_connection', { id: props.tabItem.id })
+    if (!isConnection) {
+      return
+    }
+    // 获取客户端信息
+    const redisInfo = await invoke<Record<string, string>>('get_info', { id: props.tabItem.id })
+    info.value = redisInfo
+    keyspaces.value = parseKeyspaces(redisInfo)
+  } catch (error) {
+    ElMessage.error(error as string)
   }
-  // 连接成功
-  // 获取客户端信息
-  const redisInfo = await invoke<Record<string, string>>('get_info', { id: props.tabItem.id })
-  info.value = redisInfo
-  keyspaces.value = parseKeyspaces(redisInfo)
-  console.log(redisInfo)
 }
 
 let timer:number

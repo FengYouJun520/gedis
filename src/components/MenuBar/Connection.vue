@@ -61,7 +61,7 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
       })
     }
 
-    await nextTick(() => {
+    nextTick(() => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       menuRef.value?.open?.(config.id, [config.id])
