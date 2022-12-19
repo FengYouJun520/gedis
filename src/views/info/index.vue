@@ -14,7 +14,7 @@ const uiState = useUiState()
 const info = ref<Record<string, string>>({})
 const autoRefresh = ref(false)
 const keyspaces = ref<Keyspace[]>([])
-
+const search = ref('')
 
 const fetchInfo = async () => {
   const isConnection = await invoke<boolean>('is_connection', { id: props.tabItem.id })
@@ -45,7 +45,10 @@ onUnmounted(() => {
 })
 
 const keyspaceData = computed(() => keyspaces.value.filter(key => key.len !== 0))
-const infoData = computed(() => Object.keys(unref(info)).map(key => ({ key, value: info.value[key] })))
+
+const filterData = computed(() => Object.keys(unref(info))
+  .filter(key => key.includes(unref(search)) || info.value[key].includes(unref(search)))
+  .map(key => ({ key, value: info.value[key] })))
 </script>
 
 <template>
@@ -187,13 +190,21 @@ const infoData = computed(() => Object.keys(unref(info)).map(key => ({ key, valu
       <el-col>
         <el-card>
           <template #header>
-            <el-space>
-              <i class="mdi:information" />
-              <p>Redis信息集合</p>
+            <el-space w-full justify-between>
+              <el-space>
+                <i class="mdi:information" />
+                <p>Redis信息集合</p>
+              </el-space>
+
+              <el-input v-model="search" placeholder="搜索">
+                <template #suffix>
+                  <i class="ant-design:search-outlined" />
+                </template>
+              </el-input>
             </el-space>
           </template>
 
-          <el-table :data="infoData">
+          <el-table :data="filterData">
             <el-table-column label="Key" prop="key" sortable />
             <el-table-column label="Value" prop="value" sortable />
           </el-table>
