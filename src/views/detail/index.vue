@@ -38,6 +38,39 @@ const fetchKeyInfo = async () => {
   }
 }
 
+onMounted(async () => {
+  await fetchKeyInfo()
+})
+
+const handleSaveKey = () => {
+  ElMessageBox.confirm('是否保存该键？', {
+    type: 'info',
+  }).then(async () => {
+    await invoke('rename_key', {
+      id: unref(id),
+      db: unref(db),
+      key: unref(key),
+      newKey: unref(keyinfo).key,
+    })
+
+    const tabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
+
+    key.value = unref(keyinfo).key
+    const newTabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
+    tabsState.editTab(tabKey, {
+      ...props.tabItem,
+      key: newTabKey,
+      label: `${unref(key)} | ${props.tabItem.name} | DB${unref(db)}`,
+      value: unref(keyinfo).key,
+    })
+    tabsState.setActive(newTabKey)
+
+    mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
+  })
+    .catch(() =>{})
+}
+
+
 const handleTTL = async (ttl: number) => {
   try {
     await invoke('set_key_ttl', {
@@ -53,38 +86,16 @@ const handleTTL = async (ttl: number) => {
   }
 }
 
-const handleSaveKey = () => {
-  ElMessageBox.confirm('是否保存该键？', {
+const handleSetKeyTTL = () => {
+  ElMessageBox.confirm(`是否设置该键的过期时间为: ${unref(keyinfo).ttl}？`, {
     type: 'info',
   }).then(async () => {
-    await invoke('rename_key', {
-      id: unref(id),
-      db: unref(db),
-      key: unref(key),
-      newKey: unref(keyinfo).key,
-    })
-
-    mitt.emit('fetchTreeKeys', {
-      id: unref(id),
-      db: unref(db),
-    })
-
-    const tabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
-
-    key.value = unref(keyinfo).key
-    const newTabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
-    tabsState.editTab(tabKey, {
-      ...props.tabItem,
-      key: newTabKey,
-      label: `${unref(key)} | ${props.tabItem.name} | DB${unref(db)}`,
-      value: unref(keyinfo).key,
-    })
-    tabsState.setActive(newTabKey)
+    await handleTTL(unref(keyinfo).ttl)
   })
-    .catch(() =>{})
+    .catch(() => {})
 }
 
-const handlePersist = () => {
+const handlePersistKey = () => {
   ElMessageBox.confirm('是否持久化该键？', {
     type: 'info',
   }).then(async () => {
@@ -93,9 +104,22 @@ const handlePersist = () => {
     .catch(()=>{})
 }
 
-onMounted(async () => {
-  await fetchKeyInfo()
-})
+const handleDeleteKey = () => {
+  ElMessageBox.confirm('是否删除该键？', {
+    type: 'error',
+  }).then(async () => {
+    try {
+      await invoke('del_key', { id: unref(id), db: unref(db), keys: [unref(key)] })
+
+      tabsState.removeTab(`${unref(id)}-${unref(db)}-${unref(key)}`)
+      mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
+    } catch (error) {
+      ElMessage.error(error as string
+      )
+    }
+  })
+    .catch(() => {})
+}
 </script>
 
 <template>
@@ -121,10 +145,10 @@ onMounted(async () => {
           <template #suffix>
             <el-space>
               <el-tooltip content="持久化" :show-after="1000">
-                <i class="mdi:timer-lock-outline cursor-pointer" @click="handlePersist" />
+                <i class="mdi:timer-lock-outline cursor-pointer" @click="handlePersistKey" />
               </el-tooltip>
               <el-tooltip content="修改过期时间" :show-after="1000">
-                <i class="mdi:av-timer cursor-pointer" @click="handleTTL(keyinfo.ttl)" />
+                <i class="mdi:av-timer cursor-pointer" @click="handleSetKeyTTL" />
               </el-tooltip>
             </el-space>
           </template>
@@ -134,7 +158,7 @@ onMounted(async () => {
       <el-form-item>
         <el-space>
           <el-tooltip content="删除键" :show-after="1000">
-            <el-button type="danger">
+            <el-button type="danger" @click="handleDeleteKey">
               <template #icon>
                 <i class="mdi:delete" />
               </template>

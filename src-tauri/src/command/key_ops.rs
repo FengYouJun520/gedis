@@ -1,4 +1,7 @@
-use crate::{error::Result, model::*};
+use crate::{
+    error::{Result, SerializeError},
+    model::*,
+};
 use anyhow::Context;
 use redis::{AsyncCommands, AsyncIter};
 use serde_json::json;
@@ -280,19 +283,14 @@ pub async fn set_key_ttl(
     let client = state.0.lock().await;
     let mut con = client.get_async_con(&id, db).await?;
 
-    let mut iter: AsyncIter<'_, String> = con.scan_match(&key).await?;
-
-    let mut keys = vec![];
-    while let Some(val) = iter.next_item().await {
-        keys.push(val);
+    if ttl < -1 {
+        return Err(SerializeError::from("过期的值不能小于-1"));
     }
 
-    for key in keys {
-        if ttl == -1 {
-            con.persist(key).await?;
-        } else {
-            con.expire(key, ttl as usize).await?;
-        }
+    if ttl == -1 {
+        con.persist(&key).await?;
+    } else {
+        con.expire(&key, ttl as usize).await?;
     }
 
     info!(?key, ?ttl, "设置key的ttl成功");

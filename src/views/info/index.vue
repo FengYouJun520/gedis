@@ -64,7 +64,7 @@ const filterData = computed(() => Object.keys(unref(info))
     </el-space>
     <!-- 状态信息 -->
     <el-row :gutter="24">
-      <el-col :span="24" :md="12" :lg="8">
+      <el-col :span="24" :md="8">
         <el-card>
           <template #header>
             <el-space>
@@ -100,7 +100,7 @@ const filterData = computed(() => Object.keys(unref(info))
         </el-card>
       </el-col>
 
-      <el-col :span="24" :md="12" :lg="8">
+      <el-col :span="24" :md="8">
         <el-card>
           <template #header>
             <el-space>
@@ -134,7 +134,7 @@ const filterData = computed(() => Object.keys(unref(info))
         </el-card>
       </el-col>
 
-      <el-col :span="24" :md="12" :lg="8">
+      <el-col :span="24" :md="8">
         <el-card>
           <template #header>
             <el-space>
