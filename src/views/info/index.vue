@@ -10,28 +10,32 @@ interface InfoProps {
 }
 
 const props = defineProps<InfoProps>()
+const id = ref(props.tabItem.id)
+const db = ref(props.tabItem.db)
+const key = ref(props.tabItem.value)
 const uiState = useUiState()
 const info = ref<Record<string, string>>({})
 const autoRefresh = ref(false)
 const keyspaces = ref<Keyspace[]>([])
 const search = ref('')
 
+let timer:number
 const fetchInfo = async () => {
   try {
-    const isConnection = await invoke<boolean>('is_connection', { id: props.tabItem.id })
-    if (!isConnection) {
-      return
-    }
     // 获取客户端信息
-    const redisInfo = await invoke<Record<string, string>>('get_info', { id: props.tabItem.id })
+    const redisInfo = await invoke<Record<string, string>>('get_info', { id: unref(id) })
     info.value = redisInfo
     keyspaces.value = parseKeyspaces(redisInfo)
   } catch (error) {
     ElMessage.error(error as string)
+    autoRefresh.value = false
+    if (timer) {
+      clearInterval(timer)
+    }
   }
 }
 
-let timer:number
+
 watchEffect(async () => {
   if (unref(autoRefresh)) {
     clearInterval(timer)
@@ -43,14 +47,16 @@ watchEffect(async () => {
 })
 
 onUnmounted(() => {
-  clearInterval(timer)
+  if (timer) {
+    clearInterval(timer)
+  }
 })
 
-const keyspaceData = computed(() => keyspaces.value.filter(key => key.len !== 0))
+const keyspaceData = computed(() => unref(keyspaces).filter(key => key.len !== 0))
 
 const filterData = computed(() => Object.keys(unref(info))
-  .filter(key => key.includes(unref(search)) || info.value[key].includes(unref(search)))
-  .map(key => ({ key, value: info.value[key] })))
+  .filter(key => key.includes(unref(search)) || unref(info)[key].includes(unref(search)))
+  .map(key => ({ key, value: unref(info)[key] })))
 </script>
 
 <template>

@@ -20,8 +20,9 @@ pub async fn del_key(
     db: u8,
     keys: Vec<String>,
 ) -> Result<()> {
-    let client = state.0.lock().await;
-    let mut con = client.get_async_con(&id, db).await?;
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
+    redis::cmd("SELECT").arg(db).query_async(con).await?;
 
     con.del(&keys)
         .await
@@ -44,10 +45,18 @@ pub async fn del_key_by_value(
     let value = value.unwrap_or_default();
     info!(?key, ?value);
 
-    let client = state.0.lock().await;
-    let mut con = client.get_async_con(&id, db).await?;
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
+    redis::cmd("SELECT").arg(db).query_async(con).await?;
 
-    let typ: String = redis::cmd("TYPE").arg(&key).query_async(&mut con).await?;
+    let typ: String = redis::pipe()
+        .cmd("SELECT")
+        .arg(db)
+        .ignore()
+        .cmd("TYPE")
+        .arg(&key)
+        .query_async(con)
+        .await?;
 
     match typ.as_str() {
         "string" => con.del(&key).await,
@@ -68,10 +77,15 @@ pub async fn del_key_by_value(
 #[instrument]
 #[tauri::command]
 pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: u8) -> Result<()> {
-    let client = state.0.lock().await;
-    let mut con = client.get_async_con(&id, db).await?;
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
 
-    redis::cmd("FLUSHDB").query_async(&mut con).await?;
+    redis::pipe()
+        .cmd("SELECT")
+        .arg(db)
+        .cmd("FLUSHDB")
+        .query_async(con)
+        .await?;
 
     info!("清空所有key成功");
     Ok(())
@@ -85,8 +99,10 @@ pub async fn get_keys_by_db(
     id: String,
     db: u8,
 ) -> Result<Vec<String>> {
-    let client = state.0.lock().await;
-    let mut con = client.get_async_con(&id, db).await?;
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
+
+    redis::cmd("SELECT").arg(db).query_async(con).await?;
 
     let mut iter: AsyncIter<'_, String> = con.scan().await?;
 
@@ -109,15 +125,17 @@ pub async fn get_key_info(
     db: u8,
     key: String,
 ) -> Result<KeyInfo> {
-    let client = state.0.lock().await;
-    let mut con = client.get_async_con(&id, db).await?;
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
 
     let (typ, ttl): (String, i64) = redis::pipe()
-        .atomic()
+        .cmd("SELECT")
+        .arg(db)
+        .ignore()
         .cmd("TYPE")
         .arg(&key)
         .ttl(&key)
-        .query_async(&mut con)
+        .query_async(con)
         .await?;
 
     let mut keyinfo = KeyInfo {
@@ -211,10 +229,16 @@ pub async fn rename_key(
     key: String,
     new_key: String,
 ) -> Result<()> {
-    let client = state.0.lock().await;
-    let mut con = client.get_async_con(&id, db).await?;
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
 
-    con.rename_nx(&key, &new_key).await?;
+    redis::pipe()
+        .cmd("SELECT")
+        .arg(db)
+        .ignore()
+        .rename_nx(&key, &new_key)
+        .query_async(con)
+        .await?;
 
     info!("重命名key成功, key: {}, new_key: {}", key, new_key);
 
@@ -230,8 +254,9 @@ pub async fn set_key(
     db: u8,
     keyinfo: AddKeyInfo,
 ) -> Result<()> {
-    let client = state.0.lock().await;
-    let mut con = client.get_async_con(&id, db).await?;
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
+    redis::cmd("SELECT").arg(db).query_async(con).await?;
 
     match keyinfo.r#type.as_str() {
         "string" => con.set(&keyinfo.key, &keyinfo.value).await,
@@ -280,8 +305,9 @@ pub async fn set_key_ttl(
     key: String,
     ttl: i64,
 ) -> Result<()> {
-    let client = state.0.lock().await;
-    let mut con = client.get_async_con(&id, db).await?;
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
+    redis::cmd("SELECT").arg(db).query_async(con).await?;
 
     if ttl < -1 {
         return Err(SerializeError::from("过期的值不能小于-1"));

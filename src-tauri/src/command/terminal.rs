@@ -15,8 +15,9 @@ pub async fn terminal(
 ) -> Result<serde_json::Value> {
     info!(?args);
 
-    let client = state.0.lock().await;
-    let mut con = client.get_async_con(&id, db).await?;
+    let mut client = state.0.lock().await;
+    let con = client.get_con_mut(&id).await?;
+    redis::cmd("SELECT").arg(db).query_async(con).await?;
 
     let Some(args) = args else {
         return Ok(json!(""));
@@ -35,7 +36,7 @@ pub async fn terminal(
 
     let res: redis::Value = redis::cmd(cmd_name.as_ref())
         .arg(args)
-        .query_async(&mut con)
+        .query_async(con)
         .await?;
 
     let json_result = parse_result(res);
