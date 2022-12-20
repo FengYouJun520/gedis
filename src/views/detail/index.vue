@@ -2,7 +2,13 @@
 import { TabsProps, useTabs } from '@/store/tabs'
 import { KeyInfo } from '@/types/redis'
 import { useMitt } from '@/useMitt'
-import { clipboard, invoke } from '@tauri-apps/api'
+import { invoke } from '@tauri-apps/api'
+import KeyString from './KeyString.vue'
+import KeyList from './keyList.vue'
+import KeySet from './KeySet.vue'
+import KeyZSet from './KeyZSet.vue'
+import KeyHash from './KeyHash.vue'
+import KeyStream from './KeyStream.vue'
 
 interface DetailProps {
   tabItem: TabsProps
@@ -19,8 +25,12 @@ const keyinfo = ref<KeyInfo>({
   label: '',
   total: 0,
   ttl: -1,
-  type: '',
+  type: 'string',
   value: '',
+})
+
+mitt.on('fetchKeyInfo', async () => {
+  await fetchKeyInfo()
 })
 
 const fetchKeyInfo = async () => {
@@ -54,7 +64,6 @@ const handleSaveKey = () => {
     })
 
     const tabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
-
     key.value = unref(keyinfo).key
     const newTabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
     tabsState.editTab(tabKey, {
@@ -131,6 +140,24 @@ const handleRefresh = async () => {
     mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
   }
 }
+
+
+const components: Record<string, any> = {
+  string: KeyString,
+  list: KeyList,
+  set: KeySet,
+  zset: KeyZSet,
+  hash: KeyHash,
+  stream: KeyStream,
+}
+const comp = computed(() => {
+  if (components[keyinfo.value.type]) {
+    return components[keyinfo.value.type]
+  } else {
+    ElMessage.error(`键的类型: ${keyinfo.value.type}是不支持的`)
+    return null
+  }
+})
 </script>
 
 <template>
@@ -186,9 +213,15 @@ const handleRefresh = async () => {
       </el-form-item>
     </el-form>
 
-    <div>
-      {{ keyinfo.value }}
-    </div>
+    <component
+      :is="comp"
+      v-bind="{
+        id,
+        db,
+        keyLabel: key,
+        keyinfo,
+      }"
+    />
   </div>
 </template>
 

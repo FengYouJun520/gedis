@@ -257,6 +257,7 @@ pub async fn set_key(
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
     redis::cmd("SELECT").arg(db).query_async(con).await?;
+    let expired: usize = con.ttl(&keyinfo.key).await?;
 
     match keyinfo.r#type.as_str() {
         "string" => con.set(&keyinfo.key, &keyinfo.value).await,
@@ -290,6 +291,8 @@ pub async fn set_key(
         }
         _ => return Err(format!("不支持的类型: {}", keyinfo.r#type).into()),
     }?;
+
+    con.expire(&keyinfo.key, expired).await?;
 
     info!(?keyinfo, "设置key成功: ");
     Ok(())
