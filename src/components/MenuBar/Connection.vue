@@ -97,6 +97,7 @@ const handleDisConnection = async (id: string) => {
   try {
     await invoke('dis_connection', { id })
     isOpen.value = false
+    connected.value = false
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     menuRef.value.close(id, [id])
@@ -127,12 +128,13 @@ const fetchTreeKeys = async (id: string, db: number) => {
   } catch (error) {
     ElMessage.error(error as string)
     isOpen.value = false
+    connected.value = false
   }
 }
 
 watch(selectDb, async db => {
   try {
-    if (!isOpen) {
+    if (!unref(isOpen) || !unref(connected)) {
       return
     }
 
@@ -140,6 +142,7 @@ watch(selectDb, async db => {
   } catch (error) {
     ElMessage.error(error as string)
     isOpen.value = false
+    connected.value = false
   }
 })
 
