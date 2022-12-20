@@ -182,7 +182,7 @@ const parseResult = (result: any) => {
 </script>
 
 <template>
-  <div flex flex-col h-full>
+  <div flex flex-col class="h-[calc(100vh-128px)]">
     <ElScrollbar ref="scrollRef">
       <div ref="divRef" flex-1 p-4 space-y-2>
         <div v-for="(message, i) in messages" :key="v4() + i" :class="`content--${message.type}`">
@@ -216,5 +216,8 @@ const parseResult = (result: any) => {
 }
 :deep(.el-autocomplete) {
   width: 100%;
+}
+.el-scrollbar__view {
+  height: 100%;
 }
 </style>

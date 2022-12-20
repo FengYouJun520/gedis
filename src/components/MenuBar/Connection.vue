@@ -21,6 +21,7 @@ const tabsState = useTabs()
 const treeKeys = ref<string[]>([])
 const keyspaces = ref<Keyspace[]>([])
 const menuRef = ref<InstanceType<typeof ElMenu>|null>(null)
+const connected = ref(false)
 
 const loading = ref(false)
 const isOpen = ref(false)
@@ -46,13 +47,11 @@ const fetchInfo = async (id: string) => {
 const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
   try {
     // 是否连接
-    const isConnection = await invoke<boolean>('is_connection', { id: config.id })
-
-    if (!isConnection) {
+    if (!unref(connected)) {
       loading.value = true
       await invoke('connection', { config })
+      connected.value = true
     }
-
 
     await fetchInfo(props.config.id)
 
@@ -85,6 +84,7 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
   } catch (error) {
     ElMessage.error(error as string)
     isOpen.value = false
+    connected.value = false
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     menuRef.value?.close(config.id, [config.id])
@@ -109,8 +109,7 @@ const handleDisConnection = async (id: string) => {
 
 const handleOpen = async () => {
   try {
-    const isConnection = await invoke<boolean>('is_connection', { id: props.config.id })
-    if (isConnection) {
+    if (unref(connected)) {
       return
     }
 

@@ -2,7 +2,7 @@
 import { TabsProps, useTabs } from '@/store/tabs'
 import { KeyInfo } from '@/types/redis'
 import { useMitt } from '@/useMitt'
-import { invoke } from '@tauri-apps/api'
+import { clipboard, invoke } from '@tauri-apps/api'
 
 interface DetailProps {
   tabItem: TabsProps
@@ -24,22 +24,22 @@ const keyinfo = ref<KeyInfo>({
 })
 
 const fetchKeyInfo = async () => {
-  try {
-    const res = await invoke<KeyInfo>('get_key_info', {
-      id: unref(id),
-      db: unref(db),
-      key: unref(key),
-    })
+  const res = await invoke<KeyInfo>('get_key_info', {
+    id: unref(id),
+    db: unref(db),
+    key: unref(key),
+  })
 
-    keyinfo.value = res
-    key.value = res.key
-  } catch (error) {
-    ElMessage.error(error as string)
-  }
+  keyinfo.value = res
+  key.value = res.key
 }
 
 onMounted(async () => {
-  await fetchKeyInfo()
+  try {
+    await fetchKeyInfo()
+  } catch (error) {
+    ElMessage.error(error as string)
+  }
 })
 
 const handleSaveKey = () => {
@@ -120,6 +120,17 @@ const handleDeleteKey = () => {
   })
     .catch(() => {})
 }
+
+const handleRefresh = async () => {
+  try {
+    await fetchKeyInfo()
+  } catch (error) {
+    // key不存在
+    ElMessage.error(`指定的键${unref(key)}不存在`)
+    tabsState.removeTab(`${unref(id)}-${unref(db)}-${unref(key)}`)
+    mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
+  }
+}
 </script>
 
 <template>
@@ -165,16 +176,9 @@ const handleDeleteKey = () => {
             </el-button>
           </el-tooltip>
           <el-tooltip content="刷新" :show-after="1000">
-            <el-button type="success" @click="fetchKeyInfo">
+            <el-button type="success" @click="handleRefresh">
               <template #icon>
                 <i class="mdi:refresh" />
-              </template>
-            </el-button>
-          </el-tooltip>
-          <el-tooltip content="复制为命令" :show-after="1000">
-            <el-button type="primary">
-              <template #icon>
-                <i class="ant-design:copy-outlined" />
               </template>
             </el-button>
           </el-tooltip>
