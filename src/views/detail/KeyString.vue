@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useMitt } from '@/useMitt'
 import { clipboard, invoke } from '@tauri-apps/api'
-import { KeyContentDetail, AddKeyInfo } from '@/types/redis'
+import { KeyContentDetail, AddKeyInfo, KeyInfo } from '@/types/redis'
 
 interface StringProps {
   id: string
   db: number
   keyLabel: string
+  keyinfo: KeyInfo
 }
 
 const props = defineProps<StringProps>()
@@ -24,19 +25,19 @@ const keyDetail = ref<KeyContentDetail>({
   value: '',
 })
 
-const fetchKeyDetail = async () => await invoke<KeyContentDetail>('get_key_detail', {
-  id: unref(id),
-  db: unref(db),
-  key: unref(key),
-})
+const fetchKeyDetail = async () => {
+  const detail = await invoke<KeyContentDetail>('get_key_detail', {
+    id: unref(id),
+    db: unref(db),
+    key: props.keyinfo.key,
+  })
 
-onMounted(async () => {
+  keyDetail.value = detail
+}
+
+watch(props, async () => {
   try {
-    const detail = await fetchKeyDetail()
-    console.log('string detail')
-    console.log(detail)
-
-    keyDetail.value = detail
+    await fetchKeyDetail()
   } catch (error) {
     ElMessage.error(error as string)
   }

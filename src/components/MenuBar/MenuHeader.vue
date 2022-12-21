@@ -73,16 +73,20 @@ const handleSettingCancel = () => {
       <span class="text-base">新建连接</span>
     </el-button>
     <el-space>
-      <el-button size="small" text bg @click="handleSettingBtn">
-        <template #icon>
-          <i class="material-symbols:settings" />
-        </template>
-      </el-button>
-      <el-button size="small" text bg>
-        <template #icon>
-          <i class="mdi:clock-minus-outline" />
-        </template>
-      </el-button>
+      <el-tooltip content="设置" :show-after="500">
+        <el-button size="small" text bg @click="handleSettingBtn">
+          <template #icon>
+            <i class="material-symbols:settings" />
+          </template>
+        </el-button>
+      </el-tooltip>
+      <el-tooltip content="日志" :show-after="500">
+        <el-button size="small" text bg>
+          <template #icon>
+            <i class="mdi:clock-minus-outline" />
+          </template>
+        </el-button>
+      </el-tooltip>
     </el-space>
 
     <el-dialog

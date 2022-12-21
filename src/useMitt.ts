@@ -8,7 +8,8 @@ type Events = {
     id: string,
     db: number
   },
-  fetchKeyInfo?:void
+  fetchKeyInfo?:void,
+  refreKeyDetail?: void
 }
 
 const emitter: Emitter<Events> = mitt<Events>()

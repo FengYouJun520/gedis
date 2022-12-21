@@ -86,14 +86,7 @@ pub async fn del_key_by_value(
     let con = redis_state.get_con_mut(&id).await?;
     redis::cmd("SELECT").arg(db).query_async(con).await?;
 
-    let typ: String = redis::pipe()
-        .cmd("SELECT")
-        .arg(db)
-        .ignore()
-        .cmd("TYPE")
-        .arg(&key)
-        .query_async(con)
-        .await?;
+    let typ: String = redis::cmd("TYPE").arg(&key).query_async(con).await?;
 
     match typ.as_str() {
         "string" => con.del(&key).await,
@@ -334,7 +327,14 @@ pub async fn set_key(
 
     match keyinfo.r#type.as_str() {
         "string" => con.set(&keyinfo.key, &keyinfo.value).await,
-        "list" => con.lpush(&keyinfo.key, &keyinfo.value).await,
+        "list" => {
+            // 键不存在
+            if expired == -2 {
+                con.lpush(&keyinfo.key, &keyinfo.value).await
+            } else {
+                con.rpush(&keyinfo.key, &keyinfo.value).await
+            }
+        }
         "set" => con.sadd(&keyinfo.key, &keyinfo.value).await,
         "zset" => {
             con.zadd(
@@ -365,12 +365,13 @@ pub async fn set_key(
         _ => return Err(format!("不支持的类型: {}", keyinfo.r#type).into()),
     }?;
 
-    // 键不存在(-2)或持久化的(-1)
-    if expired <= -1 {
-        con.persist(&keyinfo.key).await?;
-    } else {
-        con.expire(&keyinfo.key, expired as usize).await?;
-    }
+    match expired {
+        // 键不存在(-2)
+        -2 => con.persist(&keyinfo.key).await?,
+        // 已持久化的(-1)
+        -1 => return Ok(()),
+        _ => con.expire(&keyinfo.key, expired as usize).await?,
+    };
 
     info!(?keyinfo, "设置key成功: ");
     Ok(())

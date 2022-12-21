@@ -219,6 +219,7 @@ const comp = computed(() => {
       :id="id"
       :db="db"
       :key-label="key"
+      :keyinfo="keyinfo"
     />
   </div>
 </template>
