@@ -15,19 +15,20 @@ interface DetailProps {
 }
 
 const props = defineProps<DetailProps>()
+
+const initialData:KeyInfo = {
+  key: '',
+  label: '',
+  ttl: -1,
+  type: 'string',
+}
+
 const tabsState = useTabs()
 const mitt = useMitt()
 const id = computed(() => props.tabItem.id)
 const db = computed(() => props.tabItem.db)
 const key = ref(props.tabItem.value)
-const keyinfo = ref<KeyInfo>({
-  key: '',
-  label: '',
-  total: 0,
-  ttl: -1,
-  type: 'string',
-  value: '',
-})
+const keyinfo = ref<KeyInfo>({ ...initialData })
 
 mitt.on('fetchKeyInfo', async () => {
   await fetchKeyInfo()
@@ -215,12 +216,9 @@ const comp = computed(() => {
 
     <component
       :is="comp"
-      v-bind="{
-        id,
-        db,
-        keyLabel: key,
-        keyinfo,
-      }"
+      :id="id"
+      :db="db"
+      :key-label="key"
     />
   </div>
 </template>

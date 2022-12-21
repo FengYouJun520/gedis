@@ -37,6 +37,13 @@ export interface KeyInfo {
   label: string
   type: string
   ttl: number
-  total: number
+}
+
+export interface KeyContentDetail {
+  key: string
+  label: string
+  type: string
+  ttl: number
+  size: number
   value: any
 }

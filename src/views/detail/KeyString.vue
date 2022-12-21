@@ -1,23 +1,42 @@
 <script setup lang="ts">
 import { useMitt } from '@/useMitt'
-import { invoke } from '@tauri-apps/api'
-import { AddKeyInfo, KeyInfo } from '@/types/redis'
+import { clipboard, invoke } from '@tauri-apps/api'
+import { KeyContentDetail, AddKeyInfo } from '@/types/redis'
 
 interface StringProps {
   id: string
   db: number
   keyLabel: string
-  keyinfo: KeyInfo
 }
 
 const props = defineProps<StringProps>()
+const id = ref(props.id)
+const db = ref(props.db)
+const key = ref(props.keyLabel)
 const mitt = useMitt()
-console.log(props.keyinfo)
 
-const addKeyinfo = ref<AddKeyInfo>({
+const keyDetail = ref<KeyContentDetail>({
   key: props.keyLabel,
   type: 'string',
-  value: props.keyinfo.value,
+  label: '',
+  size: 0,
+  ttl: -1,
+  value: '',
+})
+
+const fetchKeyDetail = async () => await invoke<KeyContentDetail>('get_key_detail', {
+  id: unref(id),
+  db: unref(db),
+  key: unref(key),
+})
+
+onMounted(async () => {
+  try {
+    const detail = await fetchKeyDetail()
+    keyDetail.value = detail
+  } catch (error) {
+    ElMessage.error(error as string)
+  }
 })
 
 const handleSave = () => {
@@ -25,25 +44,50 @@ const handleSave = () => {
     type: 'info',
   }).then(async () => {
     try {
+      const keyinfo: AddKeyInfo = {
+        key: unref(key),
+        type: 'string',
+        value: unref(keyDetail).value,
+      }
+
       await invoke('set_key', {
         id: props.id,
         db: props.db,
-        keyinfo: unref(addKeyinfo),
+        keyinfo,
       })
+
       mitt.emit('fetchKeyInfo')
+      await fetchKeyDetail()
     } catch (error) {
       ElMessage.error(error as string)
     }
   })
     .catch(() => {})
 }
+
+const copyContent = () => {
+  clipboard.writeText(unref(keyDetail).value)
+}
 </script>
 
 <template>
-  <div>
-    <el-form :model="addKeyinfo">
+  <div flex flex-col gap-y-2>
+    <el-space>
+      <el-tag>
+        Size: {{ keyDetail.size }}B
+      </el-tag>
+      <el-button text size="small" @click="copyContent">
+        复制
+        <template #icon>
+          <span>
+            <i class="ant-design:copy-outlined" />
+          </span>
+        </template>
+      </el-button>
+    </el-space>
+    <el-form :model="keyDetail">
       <el-form-item prop="value">
-        <el-input v-model="addKeyinfo.value" :rows="24" type="textarea" />
+        <el-input v-model="keyDetail.value" :rows="24" type="textarea" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleSave">

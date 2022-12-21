@@ -36,6 +36,7 @@ fn main() {
             dis_connection,
             dis_connection_all,
             get_info,
+            get_key_detail,
             del_key,
             del_key_by_value,
             clear_keys,

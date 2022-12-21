@@ -49,13 +49,22 @@ impl StreamResult {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct KeyContentDetail {
+    pub key: String,
+    pub r#type: String,
+    pub label: String,
+    pub ttl: i64,
+    pub size: usize,
+    pub value: RedisValue,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct KeyInfo {
     pub key: String,
     pub r#type: String,
     pub label: String,
     pub ttl: i64,
-    pub total: usize,
-    pub value: RedisValue,
 }
 
 #[derive(Debug, Deserialize)]

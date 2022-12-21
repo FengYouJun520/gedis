@@ -116,7 +116,7 @@ pub async fn get_keys_by_db(
     Ok(keys)
 }
 
-/// 获取键对应的详细信息
+/// 获取键的基础信息
 #[tauri::command]
 #[instrument(skip(state))]
 pub async fn get_key_info(
@@ -125,6 +125,40 @@ pub async fn get_key_info(
     db: u8,
     key: String,
 ) -> Result<KeyInfo> {
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
+    redis::cmd("SELECT").arg(db).query_async(con).await?;
+
+    let (typ, ttl): (String, i64) = redis::pipe()
+        .cmd("TYPE")
+        .arg(&key)
+        .ttl(&key)
+        .query_async(con)
+        .await?;
+
+    let label = typ[0..1].to_uppercase() + &typ[1..];
+
+    let keyinfo = KeyInfo {
+        key,
+        r#type: typ,
+        label,
+        ttl,
+    };
+
+    info!(?keyinfo, "获取key基础信息成功");
+
+    Ok(keyinfo)
+}
+
+/// 获取键对应的详细信息
+#[tauri::command]
+#[instrument(skip(state))]
+pub async fn get_key_detail(
+    state: State<'_, RedisState>,
+    id: String,
+    db: u8,
+    key: String,
+) -> Result<KeyContentDetail> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
 
@@ -138,24 +172,25 @@ pub async fn get_key_info(
         .query_async(con)
         .await?;
 
-    let mut keyinfo = KeyInfo {
+    let mut keyinfo = KeyContentDetail {
         key: key.clone(),
         r#type: typ.clone(),
         label: typ[0..1].to_uppercase() + &typ[1..],
-        total: 0,
+        size: 0,
         ttl,
         value: RedisValue::String("".into()),
     };
 
     match typ.as_str() {
         "string" => {
-            let val = con.get(&key).await?;
+            let val: String = con.get(&key).await?;
+            keyinfo.size = val.len();
             keyinfo.value = RedisValue::String(val);
         }
         "list" => {
             let count: usize = con.llen(&key).await?;
             let values: Vec<String> = con.lrange(&key, 0, (count as isize) - 1).await?;
-            keyinfo.total = count;
+            keyinfo.size = count;
             keyinfo.value = RedisValue::List(values);
         }
         "set" => {
@@ -165,7 +200,7 @@ pub async fn get_key_info(
             while let Some(val) = iter.next_item().await {
                 values.push(val);
             }
-            keyinfo.total = count;
+            keyinfo.size = count;
             keyinfo.value = RedisValue::Set(values);
         }
         "zset" => {
@@ -176,7 +211,7 @@ pub async fn get_key_info(
             let length = data.len();
             let values: Vec<Z> = data.into_iter().map(|d| Z::new(d.1, d.0)).collect();
 
-            keyinfo.total = length;
+            keyinfo.size = length;
             keyinfo.value = RedisValue::ZSet(values);
         }
         "hash" => {
@@ -187,7 +222,7 @@ pub async fn get_key_info(
                 values.push(HashResult::new(key, value));
             }
 
-            keyinfo.total = count;
+            keyinfo.size = count;
             keyinfo.value = RedisValue::Hash(values);
         }
         "stream" => {
@@ -208,7 +243,7 @@ pub async fn get_key_info(
                 })
                 .collect();
 
-            keyinfo.total = count;
+            keyinfo.size = count;
             keyinfo.value = RedisValue::Stream(value);
         }
         _ => return Err(format!("key不存在: {}, type: {}", key, typ).into()),
@@ -257,7 +292,7 @@ pub async fn set_key(
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
     redis::cmd("SELECT").arg(db).query_async(con).await?;
-    let expired: usize = con.ttl(&keyinfo.key).await?;
+    let expired: isize = con.ttl(&keyinfo.key).await?;
 
     match keyinfo.r#type.as_str() {
         "string" => con.set(&keyinfo.key, &keyinfo.value).await,
@@ -292,7 +327,11 @@ pub async fn set_key(
         _ => return Err(format!("不支持的类型: {}", keyinfo.r#type).into()),
     }?;
 
-    con.expire(&keyinfo.key, expired).await?;
+    if expired == -1 {
+        con.persist(&keyinfo.key).await?;
+    } else {
+        con.expire(&keyinfo.key, expired as usize).await?;
+    }
 
     info!(?keyinfo, "设置key成功: ");
     Ok(())
