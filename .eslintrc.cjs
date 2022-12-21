@@ -66,7 +66,7 @@ module.exports = {
     'comma-style': ['error', 'last'],
     'computed-property-spacing': ['error', 'never'],
     'eol-last': ['error', 'always'],
-    'func-call-spacing': ['error', 'never'],
+    'func-call-spacing': ['off', 'never'],
     'key-spacing': ['error', {
       beforeColon: false,
       afterColon: true,
