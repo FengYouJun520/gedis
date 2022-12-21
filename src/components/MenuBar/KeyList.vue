@@ -57,7 +57,26 @@ const handleDeleteKey = async () => {
     await invoke('del_key', {
       id: configOps?.config.id,
       db: configOps?.db.value,
-      keys: [contextmenuData.value?.data.value],
+      key: contextmenuData.value?.data.value,
+    })
+
+    configOps?.fetchTreeKeys(configOps.config.id, configOps.db.value)
+    ElMessage.success(`删除键: ${contextmenuData.value?.data.value}成功`)
+    // 如果有选项卡，删除选项卡
+    tabsState.removeTab(
+      `${configOps?.config.id}-${configOps?.db.value}-${contextmenuData.value?.data.value}`
+    )
+  } catch (error) {
+    ElMessage.error(error as string)
+  }
+}
+
+const handleDeleteFolder = async () => {
+  try {
+    await invoke('del_match_keys', {
+      id: configOps?.config.id,
+      db: configOps?.db.value,
+      matchKey: `${contextmenuData.value?.data.value}*`,
     })
 
     configOps?.fetchTreeKeys(configOps.config.id, configOps.db.value)
@@ -81,6 +100,9 @@ const handleCommand = (command: string) => {
   switch (command) {
   case 'delete-key':
     handleDeleteKey()
+    break
+  case 'delete-folder':
+    handleDeleteFolder()
     break
   case 'copy-key':
     handleCopyKey()
@@ -150,11 +172,11 @@ const handleCommand = (command: string) => {
             items-center
             space-x2
             justify-start
-            @click="handleCommand('delete-key')"
+            @click="handleCommand('delete-folder')"
           >
-            <i class="material-symbols:delete-outline" />
+            <i class="material-symbols:content-copy-outline" />
             <span>
-              删除
+              删除文件
             </span>
           </div>
         </template>

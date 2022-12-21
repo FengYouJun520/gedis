@@ -11,24 +11,61 @@ use tracing::{info, instrument};
 
 use super::state::RedisState;
 
-/// 删除一个或多个键
+/// 获取键的类型
 #[instrument]
 #[tauri::command]
-pub async fn del_key(
+pub async fn get_key_type(
     state: State<'_, RedisState>,
     id: String,
     db: u8,
-    keys: Vec<String>,
+    key: String,
+) -> Result<String> {
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
+    redis::cmd("SELECT").arg(db).query_async(con).await?;
+
+    let typ: String = redis::cmd("TYPE").arg(&key).query_async(con).await?;
+    Ok(typ)
+}
+
+/// 删除一个键
+#[instrument(skip(state))]
+#[tauri::command]
+pub async fn del_key(state: State<'_, RedisState>, id: String, db: u8, key: String) -> Result<()> {
+    let mut redis_state = state.0.lock().await;
+    let con = redis_state.get_con_mut(&id).await?;
+    redis::cmd("SELECT").arg(db).query_async(con).await?;
+
+    con.del(&key)
+        .await
+        .context(format!("删除键失败, id: {id}, key: {key}"))?;
+
+    info!("删除key: {}成功", key);
+    Ok(())
+}
+
+/// 删除命名空间匹配的键
+#[instrument(skip(state))]
+#[tauri::command]
+pub async fn del_match_keys(
+    state: State<'_, RedisState>,
+    id: String,
+    db: u8,
+    match_key: String,
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
     redis::cmd("SELECT").arg(db).query_async(con).await?;
 
-    con.del(&keys)
-        .await
-        .context(format!("删除多个键失败, id: {id}"))?;
+    let mut iter: AsyncIter<String> = con.scan_match(&match_key).await?;
+    let mut keys = vec![];
+    while let Some(key) = iter.next_item().await {
+        keys.push(key);
+    }
 
-    info!(?keys, "删除多个key成功");
+    con.del(&keys).await.context(format!("删除多个键失败"))?;
+
+    info!("删除多个key成功");
     Ok(())
 }
 
@@ -293,6 +330,7 @@ pub async fn set_key(
     let con = redis_state.get_con_mut(&id).await?;
     redis::cmd("SELECT").arg(db).query_async(con).await?;
     let expired: isize = con.ttl(&keyinfo.key).await?;
+    info!(expired);
 
     match keyinfo.r#type.as_str() {
         "string" => con.set(&keyinfo.key, &keyinfo.value).await,
@@ -327,7 +365,8 @@ pub async fn set_key(
         _ => return Err(format!("不支持的类型: {}", keyinfo.r#type).into()),
     }?;
 
-    if expired == -1 {
+    // 键不存在(-2)或持久化的(-1)
+    if expired <= -1 {
         con.persist(&keyinfo.key).await?;
     } else {
         con.expire(&keyinfo.key, expired as usize).await?;

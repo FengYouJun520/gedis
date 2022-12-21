@@ -1,4 +1,3 @@
-import { RedisConfig } from '@/types/redis'
 
 export interface TabsProps {
   id: string

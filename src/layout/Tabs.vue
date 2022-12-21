@@ -25,7 +25,6 @@ onMounted(async () => {
   })
 })
 
-
 const handleCommand = (key: string, command: string) => {
   switch (command) {
   case 'close':

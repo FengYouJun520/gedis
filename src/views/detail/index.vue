@@ -4,7 +4,7 @@ import { KeyInfo } from '@/types/redis'
 import { useMitt } from '@/useMitt'
 import { invoke } from '@tauri-apps/api'
 import KeyString from './KeyString.vue'
-import KeyList from './keyList.vue'
+import KeyList from './KeyList.vue'
 import KeySet from './KeySet.vue'
 import KeyZSet from './KeyZSet.vue'
 import KeyHash from './KeyHash.vue'
@@ -16,7 +16,7 @@ interface DetailProps {
 
 const props = defineProps<DetailProps>()
 
-const initialData:KeyInfo = {
+const initialData: KeyInfo = {
   key: '',
   label: '',
   ttl: -1,
@@ -119,7 +119,7 @@ const handleDeleteKey = () => {
     type: 'error',
   }).then(async () => {
     try {
-      await invoke('del_key', { id: unref(id), db: unref(db), keys: [unref(key)] })
+      await invoke('del_key', { id: unref(id), db: unref(db), key: unref(key) })
 
       tabsState.removeTab(`${unref(id)}-${unref(db)}-${unref(key)}`)
       mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })

@@ -39,11 +39,11 @@ export interface KeyInfo {
   ttl: number
 }
 
-export interface KeyContentDetail {
+export interface KeyContentDetail<T = any> {
   key: string
   label: string
   type: string
   ttl: number
   size: number
-  value: any
+  value: T
 }

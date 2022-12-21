@@ -16,7 +16,7 @@ const key = ref(props.keyLabel)
 const mitt = useMitt()
 
 const keyDetail = ref<KeyContentDetail>({
-  key: props.keyLabel,
+  key: unref(key),
   type: 'string',
   label: '',
   size: 0,
@@ -33,6 +33,9 @@ const fetchKeyDetail = async () => await invoke<KeyContentDetail>('get_key_detai
 onMounted(async () => {
   try {
     const detail = await fetchKeyDetail()
+    console.log('string detail')
+    console.log(detail)
+
     keyDetail.value = detail
   } catch (error) {
     ElMessage.error(error as string)
