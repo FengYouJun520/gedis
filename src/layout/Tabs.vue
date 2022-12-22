@@ -87,8 +87,12 @@ const handleCommand = (key: string, command: string) => {
                 space-x2
                 :class="{ 'tab--active': tabItem.key === tabsState.currentActive }"
               >
-                <i :class="tabItem.icon" />
-                <span>{{ tabItem.label }}</span>
+                <el-tooltip content="ctrl+w关闭标签页" :show-after="1000">
+                  <el-space>
+                    <i :class="tabItem.icon" />
+                    <span>{{ tabItem.label }}</span>
+                  </el-space>
+                </el-tooltip>
               </div>
               <template #dropdown>
                 <el-dropdown-menu>
