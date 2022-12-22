@@ -47,7 +47,7 @@ const handleNodeClick = (data: TreeNode, node: any) => {
     value: data.value,
     name: configOps!.config.name,
     label: `${data.value} | ${configOps?.config.name} | DB${configOps?.db.value}`,
-    icon: 'emojione-monotone:key',
+    icon: 'fxemoji:key',
   })
 }
 
@@ -149,8 +149,8 @@ const handleCommand = (command: string) => {
         <template #default="{ node, data }">
           <template v-if="data.children">
             <div flex items-center>
-              <i v-if="node.expanded" class="mdi:folder-open w20px h20px" />
-              <i v-else class="mdi:folder w20px h20px" />
+              <i v-if="node.expanded" class="vscode-icons:folder-type-redis-opened w20px h20px" />
+              <i v-else class="vscode-icons:folder-type-redis w20px h20px" />
               <span ml1>{{ node.label }} ({{ data.children.length }})</span>
             </div>
           </template>

@@ -147,7 +147,7 @@ const filterData = computed(() => Object.keys(unref(info))
               <span>
                 <i class="carbon:status-partial-fail" />
               </span>
-              <span>服务器</span>
+              <span>状态</span>
             </el-space>
           </template>
 
