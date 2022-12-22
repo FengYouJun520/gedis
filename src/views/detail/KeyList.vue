@@ -3,14 +3,14 @@ import { AddKeyInfo, KeyContentDetail, KeyInfo } from '@/types/redis'
 import { clipboard, invoke } from '@tauri-apps/api'
 import FormDataView from './FormDataView.vue'
 
-interface StringProps {
+interface ListProps {
   id: string
   db: number
   keyLabel: string
   keyinfo: KeyInfo
 }
 
-const props = defineProps<StringProps>()
+const props = defineProps<ListProps>()
 
 const id = ref(props.id)
 const db = ref(props.db)

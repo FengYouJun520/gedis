@@ -55,6 +55,16 @@ const handleConfirm = () => {
     @close="handleCancel"
   >
     <ElForm ref="formRef" :model="addKeyinfo">
+      <el-form-item v-if="addKeyinfo.type === 'zset'" label="分数" prop="score">
+        <el-input-number v-model="addKeyinfo.score" />
+      </el-form-item>
+      <el-form-item v-if="addKeyinfo.type === 'hash'" label="Field" prop="field">
+        <el-input v-model="addKeyinfo.field" />
+      </el-form-item>
+      <el-form-item v-if="addKeyinfo.type === 'stream'" label="ID" prop="id">
+        <el-input v-model="addKeyinfo.id" />
+      </el-form-item>
+
       <el-form-item>
         <el-space>
           <span>Value</span>
@@ -70,15 +80,7 @@ const handleConfirm = () => {
           </el-button>
         </el-space>
       </el-form-item>
-      <el-form-item v-if="addKeyinfo.type === 'zset'" label="分数" prop="score">
-        <el-input-number v-model="addKeyinfo.score" />
-      </el-form-item>
-      <el-form-item v-if="addKeyinfo.type === 'hash'" label="Field" prop="field">
-        <el-input v-model="addKeyinfo.field" />
-      </el-form-item>
-      <el-form-item v-if="addKeyinfo.type === 'stream'" label="ID" prop="id">
-        <el-input v-model="addKeyinfo.id" />
-      </el-form-item>
+
       <el-form-item>
         <el-input v-model="addKeyinfo.value" type="textarea" :rows="8" />
       </el-form-item>

@@ -78,5 +78,7 @@ pub struct AddKeyInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub field: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub old_field: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
 }

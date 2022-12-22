@@ -345,12 +345,14 @@ pub async fn set_key(
             .await
         }
         "hash" => {
-            con.hset_nx(
-                &keyinfo.key,
-                keyinfo.field.clone().unwrap_or_default(),
-                &keyinfo.value,
-            )
-            .await
+            let field = keyinfo.field.clone().unwrap_or_default();
+            match keyinfo.old_field {
+                Some(ref old_field) if *old_field != field => {
+                    con.hset(&keyinfo.key, &field, &keyinfo.value).await?;
+                    con.hdel(&keyinfo.key, &old_field).await
+                }
+                _ => con.hset(&keyinfo.key, &field, &keyinfo.value).await,
+            }
         }
         "stream" => {
             let value: HashMap<String, String> = serde_json::from_str(&keyinfo.value)?;

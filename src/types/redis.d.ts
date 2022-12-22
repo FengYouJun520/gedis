@@ -29,6 +29,7 @@ export interface AddKeyInfo {
   value: string
   score?: number
   field?: string
+  oldField?: string
   id?: string
 }
 

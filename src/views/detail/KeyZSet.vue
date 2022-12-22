@@ -3,28 +3,28 @@ import { AddKeyInfo, KeyContentDetail, KeyInfo } from '@/types/redis'
 import { clipboard, invoke } from '@tauri-apps/api'
 import FormDataView from './FormDataView.vue'
 
-interface StringProps {
+interface ZSetProps {
   id: string
   db: number
   keyLabel: string
   keyinfo: KeyInfo
 }
 
-interface ZSetProps {
+interface ZSetDetail {
   score: number
   member: string
 }
 
-const props = defineProps<StringProps>()
+const props = defineProps<ZSetProps>()
 
 const id = ref(props.id)
 const db = ref(props.db)
 const key = ref(props.keyLabel)
-const listValue = ref<ZSetProps[]>([])
+const listValue = ref<ZSetDetail[]>([])
 const isEdit = ref(false)
 const showDialog = ref(false)
 
-const keyDetail = ref<KeyContentDetail<ZSetProps[]>>({
+const keyDetail = ref<KeyContentDetail<ZSetDetail[]>>({
   key: unref(key),
   type: props.keyinfo.type,
   label: '',
@@ -40,7 +40,7 @@ const addKeyinfo = ref<AddKeyInfo>({
 })
 
 const fetchKeyDetail = async () => {
-  const detail = await invoke<KeyContentDetail<ZSetProps[]>>('get_key_detail', {
+  const detail = await invoke<KeyContentDetail<ZSetDetail[]>>('get_key_detail', {
     id: unref(id),
     db: unref(db),
     key: props.keyinfo.key,
