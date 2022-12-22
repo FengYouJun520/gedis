@@ -63,7 +63,7 @@ onMounted(async () => {
   }
 })
 
-watch(props, async () => {
+watch(() => props.keyinfo, async () => {
   try {
     await fetchKeyDetail()
   } catch (error) {
@@ -126,18 +126,16 @@ const handleCancel = () => {
 
 const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
   try {
-    if (!valid || !keyinfo.value || unref(readonly)) {
+    // 删除原来值
+    if (unref(isEdit)) {
+      isEdit.value = false
+      showDialog.value = false
       return
     }
 
-    // 删除原来值
-    if (unref(isEdit)) {
-      await invoke('del_key_by_value', {
-        id: unref(id),
-        db: unref(db),
-        key: unref(key),
-        value: keyinfo.id,
-      })
+    if (!valid || !keyinfo.value || unref(readonly)) {
+      ElMessage.error('校验失败')
+      return
     }
 
     const obj: object = JSON.parse(keyinfo.value)

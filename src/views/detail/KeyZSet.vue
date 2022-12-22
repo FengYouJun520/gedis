@@ -61,7 +61,7 @@ onMounted(async () => {
   }
 })
 
-watch(props, async () => {
+watch(() => props.keyinfo, async () => {
   try {
     await fetchKeyDetail()
   } catch (error) {
@@ -130,7 +130,7 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
         id: unref(id),
         db: unref(db),
         key: unref(key),
-        value: keyinfo.value,
+        value: unref(addKeyinfo).value,
       })
     }
 

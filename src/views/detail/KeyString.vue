@@ -54,8 +54,6 @@ const handleSave = () => {
         value: unref(keyDetail).value,
       }
 
-      console.log(keyinfo)
-
       await invoke('set_key', {
         id: props.id,
         db: props.db,
