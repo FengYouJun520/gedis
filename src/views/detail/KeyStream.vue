@@ -172,10 +172,10 @@ const objToString = (obj: Record<string, any>) => {
   let res: Record<string, string> = {}
 
   for (const k in obj) {
-    if (typeof obj[k] === 'object') {
-      res[k] = '[object Object]'
-    } else if (Array.isArray(obj[k])) {
+    if (Array.isArray(obj[k])) {
       res[k] = new Array(obj[k]).join(',')
+    } else if (typeof obj[k] === 'object') {
+      res[k] = '[object Object]'
     } else if (typeof obj[k] === 'bigint' ||
     typeof obj[k] === 'number' ||
     typeof obj[k] === 'boolean') {
