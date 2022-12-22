@@ -157,7 +157,7 @@ const handleCommand = (command: string) => {
 
           <template v-else>
             <div flex items-center>
-              <i class="mdi:key-variant w20px h20px" />
+              <i class="fxemoji:key w20px h20px" />
               <span ml1>{{ node.label }}</span>
             </div>
           </template>
