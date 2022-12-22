@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import { shell } from '@tauri-apps/api'
 
+const githubUrl = 'https://github.com/FengYouJun520'
+const openGithub = () => {
+  shell.open(githubUrl)
+}
 </script>
 
 <template>
@@ -23,7 +28,7 @@
         <span text-center>Gedis 0.1.0</span>
       </div>
       <div flex items-center>
-        <el-button size="large" circle text>
+        <el-button size="large" circle text @click="openGithub">
           <template #icon>
             <i
               class="mdi:github"

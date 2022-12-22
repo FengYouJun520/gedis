@@ -158,9 +158,11 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
     isEdit.value = false
     showDialog.value = false
   } catch (error) {
-    console.log(error)
-
-    ElMessage.error(error as string)
+    if (error instanceof SyntaxError) {
+      ElMessage.error(error.message)
+    } else {
+      ElMessage.error(error as string)
+    }
   }
 }
 

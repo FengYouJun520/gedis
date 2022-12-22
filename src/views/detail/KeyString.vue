@@ -29,13 +29,13 @@ const fetchKeyDetail = async () => {
   const detail = await invoke<KeyContentDetail>('get_key_detail', {
     id: unref(id),
     db: unref(db),
-    key: props.keyinfo.key,
+    key: unref(key),
   })
 
   keyDetail.value = detail
 }
 
-watch(props, async () => {
+watch(() => props.keyinfo, async () => {
   try {
     await fetchKeyDetail()
   } catch (error) {
@@ -53,6 +53,8 @@ const handleSave = () => {
         type: 'string',
         value: unref(keyDetail).value,
       }
+
+      console.log(keyinfo)
 
       await invoke('set_key', {
         id: props.id,

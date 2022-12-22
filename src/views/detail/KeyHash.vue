@@ -109,8 +109,6 @@ const addValueClick = () => {
 }
 
 const editValueClick = (scope: any) => {
-  console.log(scope.row)
-
   isEdit.value = true
   showDialog.value = true
   addKeyinfo.value.oldField = scope.row.key
@@ -124,7 +122,6 @@ const handleCancel = () => {
 }
 
 const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
-  console.log(unref(keyinfo))
   try {
     if (!valid || !keyinfo.value) {
       return

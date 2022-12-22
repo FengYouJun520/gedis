@@ -21,7 +21,6 @@ mitt.on('searchKeyTree', query => {
 })
 
 const filterNode = (value: string, data: TreeNode | TreeNodeData, node: Node) => {
-  console.log(data, node)
   const rawData = data as TreeNode
   if (node.isLeaf) {
     return rawData.value.includes(value)
