@@ -85,6 +85,9 @@ const handleDeleteKey = async () => {
     tabsState.removeTab(
       `${configOps?.config.id}-${configOps?.db.value}-${contextmenuData.value?.data.value}`
     )
+
+    mitt.emit('fetchInfo', configOps!.config.id)
+    mitt.emit('fetchTreeKeys', { id: configOps!.config.id, db: configOps!.db.value })
   } catch (error) {
     ElMessage.error(error as string)
   }
@@ -104,6 +107,9 @@ const handleDeleteFolder = async () => {
     tabsState.removeTab(
       `${configOps?.config.id}-${configOps?.db.value}-${contextmenuData.value?.data.value}`
     )
+
+    mitt.emit('fetchInfo', configOps!.config.id)
+    mitt.emit('fetchTreeKeys', { id: configOps!.config.id, db: configOps!.db.value })
   } catch (error) {
     ElMessage.error(error as string)
   }

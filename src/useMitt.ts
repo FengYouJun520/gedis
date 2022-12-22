@@ -2,7 +2,6 @@ import mitt, { Emitter } from 'mitt'
 
 type Events = {
   changeDb: number,
-  getInfo?: void,
   fetchInfo: string,
   searchKeyTree: string,
   fetchTreeKeys: {

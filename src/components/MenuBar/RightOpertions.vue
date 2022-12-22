@@ -2,6 +2,7 @@
 import { useRedis } from '@/store/redis'
 import { useTabs } from '@/store/tabs'
 import { RedisConfig } from '@/types/redis'
+import { useMitt } from '@/useMitt'
 import { invoke } from '@tauri-apps/api'
 import { v4 } from 'uuid'
 import { useConfig } from './useConfig'
@@ -12,6 +13,7 @@ interface MenuOperationProps {
 }
 
 const props = defineProps<MenuOperationProps>()
+const mitt = useMitt()
 const configState = useRedis()
 const configOps = useConfig()
 const tabsState = useTabs()
@@ -165,6 +167,7 @@ const handleClearKeys = async () => {
     try {
       await invoke('clear_keys', { id: props.config.id, db: configOps?.db.value })
       await configOps?.fetchTreeKeys(props.config.id, configOps.db.value)
+      mitt.emit('fetchInfo', props.config.id)
     } catch (error) {
       ElMessage.error(error as string)
     }
