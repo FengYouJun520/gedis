@@ -18,7 +18,7 @@ const mitt = useMitt()
 
 const keyDetail = ref<KeyContentDetail>({
   key: unref(key),
-  type: 'string',
+  type: props.keyinfo.type,
   label: '',
   size: 0,
   ttl: -1,

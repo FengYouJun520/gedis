@@ -21,7 +21,7 @@ const showDialog = ref(false)
 
 const keyDetail = ref<KeyContentDetail<string[]>>({
   key: unref(key),
-  type: 'list',
+  type: props.keyinfo.type,
   label: '',
   size: 0,
   ttl: -1,
@@ -30,7 +30,7 @@ const keyDetail = ref<KeyContentDetail<string[]>>({
 
 const addKeyinfo = ref<AddKeyInfo>({
   key: unref(key),
-  type: 'list',
+  type: props.keyinfo.type,
   value: '',
 })
 
@@ -92,7 +92,7 @@ const addValueClick = () => {
   showDialog.value = true
   addKeyinfo.value = {
     key: unref(key),
-    type: 'list',
+    type: props.keyinfo.type,
     value: '',
   }
 }
