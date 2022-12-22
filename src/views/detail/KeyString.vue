@@ -91,7 +91,7 @@ const copyContent = () => {
     </el-space>
     <el-form :model="keyDetail">
       <el-form-item prop="value">
-        <el-input v-model="keyDetail.value" :rows="24" type="textarea" />
+        <el-input v-model="keyDetail.value" :rows="20" type="textarea" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleSave">

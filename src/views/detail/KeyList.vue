@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { AddKeyInfo, KeyContentDetail, KeyInfo } from '@/types/redis'
-import { useMitt } from '@/useMitt'
 import { clipboard, invoke } from '@tauri-apps/api'
-import { ElForm } from 'element-plus'
 import FormDataView from './FormDataView.vue'
 
 interface StringProps {
@@ -17,14 +15,13 @@ const props = defineProps<StringProps>()
 const id = ref(props.id)
 const db = ref(props.db)
 const key = ref(props.keyLabel)
-const mitt = useMitt()
 const listValue = ref<{value: string}[]>([])
 const isEdit = ref(false)
 const showDialog = ref(false)
 
 const keyDetail = ref<KeyContentDetail<string[]>>({
   key: unref(key),
-  type: 'string',
+  type: 'list',
   label: '',
   size: 0,
   ttl: -1,
@@ -113,14 +110,11 @@ const handleCancel = () => {
 
 const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
   try {
-    console.log(valid)
-
     if (!valid || !keyinfo.value) {
       isEdit.value = false
       showDialog.value = false
       return
     }
-    console.log(addKeyinfo.value.value)
 
     // 删除原来值
     if (unref(isEdit)) {
@@ -161,9 +155,10 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
     <el-table
       :data="listValue"
       border
+      stripe
     >
       <el-table-column type="index" :width="200" :label="`ID（Total: ${keyDetail.size}）`" />
-      <el-table-column prop="value" label="Value" />
+      <el-table-column prop="value" label="Value" sortable />
       <el-table-column label="Operation">
         <template #default="scope">
           <el-space>
@@ -186,7 +181,7 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
               </el-button>
             </el-tooltip>
             <el-tooltip content="删除值" :show-after="1000">
-              <el-button text @click="deleteValueByKey(scope)">
+              <el-button type="danger" text @click="deleteValueByKey(scope)">
                 <template #icon>
                   <span>
                     <i class="ant-design:delete-outlined" />
@@ -204,7 +199,6 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
       :model="addKeyinfo"
       :is-edit="isEdit"
       :title="isEdit ? '修改行' : '添加新行'"
-      :size="isEdit ? keyDetail.size : 0"
       @cancel="handleCancel"
       @confirm="handleConfirm"
     />

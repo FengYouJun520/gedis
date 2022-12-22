@@ -9,7 +9,6 @@ type Events = {
     db: number
   },
   fetchKeyInfo?:void,
-  refreKeyDetail?: void
 }
 
 const emitter: Emitter<Events> = mitt<Events>()
