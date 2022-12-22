@@ -113,7 +113,12 @@ const handleCloseDialog = () => {
       </el-button>
     </div>
     <div>
-      <el-input v-model="search" placeholder="搜索" @update:model-value="handleSearchChange" />
+      <el-input
+        v-model="search"
+        clearable
+        placeholder="搜索"
+        @update:model-value="handleSearchChange"
+      />
     </div>
 
     <el-dialog
