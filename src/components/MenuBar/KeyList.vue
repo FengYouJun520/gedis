@@ -1,13 +1,33 @@
 <script setup lang="ts">
 import { useTabs } from '@/store/tabs'
 import { TreeNode } from '@/types/redis'
+import { useMitt } from '@/useMitt'
 import { clipboard, invoke } from '@tauri-apps/api'
+import type { ElTree } from 'element-plus'
 import Node from 'element-plus/es/components/tree/src/model/node'
+import { TreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
 import { useConfig } from './useConfig'
 
 const tabsState = useTabs()
+const mitt = useMitt()
 const configOps = useConfig()
-const treeKeys = computed(() => configOps?.treeKeys.value)
+const treeKeys = computed(() =>configOps!.treeKeys.value)
+const search = ref('')
+const treeRef = ref<InstanceType<typeof ElTree>|null>(null)
+
+mitt.on('searchKeyTree', query => {
+  search.value = query
+  treeRef.value?.filter(query)
+})
+
+const filterNode = (value: string, data: TreeNode | TreeNodeData, node: Node) => {
+  console.log(data, node)
+  const rawData = data as TreeNode
+  if (node.isLeaf) {
+    return rawData.value.includes(value)
+  }
+  return rawData.label.includes(value)
+}
 
 const rendIcon = () => h('i', { class: 'bi:caret-right-fill w20px h20px' })
 
@@ -118,10 +138,12 @@ const handleCommand = (command: string) => {
 <template>
   <div mt4>
     <el-scrollbar>
-      <el-tree
+      <ElTree
+        ref="treeRef"
         :data="treeKeys"
         style="max-height: 500px;"
         :icon="rendIcon()"
+        :filter-node-method="filterNode"
         @node-click="handleNodeClick"
         @node-contextmenu="handleContextmenu"
       >
@@ -141,7 +163,7 @@ const handleCommand = (command: string) => {
             </div>
           </template>
         </template>
-      </el-tree>
+      </ElTree>
     </el-scrollbar>
 
     <!-- contextmenu -->

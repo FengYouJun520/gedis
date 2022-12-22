@@ -4,6 +4,7 @@ type Events = {
   changeDb: number,
   getInfo?: void,
   fetchInfo: string,
+  searchKeyTree: string,
   fetchTreeKeys: {
     id: string,
     db: number

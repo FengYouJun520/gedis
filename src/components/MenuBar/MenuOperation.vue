@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { useTabs } from '@/store/tabs'
 import { AddKeyInfo } from '@/types/redis'
+import { useMitt } from '@/useMitt'
 import { invoke } from '@tauri-apps/api'
 import { useConfig } from './useConfig'
 
 const tabsState = useTabs()
+const mitt = useMitt()
 const configOps = useConfig()
 const selectDB = ref(configOps?.db || 0)
+const search = ref('')
 
 const createOptions = () => {
   const result = []
@@ -24,6 +27,10 @@ const options = createOptions()
 
 const handleChange = (val: number) => {
   configOps?.changeDb(val)
+}
+
+const handleSearchChange = () => {
+  mitt.emit('searchKeyTree', unref(search))
 }
 
 const visibleDialog = ref(false)
@@ -106,7 +113,7 @@ const handleCloseDialog = () => {
       </el-button>
     </div>
     <div>
-      <el-input placeholder="搜索" />
+      <el-input v-model="search" placeholder="搜索" @update:model-value="handleSearchChange" />
     </div>
 
     <el-dialog
