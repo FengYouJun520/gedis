@@ -127,8 +127,6 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
   console.log(unref(keyinfo))
   try {
     if (!valid || !keyinfo.value) {
-      isEdit.value = false
-      showDialog.value = false
       return
     }
 
@@ -138,7 +136,7 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
         id: unref(id),
         db: unref(db),
         key: unref(key),
-        value: unref(addKeyinfo).value,
+        value: keyinfo.value,
       })
     }
 
@@ -155,8 +153,6 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
     showDialog.value = false
   } catch (error) {
     ElMessage.error(error as string)
-    isEdit.value = false
-    showDialog.value = false
   }
 }
 </script>

@@ -8,6 +8,7 @@ interface FormDataViewProps {
   modelValue: boolean
   model: AddKeyInfo
   isEdit: boolean
+  readonly?: boolean
 }
 
 const props = defineProps<FormDataViewProps>()
@@ -42,6 +43,11 @@ const handleConfirm = () => {
     emit('confirm', unref(addKeyinfo), valid)
   })
 }
+
+const streamViewJson = computed(() => {
+  const obj:Record<string, any> = JSON.parse(props.model.value)
+  return JSON.stringify(obj, null, 2)
+})
 </script>
 
 <template>
@@ -62,7 +68,7 @@ const handleConfirm = () => {
         <el-input v-model="addKeyinfo.field" />
       </el-form-item>
       <el-form-item v-if="addKeyinfo.type === 'stream'" label="ID" prop="id">
-        <el-input v-model="addKeyinfo.id" />
+        <el-input v-model="addKeyinfo.id" :disabled="readonly" />
       </el-form-item>
 
       <el-form-item>
@@ -81,8 +87,20 @@ const handleConfirm = () => {
         </el-space>
       </el-form-item>
 
-      <el-form-item>
-        <el-input v-model="addKeyinfo.value" type="textarea" :rows="8" />
+      <el-form-item v-if="addKeyinfo.type === 'stream' && isEdit">
+        <el-input
+          v-model="streamViewJson"
+          :readonly="readonly"
+          type="textarea"
+          :rows="8"
+        />
+      </el-form-item>
+      <el-form-item v-else>
+        <el-input
+          v-model="addKeyinfo.value"
+          type="textarea"
+          :rows="8"
+        />
       </el-form-item>
     </ElForm>
 
