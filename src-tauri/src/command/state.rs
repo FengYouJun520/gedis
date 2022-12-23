@@ -1,20 +1,19 @@
-use crate::{config::RedisConfig, error::Result, redis_log::RedisLog};
+use crate::{config::RedisConfig, error::Result};
 use anyhow::Context;
-use std::{collections::HashMap, fmt::Debug};
+use async_trait::async_trait;
+use redis::{Cmd, Pipeline};
+use std::{collections::HashMap, fmt::Debug, sync::Arc};
 use tauri::async_runtime::Mutex;
-
 #[derive(Default)]
 pub struct Redis {
     configs: HashMap<String, RedisConfig>,
     connections: HashMap<String, redis::aio::Connection>,
-    histories: HashMap<String, RedisLog>,
 }
 
 impl Debug for Redis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Redis")
             .field("configs", &self.configs)
-            .field("histories", &self.histories)
             .finish()
     }
 }
@@ -50,14 +49,63 @@ impl Redis {
         let con = self.connections.get_mut(id).context("客户端未连接")?;
         Ok(con)
     }
+}
 
-    pub fn get_log(&self, id: &str) -> Result<&RedisLog> {
-        let log = self.histories.get(id).context("获取日志信息失败")?;
-        Ok(log)
+#[derive(Debug, Default)]
+pub struct History(pub Arc<Mutex<Vec<String>>>);
+
+impl History {
+    pub async fn add_log(&self, value: String) {
+        let mut histories = self.0.lock().await;
+        histories.push(value);
     }
 
-    pub fn get_config(&self, id: &str) -> Result<&RedisConfig> {
-        let config = self.configs.get(id).context("获取配置失败")?;
-        Ok(config)
+    pub async fn add_log_vec(&self, values: Vec<String>) {
+        let log: String = values.join(" ").to_lowercase();
+        self.add_log(log).await
+    }
+}
+
+impl Clone for History {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+#[async_trait]
+pub trait CmdLog: Send {
+    async fn log(&self, state: Arc<Mutex<Vec<String>>>) -> &Self;
+}
+
+#[async_trait]
+impl CmdLog for Pipeline {
+    async fn log(&self, state: Arc<Mutex<Vec<String>>>) -> &Self {
+        let iter = self.cmd_iter();
+        for cmd in iter {
+            _ = cmd.log(state.clone());
+        }
+
+        self
+    }
+}
+
+#[async_trait]
+impl CmdLog for Cmd {
+    async fn log(&self, state: Arc<Mutex<Vec<String>>>) -> &Self {
+        let mut logs: Vec<String> = vec![];
+        let iter = self.args_iter();
+        for arg in iter {
+            match arg {
+                redis::Arg::Simple(val) => {
+                    logs.push(String::from_utf8_lossy(val).to_lowercase());
+                }
+                redis::Arg::Cursor => {}
+            }
+        }
+
+        let log: String = logs.join(" ");
+        state.lock().await.push(log);
+
+        self
     }
 }

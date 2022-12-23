@@ -1,6 +1,6 @@
 [package]
 name = "gedis"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
@@ -22,6 +22,7 @@ chrono = { version = "0.4.23", features = ["serde"] }
 anyhow = "1.0.66"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.16", features = ["local-time", "time"] }
+async-trait = "0.1.60"
 
 [features]
 # by default Tauri runs in production mode

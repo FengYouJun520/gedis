@@ -37,6 +37,8 @@ fn main() {
             dis_connection_all,
             get_key_type,
             get_info,
+            get_logs,
+            clear_logs,
             get_key_detail,
             del_key,
             del_match_keys,
@@ -50,6 +52,7 @@ fn main() {
             terminal
         ])
         .manage(RedisState::default())
+        .manage(History::default())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -19,6 +19,17 @@ const configState = useRedis()
 const visible = ref(false)
 const loading = ref(false)
 const configData = ref<RedisConfig>({ ...initConfig })
+const logs = ref<string[]>([])
+const visibleLog = ref(false)
+
+const fetchlogs = async () => {
+  try {
+    const res = await invoke<string[]>('get_logs')
+    logs.value = res
+  } catch (error) {
+    ElMessage.error(error as string)
+  }
+}
 
 const handleNewConfigBtn = () => {
   visible.value = true
@@ -57,6 +68,21 @@ const handleSettingBtn = () => {
 const handleSettingCancel = () => {
   settingVisible.value = false
 }
+
+const handleLogs = async () => {
+  await fetchlogs()
+  visibleLog.value = true
+}
+
+const clearLogs = async () => {
+  try {
+    await invoke('clear_logs')
+    logs.value = []
+    visibleLog.value = false
+  } catch (error) {
+    ElMessage.error(error as string)
+  }
+}
 </script>
 
 <template>
@@ -81,7 +107,7 @@ const handleSettingCancel = () => {
         </el-button>
       </el-tooltip>
       <el-tooltip content="日志" :show-after="500">
-        <el-button size="small" text bg>
+        <el-button size="small" text bg @click="handleLogs">
           <template #icon>
             <i class="mdi:clock-minus-outline" />
           </template>
@@ -241,7 +267,34 @@ const handleSettingCancel = () => {
       </div>
 
       <template #footer>
-        <el-button type="primary" @click="settingVisible = false">
+        <el-button type="primary" @click="handleSettingCancel">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="visibleLog"
+      title="日志"
+      width="50%"
+      append-to-body
+      @close="visibleLog = false"
+    >
+      <el-scrollbar class="list">
+        <ul v-infinite-scroll="fetchlogs"
+            style="overflow: auto;"
+            infinite-scroll-disabled>
+          <li v-for="(log, index) in logs" :key="index">
+            {{ log }}
+          </li>
+        </ul>
+      </el-scrollbar>
+
+      <template #footer>
+        <el-button type="danger" text bg @click="clearLogs">
+          清空日志
+        </el-button>
+        <el-button type="primary" @click="visibleLog = false">
           确定
         </el-button>
       </template>
@@ -250,4 +303,11 @@ const handleSettingCancel = () => {
 </template>
 
 <style lang="css" scoped>
+.list {
+  height: 400px;
+}
+
+.list ul {
+  list-style: none;
+}
 </style>

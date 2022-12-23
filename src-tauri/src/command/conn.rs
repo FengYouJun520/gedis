@@ -3,7 +3,7 @@ use std::{collections::HashMap, time::Duration};
 use tauri::State;
 use tracing::{info, instrument};
 
-use crate::{config::RedisConfig, error::Result, RedisState};
+use crate::{config::RedisConfig, error::Result, CmdLog, History, RedisState};
 
 /// 测试连接
 #[tauri::command]
@@ -22,10 +22,18 @@ pub async fn test_connection(config: RedisConfig) -> Result<()> {
 /// redis连接
 #[tauri::command]
 #[instrument(skip_all, fields(id=config.id, host=config.host, port=config.port))]
-pub async fn connection(state: State<'_, RedisState>, config: RedisConfig) -> Result<()> {
+pub async fn connection(
+    state: State<'_, RedisState>,
+    history: State<'_, History>,
+    config: RedisConfig,
+) -> Result<()> {
     let client = redis::Client::open(config.get_url())?;
     let mut con = client.get_async_connection().await?;
-    redis::cmd("PING").query_async(&mut con).await?;
+    redis::cmd("PING")
+        .log(history.0.clone())
+        .await
+        .query_async(&mut con)
+        .await?;
 
     let mut redis_state = state.0.lock().await;
 
@@ -49,12 +57,20 @@ pub async fn is_connection(state: State<'_, RedisState>, id: String) -> Result<b
 /// ping
 #[tauri::command]
 #[instrument]
-#[instrument(skip(state))]
-pub async fn ping(state: State<'_, RedisState>, id: String) -> Result<()> {
+#[instrument(skip(state, history))]
+pub async fn ping(
+    state: State<'_, RedisState>,
+    history: State<'_, History>,
+    id: String,
+) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
 
-    redis::cmd("PING").query_async(con).await?;
+    redis::cmd("PING")
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
 
     info!("ping");
     Ok(())
@@ -84,15 +100,20 @@ pub async fn dis_connection_all(state: State<'_, RedisState>) -> Result<()> {
 
 /// 获取redis客户端信息
 #[tauri::command]
-#[instrument(skip(state))]
-pub async fn get_info(state: State<'_, RedisState>, id: String) -> Result<HashMap<String, String>> {
+#[instrument(skip(state, history))]
+pub async fn get_info(
+    state: State<'_, RedisState>,
+    history: State<'_, History>,
+    id: String,
+) -> Result<HashMap<String, String>> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
 
     let info: InfoDict = redis::cmd("INFO")
-        .query_async(con)
+        .log(history.0.clone())
         .await
-        .map_err(|err| err.to_string())?;
+        .query_async(con)
+        .await?;
 
     let mut info_result: HashMap<String, String> = HashMap::new();
 
@@ -104,4 +125,22 @@ pub async fn get_info(state: State<'_, RedisState>, id: String) -> Result<HashMa
 
     info!("获取redis客户端信息: {}", id);
     Ok(info_result)
+}
+
+/// 获取日志
+#[tauri::command]
+#[instrument(skip(history))]
+pub async fn get_logs(history: State<'_, History>) -> Result<Vec<String>> {
+    let logs = history.0.lock().await;
+    Ok(logs.to_vec())
+}
+
+/// 清空日志
+#[tauri::command]
+#[instrument(skip(history))]
+pub async fn clear_logs(history: State<'_, History>) -> Result<()> {
+    let mut logs = history.0.lock().await;
+    logs.clear();
+
+    Ok(())
 }

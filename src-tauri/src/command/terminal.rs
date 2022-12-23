@@ -2,13 +2,14 @@ use serde_json::json;
 use tauri::State;
 use tracing::{info, instrument};
 
-use crate::{error::Result, RedisState};
+use crate::{error::Result, CmdLog, History, RedisState};
 
 /// 在终端执行执行
 #[tauri::command]
-#[instrument(skip(state))]
+#[instrument(skip(state, history))]
 pub async fn terminal(
     state: State<'_, RedisState>,
+    history: State<'_, History>,
     id: String,
     db: u8,
     args: Option<Vec<String>>,
@@ -17,7 +18,12 @@ pub async fn terminal(
 
     let mut client = state.0.lock().await;
     let con = client.get_con_mut(&id).await?;
-    redis::cmd("SELECT").arg(db).query_async(con).await?;
+    redis::cmd("SELECT")
+        .arg(db)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
 
     let Some(args) = args else {
         return Ok(json!(""));

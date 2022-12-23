@@ -1,6 +1,8 @@
+use super::state::RedisState;
 use crate::{
     error::{Result, SerializeError},
     model::*,
+    CmdLog, History, LogArgs,
 };
 use anyhow::Context;
 use redis::{AsyncCommands, AsyncIter};
@@ -9,53 +11,80 @@ use std::collections::HashMap;
 use tauri::State;
 use tracing::{info, instrument};
 
-use super::state::RedisState;
-
 /// 获取键的类型
-#[instrument]
 #[tauri::command]
+#[instrument(skip(state, history))]
 pub async fn get_key_type(
     state: State<'_, RedisState>,
+    history: State<'_, History>,
     id: String,
     db: u8,
     key: String,
 ) -> Result<String> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
-    redis::cmd("SELECT").arg(db).query_async(con).await?;
+    redis::cmd("SELECT")
+        .arg(db)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
 
-    let typ: String = redis::cmd("TYPE").arg(&key).query_async(con).await?;
+    let typ: String = redis::cmd("TYPE")
+        .arg(&key)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
     Ok(typ)
 }
 
 /// 删除一个键
-#[instrument(skip(state))]
+#[instrument(skip(state, history))]
 #[tauri::command]
-pub async fn del_key(state: State<'_, RedisState>, id: String, db: u8, key: String) -> Result<()> {
+pub async fn del_key(
+    state: State<'_, RedisState>,
+    history: State<'_, History>,
+    id: String,
+    db: u8,
+    key: String,
+) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
-    redis::cmd("SELECT").arg(db).query_async(con).await?;
+    redis::cmd("SELECT")
+        .arg(db)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
 
     con.del(&key)
         .await
         .context(format!("删除键失败, id: {id}, key: {key}"))?;
+    history.add_log(format!("del {}", key)).await;
 
     info!("删除key: {}成功", key);
     Ok(())
 }
 
 /// 删除命名空间匹配的键
-#[instrument(skip(state))]
+#[instrument(skip(state, history))]
 #[tauri::command]
 pub async fn del_match_keys(
     state: State<'_, RedisState>,
+    history: State<'_, History>,
     id: String,
     db: u8,
     match_key: String,
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
-    redis::cmd("SELECT").arg(db).query_async(con).await?;
+    redis::cmd("SELECT")
+        .arg(db)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
 
     let mut iter: AsyncIter<String> = con.scan_match(&match_key).await?;
     let mut keys = vec![];
@@ -64,16 +93,20 @@ pub async fn del_match_keys(
     }
 
     con.del(&keys).await.context(format!("删除多个键失败"))?;
+    let mut logs = LogArgs!["del"];
+    logs.extend(keys);
+    history.add_log_vec(logs).await;
 
     info!("删除多个key成功");
     Ok(())
 }
 
 /// 删除指定key类型中的部分内容
-#[instrument]
 #[tauri::command]
+#[instrument(skip(state, history))]
 pub async fn del_key_by_value(
     state: State<'_, RedisState>,
+    history: State<'_, History>,
     id: String,
     db: u8,
     key: String,
@@ -84,19 +117,49 @@ pub async fn del_key_by_value(
 
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
-    redis::cmd("SELECT").arg(db).query_async(con).await?;
+    redis::cmd("SELECT")
+        .arg(db)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
 
-    let typ: String = redis::cmd("TYPE").arg(&key).query_async(con).await?;
+    let typ: String = redis::cmd("TYPE")
+        .arg(&key)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
 
-    match typ.as_str() {
-        "string" => con.del(&key).await,
-        "list" => con.lrem(&key, 1, &value).await,
-        "set" => con.srem(&key, &value).await,
-        "zset" => con.zrem(&key, &value).await,
-        "hash" => con.hdel(&key, &value).await,
-        "stream" => con.xdel(&key, &[value]).await,
+    let logs = match typ.as_str() {
+        "string" => {
+            con.del(&key).await?;
+            LogArgs!["del", &key]
+        }
+        "list" => {
+            con.lrem(&key, 1, &value).await?;
+            LogArgs!["lrem", &key, "1", &value]
+        }
+        "set" => {
+            con.srem(&key, &value).await?;
+            LogArgs!["srem", &key, &value]
+        }
+        "zset" => {
+            con.zrem(&key, &value).await?;
+            LogArgs!["zrem", &key, &value]
+        }
+        "hash" => {
+            con.hdel(&key, &value).await?;
+            LogArgs!["hdel", &key, &value]
+        }
+        "stream" => {
+            con.xdel(&key, &[&value]).await?;
+            LogArgs!["xdel", &key, &value]
+        }
         _ => return Err(format!("不支持的类型: {}", typ).into()),
-    }?;
+    };
+
+    history.add_log_vec(logs).await;
 
     info!(?key, "删除键成功: ");
 
@@ -104,9 +167,14 @@ pub async fn del_key_by_value(
 }
 
 /// 清空所有键
-#[instrument]
 #[tauri::command]
-pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: u8) -> Result<()> {
+#[instrument(skip(state, history))]
+pub async fn clear_keys(
+    state: State<'_, RedisState>,
+    history: State<'_, History>,
+    id: String,
+    db: u8,
+) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
 
@@ -114,6 +182,8 @@ pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: u8) -> Res
         .cmd("SELECT")
         .arg(db)
         .cmd("FLUSHDB")
+        .log(history.0.clone())
+        .await
         .query_async(con)
         .await?;
 
@@ -123,18 +193,26 @@ pub async fn clear_keys(state: State<'_, RedisState>, id: String, db: u8) -> Res
 
 /// 获取指定数据库中的所有键
 #[tauri::command]
-#[instrument(skip(state))]
+#[instrument(skip(state, history))]
 pub async fn get_keys_by_db(
     state: State<'_, RedisState>,
+    history: State<'_, History>,
     id: String,
     db: u8,
 ) -> Result<Vec<String>> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
 
-    redis::cmd("SELECT").arg(db).query_async(con).await?;
+    redis::cmd("SELECT")
+        .arg(db)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
 
     let mut iter: AsyncIter<'_, String> = con.scan().await?;
+    let logs = LogArgs!["scan", 0, "MATCH", "*", 2000];
+    history.add_log_vec(logs).await;
 
     let mut keys = vec![];
     while let Some(val) = iter.next_item().await.to_owned() {
@@ -148,21 +226,29 @@ pub async fn get_keys_by_db(
 
 /// 获取键的基础信息
 #[tauri::command]
-#[instrument(skip(state))]
+#[instrument(skip(state, history))]
 pub async fn get_key_info(
     state: State<'_, RedisState>,
+    history: State<'_, History>,
     id: String,
     db: u8,
     key: String,
 ) -> Result<KeyInfo> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
-    redis::cmd("SELECT").arg(db).query_async(con).await?;
+    redis::cmd("SELECT")
+        .arg(db)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
 
     let (typ, ttl): (String, i64) = redis::pipe()
         .cmd("TYPE")
         .arg(&key)
         .ttl(&key)
+        .log(history.0.clone())
+        .await
         .query_async(con)
         .await?;
 
@@ -182,9 +268,10 @@ pub async fn get_key_info(
 
 /// 获取键对应的详细信息
 #[tauri::command]
-#[instrument(skip(state))]
+#[instrument(skip(state, history))]
 pub async fn get_key_detail(
     state: State<'_, RedisState>,
+    history: State<'_, History>,
     id: String,
     db: u8,
     key: String,
@@ -199,6 +286,8 @@ pub async fn get_key_detail(
         .cmd("TYPE")
         .arg(&key)
         .ttl(&key)
+        .log(history.0.clone())
+        .await
         .query_async(con)
         .await?;
 
@@ -216,12 +305,19 @@ pub async fn get_key_detail(
             let val: String = con.get(&key).await?;
             keyinfo.size = val.len();
             keyinfo.value = RedisValue::String(val);
+
+            history.add_log_vec(LogArgs!["get", &key]).await;
         }
         "list" => {
             let count: usize = con.llen(&key).await?;
             let values: Vec<String> = con.lrange(&key, 0, (count as isize) - 1).await?;
             keyinfo.size = count;
             keyinfo.value = RedisValue::List(values);
+
+            history.add_log_vec(LogArgs!["llen", &key]).await;
+            history
+                .add_log_vec(LogArgs!["lrange", &key, 0, count - 1])
+                .await;
         }
         "set" => {
             let count: usize = con.scard(&key).await?;
@@ -232,6 +328,11 @@ pub async fn get_key_detail(
             }
             keyinfo.size = count;
             keyinfo.value = RedisValue::Set(values);
+
+            history.add_log_vec(LogArgs!["scard", &key]).await;
+            history
+                .add_log_vec(LogArgs!["sscan", &key, "MATCH", "*"])
+                .await;
         }
         "zset" => {
             let count: usize = con.zcard(&key).await?;
@@ -243,6 +344,11 @@ pub async fn get_key_detail(
 
             keyinfo.size = length;
             keyinfo.value = RedisValue::ZSet(values);
+
+            history.add_log_vec(LogArgs!["zcard", &key]).await;
+            history
+                .add_log_vec(LogArgs!["zrange", &key, 0, count - 1, "withscores"])
+                .await;
         }
         "hash" => {
             let count: usize = con.hlen(&key).await?;
@@ -254,6 +360,11 @@ pub async fn get_key_detail(
 
             keyinfo.size = count;
             keyinfo.value = RedisValue::Hash(values);
+
+            history.add_log_vec(LogArgs!["hlen", &key]).await;
+            history
+                .add_log_vec(LogArgs!["hscan", &key, "MATCH", "*"])
+                .await;
         }
         "stream" => {
             let count: usize = con.xlen(&key).await?;
@@ -275,6 +386,11 @@ pub async fn get_key_detail(
 
             keyinfo.size = count;
             keyinfo.value = RedisValue::Stream(value);
+
+            history.add_log_vec(LogArgs!["xlen", &key]).await;
+            history
+                .add_log_vec(LogArgs!["xrevrange", &key, "+", "-", "count", 200])
+                .await;
         }
         _ => return Err(format!("key不存在: {}, type: {}", key, typ).into()),
     };
@@ -286,9 +402,10 @@ pub async fn get_key_detail(
 
 /// 重命名键
 #[tauri::command]
-#[instrument(skip(state))]
+#[instrument(skip(state, history))]
 pub async fn rename_key(
     state: State<'_, RedisState>,
+    history: State<'_, History>,
     id: String,
     db: u8,
     key: String,
@@ -302,6 +419,8 @@ pub async fn rename_key(
         .arg(db)
         .ignore()
         .rename_nx(&key, &new_key)
+        .log(history.0.clone())
+        .await
         .query_async(con)
         .await?;
 
@@ -312,46 +431,88 @@ pub async fn rename_key(
 
 /// 设置key
 #[tauri::command]
-#[instrument(skip(state))]
+#[instrument(skip(state, history))]
 pub async fn set_key(
     state: State<'_, RedisState>,
+    history: State<'_, History>,
     id: String,
     db: u8,
     keyinfo: AddKeyInfo,
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
-    redis::cmd("SELECT").arg(db).query_async(con).await?;
+    redis::cmd("SELECT")
+        .arg(db)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
     let expired: isize = con.ttl(&keyinfo.key).await?;
-    info!(expired);
+    history.add_log_vec(LogArgs!["ttl", &keyinfo.key]).await;
 
     match keyinfo.r#type.as_str() {
-        "string" => con.set(&keyinfo.key, &keyinfo.value).await,
+        "string" => {
+            con.set(&keyinfo.key, &keyinfo.value).await?;
+            history
+                .add_log_vec(LogArgs!["set", &keyinfo.key, &keyinfo.value])
+                .await;
+        }
         "list" => {
             // 键不存在
             if expired == -2 {
-                con.lpush(&keyinfo.key, &keyinfo.value).await
+                con.lpush(&keyinfo.key, &keyinfo.value).await?;
+                history
+                    .add_log_vec(LogArgs!["lpush", &keyinfo.key, &keyinfo.value])
+                    .await;
             } else {
-                con.rpush(&keyinfo.key, &keyinfo.value).await
+                con.rpush(&keyinfo.key, &keyinfo.value).await?;
+                history
+                    .add_log_vec(LogArgs!["rpush", &keyinfo.key, &keyinfo.value])
+                    .await
             }
         }
-        "set" => con.sadd(&keyinfo.key, &keyinfo.value).await,
+        "set" => {
+            con.sadd(&keyinfo.key, &keyinfo.value).await?;
+            history
+                .add_log_vec(LogArgs!["sadd", &keyinfo.key, &keyinfo.value])
+                .await;
+        }
         "zset" => {
             con.zadd(
                 &keyinfo.key,
                 &keyinfo.value,
                 keyinfo.score.unwrap_or_default(),
             )
-            .await
+            .await?;
+            history
+                .add_log_vec(LogArgs![
+                    "zadd",
+                    &keyinfo.key,
+                    &keyinfo.value,
+                    keyinfo.score.unwrap_or_default()
+                ])
+                .await;
         }
         "hash" => {
             let field = keyinfo.field.clone().unwrap_or_default();
             match keyinfo.old_field {
                 Some(ref old_field) if *old_field != field => {
                     con.hset(&keyinfo.key, &field, &keyinfo.value).await?;
-                    con.hdel(&keyinfo.key, &old_field).await
+                    con.hdel(&keyinfo.key, &old_field).await?;
+
+                    history
+                        .add_log_vec(LogArgs!["hset", &keyinfo.key, &field, &keyinfo.value])
+                        .await;
+                    history
+                        .add_log_vec(LogArgs!["hdel", &keyinfo.key, &old_field])
+                        .await;
                 }
-                _ => con.hset(&keyinfo.key, &field, &keyinfo.value).await,
+                _ => {
+                    con.hset(&keyinfo.key, &field, &keyinfo.value).await?;
+                    history
+                        .add_log_vec(LogArgs!["hset", &keyinfo.key, &field, &keyinfo.value])
+                        .await;
+                }
             }
         }
         "stream" => {
@@ -362,17 +523,34 @@ pub async fn set_key(
                 keyinfo.id.clone().unwrap_or_else(|| "*".to_string()),
                 &value,
             )
-            .await
+            .await?;
+
+            let mut logs = LogArgs![
+                "xadd",
+                &keyinfo.key,
+                keyinfo.id.clone().unwrap_or_else(|| "*".to_string()),
+            ];
+            let values: Vec<String> = value.iter().map(|v| v.0.to_string() + "," + &v.1).collect();
+            logs.extend(values);
+            history.add_log_vec(logs).await;
         }
         _ => return Err(format!("不支持的类型: {}", keyinfo.r#type).into()),
-    }?;
+    };
 
     match expired {
         // 键不存在(-2)
-        -2 => con.persist(&keyinfo.key).await?,
+        -2 => {
+            con.persist(&keyinfo.key).await?;
+            history.add_log_vec(LogArgs!["persist", &keyinfo.key]).await;
+        }
         // 已持久化的(-1)
         -1 => return Ok(()),
-        _ => con.expire(&keyinfo.key, expired as usize).await?,
+        _ => {
+            con.expire(&keyinfo.key, expired as usize).await?;
+            history
+                .add_log_vec(LogArgs!["persist", &keyinfo.key, expired])
+                .await;
+        }
     };
 
     info!(?keyinfo, "设置key成功: ");
@@ -381,9 +559,10 @@ pub async fn set_key(
 
 /// 设置键的过期时间
 #[tauri::command]
-#[instrument(skip(state))]
+#[instrument(skip(state, history))]
 pub async fn set_key_ttl(
     state: State<'_, RedisState>,
+    history: State<'_, History>,
     id: String,
     db: u8,
     key: String,
@@ -391,7 +570,12 @@ pub async fn set_key_ttl(
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let con = redis_state.get_con_mut(&id).await?;
-    redis::cmd("SELECT").arg(db).query_async(con).await?;
+    redis::cmd("SELECT")
+        .arg(db)
+        .log(history.0.clone())
+        .await
+        .query_async(con)
+        .await?;
 
     if ttl < -1 {
         return Err(SerializeError::from("过期的值不能小于-1"));
@@ -399,8 +583,10 @@ pub async fn set_key_ttl(
 
     if ttl == -1 {
         con.persist(&key).await?;
+        history.add_log_vec(LogArgs!["persist", &key]).await;
     } else {
         con.expire(&key, ttl as usize).await?;
+        history.add_log_vec(LogArgs!["expire", &key, ttl]).await;
     }
 
     info!(?key, ?ttl, "设置key的ttl成功");
