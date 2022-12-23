@@ -83,6 +83,16 @@ const clearLogs = async () => {
     ElMessage.error(error as string)
   }
 }
+
+const alertType = (arg: string) => {
+  if (arg.match(/(.*add.*)|(.*set.*)|(.*card.*)|(.*push*)/)) {
+    return 'success'
+  } else if (arg.match(/(.*del.*)|(.*pop*)/)) {
+    return 'error'
+  } else {
+    return 'info'
+  }
+}
 </script>
 
 <template>
@@ -276,18 +286,28 @@ const clearLogs = async () => {
     <el-dialog
       v-model="visibleLog"
       title="日志"
-      width="50%"
+      width="60%"
       append-to-body
       @close="visibleLog = false"
     >
       <el-scrollbar class="list">
-        <ul v-infinite-scroll="fetchlogs"
-            style="overflow: auto;"
-            infinite-scroll-disabled>
-          <li v-for="(log, index) in logs" :key="index">
-            {{ log }}
-          </li>
-        </ul>
+        <div
+          v-infinite-scroll="fetchlogs"
+          flex
+          flex-col
+          gap-y-3
+          infinite-scroll-disabled
+          overflow-auto
+
+        >
+          <el-alert
+            v-for="(log, index) in logs" :key="index"
+            :closable="false"
+            :type="alertType(log)"
+          >
+            <span text-1rem>{{ log }}</span>
+          </el-alert>
+        </div>
       </el-scrollbar>
 
       <template #footer>
