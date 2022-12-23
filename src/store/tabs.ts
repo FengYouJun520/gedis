@@ -87,6 +87,17 @@ export const useTabs = defineStore('tabs', {
         this.currentActive = this.tabs[this.tabs.length - 1].key
       }
     },
+    // 删除指定id和db的所有选项卡
+    removeTabByDb(db: number) {
+      console.log(this.tabs)
+      this.tabs = this.tabs.filter(t => t.db !== db)
+
+      if (this.tabs.length === 1) {
+        this.currentActive = this.tabs[0].key
+      } else if (this.tabs.length > 1) {
+        this.currentActive = this.tabs[this.tabs.length - 1].key
+      }
+    },
     // 删除其他选项卡
     removeOther(key: string) {
       this.tabs = this.tabs.filter((t, idx) => idx === 0 || t.key === key)

@@ -103,7 +103,7 @@ const handleDeleteFolder = async () => {
 
     configOps?.fetchTreeKeys(configOps.config.id, configOps.db.value)
     ElMessage.success(`删除键: ${contextmenuData.value?.data.value}成功`)
-    // 如果有选项卡，删除选项卡
+    // 如果有选项卡，删除目录下所有相关的选项卡
     tabsState.removeTab(
       `${configOps?.config.id}-${configOps?.db.value}-${contextmenuData.value?.data.value}`
     )
@@ -186,11 +186,11 @@ const handleCommand = (command: string) => {
             items-center
             space-x2
             justify-start
-            @click="handleCommand('add-key')"
+            @click="handleCommand('copy-key')"
           >
             <i class="material-symbols:content-copy-outline" />
             <span>
-              添加键
+              复制
             </span>
           </div>
           <div

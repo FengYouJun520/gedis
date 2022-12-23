@@ -166,8 +166,12 @@ const handleClearKeys = async () => {
   }).then(async () => {
     try {
       await invoke('clear_keys', { id: props.config.id, db: configOps?.db.value })
-      await configOps?.fetchTreeKeys(props.config.id, configOps.db.value)
+
+      // 删除所有相关的选项卡(DB)
+      tabsState.removeTabByDb(props.db)
+
       mitt.emit('fetchInfo', props.config.id)
+      mitt.emit('fetchTreeKeys', { id: props.config.id, db: props.db })
     } catch (error) {
       ElMessage.error(error as string)
     }
