@@ -56,12 +56,11 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 750,
+        "height": 700,
         "width": 1100,
         "resizable": true,
         "title": "gedis",
-        "x": 30,
-        "y": 30
+        "center": true
       }
     ]
   }

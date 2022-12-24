@@ -89,7 +89,6 @@ export const useTabs = defineStore('tabs', {
     },
     // 删除指定id和db的所有选项卡
     removeTabByDb(db: number) {
-      console.log(this.tabs)
       this.tabs = this.tabs.filter(t => t.db !== db)
 
       if (this.tabs.length === 1) {

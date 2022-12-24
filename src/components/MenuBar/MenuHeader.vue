@@ -26,7 +26,7 @@ const logs = ref<string[]>([])
 const visibleLog = ref(false)
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar> | null>(null)
 const ulRef = ref<HTMLUListElement | null>(null)
-const scrollHeight = 400
+const scrollHeight = 300
 
 const fetchlogs = async () => {
   try {
@@ -82,8 +82,6 @@ const handleLogs = async () => {
 
 const handleOpenLog = () => {
   nextTick(() => {
-    console.log(scrollbarRef.value)
-
     scrollbarRef.value?.scrollTo({
       top: ulRef.value?.scrollHeight,
     })
@@ -306,13 +304,13 @@ const alertType = (arg: string) => {
     <el-dialog
       v-model="visibleLog"
       title="日志"
-      width="60%"
+      width="70%"
       append-to-body
       destroy-on-close
       @open="handleOpenLog"
       @close="visibleLog = false"
     >
-      <ElScrollbar ref="scrollbarRef" :height="scrollHeight">
+      <ElScrollbar ref="scrollbarRef" :min-size="150" :height="scrollHeight">
         <ul
           ref="ulRef"
           py-0

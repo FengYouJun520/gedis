@@ -50,8 +50,6 @@ const addHistroy = (value: string) => {
 }
 
 const changePrev = () => {
-  console.log(autoRef.value?.activated)
-
   if (autoRef.value?.activated) {
     return
   }
