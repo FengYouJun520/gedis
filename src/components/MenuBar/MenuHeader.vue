@@ -4,6 +4,8 @@ import { useRedis } from '@/store/redis'
 import { v4 } from 'uuid'
 import { invoke } from '@tauri-apps/api'
 import { useUiState } from '@/store/ui'
+import { useMitt } from '@/useMitt'
+import type { ElScrollbar } from 'element-plus'
 
 const initConfig: RedisConfig = {
   id: '',
@@ -15,12 +17,16 @@ const initConfig: RedisConfig = {
 
 const uiState = useUiState()
 const configState = useRedis()
+const mitt = useMitt()
 
 const visible = ref(false)
 const loading = ref(false)
 const configData = ref<RedisConfig>({ ...initConfig })
 const logs = ref<string[]>([])
 const visibleLog = ref(false)
+const scrollbarRef = ref<InstanceType<typeof ElScrollbar> | null>(null)
+const ulRef = ref<HTMLUListElement | null>(null)
+const scrollHeight = 400
 
 const fetchlogs = async () => {
   try {
@@ -74,6 +80,20 @@ const handleLogs = async () => {
   visibleLog.value = true
 }
 
+const handleOpenLog = () => {
+  nextTick(() => {
+    console.log(scrollbarRef.value)
+
+    scrollbarRef.value?.scrollTo({
+      top: ulRef.value?.scrollHeight,
+    })
+  })
+}
+
+mitt.on('clearLogs', async () => {
+  await clearLogs()
+})
+
 const clearLogs = async () => {
   try {
     await invoke('clear_logs')
@@ -85,9 +105,9 @@ const clearLogs = async () => {
 }
 
 const alertType = (arg: string) => {
-  if (arg.match(/(.*add.*)|(.*set.*)|(.*card.*)|(.*push*)/)) {
+  if (arg.match(/(.*add.*)|(.*set.*)|(.*push*)/)) {
     return 'success'
-  } else if (arg.match(/(.*del.*)|(.*pop*)/)) {
+  } else if (arg.match(/(.*del.*)|(.*pop.*)/)) {
     return 'error'
   } else {
     return 'info'
@@ -288,34 +308,38 @@ const alertType = (arg: string) => {
       title="日志"
       width="60%"
       append-to-body
+      destroy-on-close
+      @open="handleOpenLog"
       @close="visibleLog = false"
     >
-      <el-scrollbar class="list">
-        <div
-          v-infinite-scroll="fetchlogs"
-          flex
-          flex-col
-          gap-y-3
-          infinite-scroll-disabled
-          overflow-auto
-
+      <ElScrollbar ref="scrollbarRef" :height="scrollHeight">
+        <ul
+          ref="ulRef"
+          py-0
+          px-4
         >
-          <el-alert
-            v-for="(log, index) in logs" :key="index"
-            :closable="false"
-            :type="alertType(log)"
+          <li
+            flex
+            flex-col
+            gap-y-3
           >
-            <span text-1rem>{{ log }}</span>
-          </el-alert>
-        </div>
-      </el-scrollbar>
+            <el-alert
+              v-for="(log, index) in logs" :key="index"
+              :closable="false"
+              :type="alertType(log)"
+            >
+              <span text-1rem>{{ log }}</span>
+            </el-alert>
+          </li>
+        </ul>
+      </ElScrollbar>
 
       <template #footer>
         <el-button type="danger" text bg @click="clearLogs">
           清空日志
         </el-button>
         <el-button type="primary" @click="visibleLog = false">
-          确定
+          取消
         </el-button>
       </template>
     </el-dialog>
@@ -323,11 +347,4 @@ const alertType = (arg: string) => {
 </template>
 
 <style lang="css" scoped>
-.list {
-  height: 400px;
-}
-
-.list ul {
-  list-style: none;
-}
 </style>

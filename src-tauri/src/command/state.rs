@@ -51,18 +51,27 @@ impl Redis {
     }
 }
 
+const MAX_HISTORY: usize = 5000;
+
 #[derive(Debug, Default)]
-pub struct History(pub Arc<Mutex<Vec<String>>>);
+pub struct History(pub Arc<std::sync::Mutex<Vec<String>>>);
 
 impl History {
-    pub async fn add_log(&self, value: String) {
-        let mut histories = self.0.lock().await;
+    pub fn add_log(&self, value: String) {
+        let mut histories = self.0.lock().unwrap();
+        if histories.len() == MAX_HISTORY {
+            histories.reverse();
+            for _ in 0..=2500 {
+                histories.pop();
+            }
+            histories.reverse();
+        }
         histories.push(value);
     }
 
-    pub async fn add_log_vec(&self, values: Vec<String>) {
+    pub fn add_log_vec(&self, values: Vec<String>) {
         let log: String = values.join(" ").to_lowercase();
-        self.add_log(log).await
+        self.add_log(log)
     }
 }
 
@@ -74,15 +83,16 @@ impl Clone for History {
 
 #[async_trait]
 pub trait CmdLog: Send {
-    async fn log(&self, state: Arc<Mutex<Vec<String>>>) -> &Self;
+    fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>) -> &Self;
 }
 
+/// 这个不起作用？
 #[async_trait]
 impl CmdLog for Pipeline {
-    async fn log(&self, state: Arc<Mutex<Vec<String>>>) -> &Self {
+    fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>) -> &Self {
         let iter = self.cmd_iter();
         for cmd in iter {
-            _ = cmd.log(state.clone());
+            _ = cmd.log(history.clone());
         }
 
         self
@@ -91,7 +101,7 @@ impl CmdLog for Pipeline {
 
 #[async_trait]
 impl CmdLog for Cmd {
-    async fn log(&self, state: Arc<Mutex<Vec<String>>>) -> &Self {
+    fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>) -> &Self {
         let mut logs: Vec<String> = vec![];
         let iter = self.args_iter();
         for arg in iter {
@@ -104,7 +114,7 @@ impl CmdLog for Cmd {
         }
 
         let log: String = logs.join(" ");
-        state.lock().await.push(log);
+        history.lock().unwrap().push(log);
 
         self
     }

@@ -31,7 +31,6 @@ pub async fn connection(
     let mut con = client.get_async_connection().await?;
     redis::cmd("PING")
         .log(history.0.clone())
-        .await
         .query_async(&mut con)
         .await?;
 
@@ -68,7 +67,6 @@ pub async fn ping(
 
     redis::cmd("PING")
         .log(history.0.clone())
-        .await
         .query_async(con)
         .await?;
 
@@ -111,7 +109,6 @@ pub async fn get_info(
 
     let info: InfoDict = redis::cmd("INFO")
         .log(history.0.clone())
-        .await
         .query_async(con)
         .await?;
 
@@ -131,7 +128,7 @@ pub async fn get_info(
 #[tauri::command]
 #[instrument(skip(history))]
 pub async fn get_logs(history: State<'_, History>) -> Result<Vec<String>> {
-    let logs = history.0.lock().await;
+    let logs = history.0.lock().unwrap();
     Ok(logs.to_vec())
 }
 
@@ -139,7 +136,7 @@ pub async fn get_logs(history: State<'_, History>) -> Result<Vec<String>> {
 #[tauri::command]
 #[instrument(skip(history))]
 pub async fn clear_logs(history: State<'_, History>) -> Result<()> {
-    let mut logs = history.0.lock().await;
+    let mut logs = history.0.lock().unwrap();
     logs.clear();
 
     Ok(())

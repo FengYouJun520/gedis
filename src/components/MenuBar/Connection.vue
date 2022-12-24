@@ -96,6 +96,7 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
 const handleDisConnection = async (id: string) => {
   try {
     await invoke('dis_connection', { id })
+    mitt.emit('clearLogs')
     isOpen.value = false
     connected.value = false
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

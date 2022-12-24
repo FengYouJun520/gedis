@@ -21,7 +21,6 @@ pub async fn terminal(
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone())
-        .await
         .query_async(con)
         .await?;
 
@@ -42,6 +41,7 @@ pub async fn terminal(
 
     let res: redis::Value = redis::cmd(cmd_name.as_ref())
         .arg(args)
+        .log(history.0.clone())
         .query_async(con)
         .await?;
 
