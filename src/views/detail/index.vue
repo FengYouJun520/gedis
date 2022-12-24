@@ -162,7 +162,7 @@ const comp = computed(() => {
 </script>
 
 <template>
-  <div flex flex-col>
+  <div>
     <el-form :model="keyinfo" inline flex>
       <el-form-item flex-1>
         <el-input v-model="keyinfo.key">

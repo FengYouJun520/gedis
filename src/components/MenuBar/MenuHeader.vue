@@ -2,7 +2,7 @@
 import { RedisConfig } from '@/types/redis'
 import { useRedis } from '@/store/redis'
 import { v4 } from 'uuid'
-import { invoke } from '@tauri-apps/api'
+import { clipboard, invoke } from '@tauri-apps/api'
 import { useUiState } from '@/store/ui'
 import { useMitt } from '@/useMitt'
 import type { ElScrollbar } from 'element-plus'
@@ -102,7 +102,8 @@ const clearLogs = async () => {
   }
 }
 
-const alertType = (arg: string) => {
+const alertType = (log: string) => {
+  const arg = log.split(/\s+/)[0]
   if (arg.match(/(.*add.*)|(.*set.*)|(.*push*)/)) {
     return 'success'
   } else if (arg.match(/(.*del.*)|(.*pop.*)/)) {
@@ -110,6 +111,10 @@ const alertType = (arg: string) => {
   } else {
     return 'info'
   }
+}
+
+const copyCommand = (log: string) => {
+  clipboard.writeText(log)
 }
 </script>
 
@@ -325,8 +330,24 @@ const alertType = (arg: string) => {
               v-for="(log, index) in logs" :key="index"
               :closable="false"
               :type="alertType(log)"
+              relative
             >
               <span text-1rem>{{ log }}</span>
+
+              <el-tooltip content="复制命令" :show-after="1000">
+                <el-button
+                  size="small"
+                  text
+                  absolute
+                  right-20px
+                  class="top-50% -translate-y-50% cursor-pointer"
+                  @click="copyCommand(log)"
+                >
+                  <template #icon>
+                    <i class="ant-design:copy-outlined" />
+                  </template>
+                </el-button>
+              </el-tooltip>
             </el-alert>
           </li>
         </ul>
