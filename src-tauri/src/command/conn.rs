@@ -55,7 +55,6 @@ pub async fn is_connection(state: State<'_, RedisState>, id: String) -> Result<b
 
 /// ping
 #[tauri::command]
-#[instrument]
 #[instrument(skip(state, history))]
 pub async fn ping(
     state: State<'_, RedisState>,

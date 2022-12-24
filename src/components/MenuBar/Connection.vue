@@ -22,7 +22,6 @@ const treeKeys = ref<string[]>([])
 const keyspaces = ref<Keyspace[]>([])
 const menuRef = ref<InstanceType<typeof ElMenu>|null>(null)
 const connected = ref(false)
-
 const loading = ref(false)
 const isOpen = ref(false)
 const selectDb = ref(0)
@@ -34,6 +33,24 @@ const changeDb = (db: number) => {
 
 mitt.on('fetchInfo', id=> fetchInfo(id))
 mitt.on('fetchTreeKeys', ({ id, db }) => fetchTreeKeys(id, db))
+
+let ping: number|null = null
+const pingTime = 60 * 1000
+const handlePing = () => {
+  ping && clearInterval(ping)
+  ping = setInterval(async () => {
+    await invoke('ping', { id: props.config.id })
+  }, pingTime)
+}
+
+watch(connected, newConnected => {
+  if (newConnected) {
+    handlePing()
+  } else {
+    ping && clearInterval(ping)
+    handleDisConnection(props.config.id)
+  }
+})
 
 const fetchInfo = async (id: string) => {
   try {
@@ -145,6 +162,10 @@ watch(selectDb, async db => {
     isOpen.value = false
     connected.value = false
   }
+})
+
+onUnmounted(() => {
+  ping && clearInterval(ping)
 })
 
 createConfigContext({
