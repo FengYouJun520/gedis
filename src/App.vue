@@ -23,7 +23,7 @@ watchEffect(() => {
   let theme = uiState.theme
   if (theme === 'system') {
     const isDark = usePreferredDark()
-    if (isDark) {
+    if (unref(isDark)) {
       theme = 'dark'
     } else {
       theme = 'light'
