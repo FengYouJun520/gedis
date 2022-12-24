@@ -1,12 +1,12 @@
 [package]
 name = "gedis"
-version = "0.4.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
+version = "0.4.1"
+description = "redis desktop manager"
+authors = ["FengYouJun"]
+license = "MIT"
 repository = ""
 edition = "2021"
-rust-version = "1.57"
+rust-version = "1.66"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
