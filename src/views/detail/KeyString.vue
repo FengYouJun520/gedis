@@ -60,7 +60,6 @@ const handleSave = () => {
         keyinfo,
       })
 
-      mitt.emit('fetchKeyInfo')
       await fetchKeyDetail()
     } catch (error) {
       ElMessage.error(error as string)
