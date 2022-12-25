@@ -166,7 +166,7 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
       border
       stripe
     >
-      <el-table-column type="index" :width="200" :label="`ID（Total: ${keyDetail.size}）`" />
+      <el-table-column type="index" :width="180" :label="`ID（Total: ${keyDetail.size}）`" />
       <el-table-column prop="key" label="Key" sortable />
       <el-table-column prop="value" label="Value" sortable />
       <el-table-column label="Operation">

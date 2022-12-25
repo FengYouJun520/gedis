@@ -33,13 +33,19 @@ const changeDb = (db: number) => {
 
 mitt.on('fetchInfo', id=> fetchInfo(id))
 mitt.on('fetchTreeKeys', ({ id, db }) => fetchTreeKeys(id, db))
+mitt.on('disConnection', async () => await handleDisConnection(props.config.id))
 
 let ping: number|null = null
 const pingTime = 60 * 1000
 const handlePing = () => {
   ping && clearInterval(ping)
   ping = setInterval(async () => {
-    await invoke('ping', { id: props.config.id })
+    try {
+      await invoke('ping', { id: props.config.id })
+    } catch (error) {
+      ElMessage.error(error as string)
+      await handleDisConnection(props.config.id)
+    }
   }, pingTime)
 }
 

@@ -202,7 +202,7 @@ const objToString = (obj: Record<string, any>) => {
       border
       stripe
     >
-      <el-table-column type="index" :width="200" :label="`ID（Total: ${keyDetail.size}）`" />
+      <el-table-column type="index" :width="160" :label="`ID（Total: ${keyDetail.size}）`" />
       <el-table-column prop="id" label="ID" sortable />
       <el-table-column prop="value" label="value" sortable />
       <el-table-column label="Operation">
