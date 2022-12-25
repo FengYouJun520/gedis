@@ -5,6 +5,10 @@ interface ViewerTextProps {
 
 const props = defineProps<ViewerTextProps>()
 const newContent = ref(props.content)
+
+onMounted(() => {
+  newContent.value = props.content
+})
 watch(() => props.content, value => {
   newContent.value = value
 })

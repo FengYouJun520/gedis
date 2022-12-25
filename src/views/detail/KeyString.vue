@@ -35,7 +35,6 @@ const fetchKeyDetail = async () => {
 
   keyDetail.value = detail
   content.value = keyDetail.value.value
-  console.log(content.value)
 }
 
 const content = ref('')

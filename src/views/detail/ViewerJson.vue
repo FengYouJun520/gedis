@@ -15,6 +15,16 @@ onMounted(() => {
   }
 })
 
+watch(() => props.content, value => {
+  try {
+    const obj = JSON.parse(value)
+    newContent.value = JSON.stringify(obj, null, 4)
+    console.log('watch', unref(newContent))
+  } catch (error) {
+    newContent.value = value
+  }
+})
+
 
 defineExpose({
   getContent: () => unref(newContent),
