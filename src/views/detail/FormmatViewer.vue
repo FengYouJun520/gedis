@@ -6,6 +6,7 @@ import ViewerJson from './ViewerJson.vue'
 interface StringProps {
   redisKey: string
   content: string
+  readonly?: boolean
 }
 
 defineProps<StringProps>()
@@ -58,7 +59,7 @@ watch(selected, value => {
 </script>
 
 <template>
-  <div flex flex-col gap-y-3 w-full>
+  <div flex flex-col gap-y-4 w-full>
     <el-space>
       <el-select v-model="selected" @change="handleChange">
         <el-option
@@ -91,6 +92,7 @@ watch(selected, value => {
       :is="viewComponent"
       ref="viewRef"
       :content="content"
+      :readonly="readonly"
     />
   </div>
 </template>

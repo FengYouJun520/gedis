@@ -1,6 +1,7 @@
 <script setup lang="ts">
 interface ViewerTextProps {
   content: string
+  readonly: boolean
 }
 
 const props = defineProps<ViewerTextProps>()
@@ -20,10 +21,16 @@ defineExpose({
 </script>
 
 <template>
-  <div>
-    <el-input v-model="newContent" :rows="20" type="textarea" />
+  <div class="viewer-text">
+    <el-input v-model="newContent" :readonly="readonly" :rows="18" type="textarea" />
   </div>
 </template>
 
 <style lang="css" scoped>
+.viewer-text {
+  min-width: 350px;
+  min-height: 350px;
+  height: 100%;
+  width: 100%;
+}
 </style>

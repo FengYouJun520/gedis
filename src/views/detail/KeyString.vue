@@ -49,6 +49,10 @@ const handleSave = () => {
   }).then(async () => {
     try {
       const content = viewRef.value!.getRowContent()
+      if (!content) {
+        return
+      }
+
       const keyinfo: AddKeyInfo = {
         key: unref(key),
         type: 'string',
