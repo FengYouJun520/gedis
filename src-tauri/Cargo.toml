@@ -1,6 +1,6 @@
 [package]
 name = "gedis"
-version = "0.4.1"
+version = "0.4.2"
 description = "redis desktop manager"
 authors = ["FengYouJun"]
 license = "MIT"
