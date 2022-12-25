@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useMitt } from '@/useMitt'
-import { clipboard, invoke } from '@tauri-apps/api'
+import { invoke } from '@tauri-apps/api'
 import { KeyContentDetail, AddKeyInfo, KeyInfo } from '@/types/redis'
+import FormmatViewer from './FormmatViewer.vue'
 
 interface StringProps {
   id: string
@@ -33,14 +34,14 @@ const fetchKeyDetail = async () => {
   })
 
   keyDetail.value = detail
+  content.value = keyDetail.value.value
+  console.log(content.value)
 }
 
-watch(() => props.keyinfo, async () => {
-  try {
-    await fetchKeyDetail()
-  } catch (error) {
-    ElMessage.error(error as string)
-  }
+const content = ref('')
+
+onMounted(() => {
+  fetchKeyDetail()
 })
 
 const handleSave = () => {
@@ -48,10 +49,11 @@ const handleSave = () => {
     type: 'info',
   }).then(async () => {
     try {
+      const content = viewRef.value!.getRowContent()
       const keyinfo: AddKeyInfo = {
         key: unref(key),
         type: 'string',
-        value: unref(keyDetail).value,
+        value: content,
       }
 
       await invoke('set_key', {
@@ -68,29 +70,18 @@ const handleSave = () => {
     .catch(() => {})
 }
 
-const copyContent = () => {
-  clipboard.writeText(unref(keyDetail).value)
-}
+const viewRef = ref<InstanceType<typeof FormmatViewer> | null>(null)
 </script>
 
 <template>
   <div flex flex-col gap-y-2>
-    <el-space>
-      <el-tag>
-        Size: {{ keyDetail.size }}B
-      </el-tag>
-      <el-button text size="small" @click="copyContent">
-        复制
-        <template #icon>
-          <span>
-            <i class="ant-design:copy-outlined" />
-          </span>
-        </template>
-      </el-button>
-    </el-space>
     <el-form :model="keyDetail">
       <el-form-item prop="value">
-        <el-input v-model="keyDetail.value" :rows="20" type="textarea" />
+        <FormmatViewer
+          ref="viewRef"
+          :content="content"
+          :redis-key="keyLabel"
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleSave">

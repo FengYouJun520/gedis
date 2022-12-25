@@ -59,6 +59,7 @@ const handleCommand = (key: string, command: string) => {
         <el-tab-pane
           v-for="tabItem in tabsState.tabs"
           :key="tabItem.key"
+          class="px-4"
           :name="tabItem.key"
           :closable="tabItem.type !== 'home'"
         >

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { AddKeyInfo, KeyContentDetail, KeyInfo } from '@/types/redis'
 import { clipboard, invoke } from '@tauri-apps/api'
-import { k } from '@tauri-apps/api/event-2a9960e7'
 import FormDataView from './FormDataView.vue'
 
 interface StreamProps {
