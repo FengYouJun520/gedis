@@ -20,6 +20,10 @@ mitt.on('searchKeyTree', query => {
   treeRef.value?.filter(query)
 })
 
+onUnmounted(() => {
+  mitt.off('searchKeyTree')
+})
+
 const filterNode = (value: string, data: TreeNode | TreeNodeData, node: Node) => {
   const rawData = data as TreeNode
   if (node.isLeaf) {

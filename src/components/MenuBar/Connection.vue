@@ -35,6 +35,12 @@ mitt.on('fetchInfo', id=> fetchInfo(id))
 mitt.on('fetchTreeKeys', ({ id, db }) => fetchTreeKeys(id, db))
 mitt.on('disConnection', async () => await handleDisConnection(props.config.id))
 
+onUnmounted(() => {
+  mitt.off('fetchInfo')
+  mitt.off('fetchTreeKeys')
+  mitt.off('disConnection')
+})
+
 let ping: number|null = null
 const pingTime = 60 * 1000
 const handlePing = () => {

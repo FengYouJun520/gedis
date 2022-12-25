@@ -34,6 +34,10 @@ mitt.on('fetchKeyInfo', async () => {
   await fetchKeyInfo()
 })
 
+onUnmounted(() => {
+  mitt.off('fetchKeyInfo')
+})
+
 const fetchKeyInfo = async () => {
   const res = await invoke<KeyInfo>('get_key_info', {
     id: unref(id),

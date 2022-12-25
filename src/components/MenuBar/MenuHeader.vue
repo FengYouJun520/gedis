@@ -92,6 +92,10 @@ mitt.on('clearLogs', async () => {
   await clearLogs()
 })
 
+onUnmounted(() => {
+  mitt.off('clearLogs')
+})
+
 const clearLogs = async () => {
   try {
     await invoke('clear_logs')
