@@ -49,6 +49,10 @@ const fetchKeyInfo = async () => {
     key: unref(key),
   })
 
+  if (res.ttl === -2) {
+    return Promise.reject(`指定的键: ${unref(key)}不存在`)
+  }
+
   keyinfo.value = res
   key.value = res.key
 }
@@ -144,9 +148,9 @@ const handleRefresh = async () => {
     await fetchKeyInfo()
   } catch (error) {
     // key不存在
-    ElMessage.error(`指定的键${unref(key)}不存在`)
-    tabsState.removeTab(`${unref(id)}-${unref(db)}-${unref(key)}`)
-    mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
+    ElMessage.error(error as string)
+    tabsState.removeTab(`${unref(id)}-${unref(db)}-${props.tabItem.value}`)
+    mitt.emit('refresh', { id: unref(id), db: unref(db) })
   }
 }
 
