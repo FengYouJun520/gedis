@@ -166,8 +166,6 @@ const components: Record<string, any> = {
 
 const comp = shallowRef()
 watch(() => keyinfo.value.type, t => {
-  console.log(t)
-
   if (components[t]) {
     comp.value = components[t]
   } else {

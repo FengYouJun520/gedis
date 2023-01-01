@@ -155,7 +155,7 @@ const handleCommand = (command: string) => {
       <ElTree
         ref="treeRef"
         :data="treeKeys"
-        style="max-height: 500px;"
+        style="max-height: calc(100vh - 252px)"
         :icon="rendIcon()"
         :filter-node-method="filterNode"
         @node-click="handleNodeClick"
