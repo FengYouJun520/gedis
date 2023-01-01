@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useMitt } from '@/useMitt'
 import { invoke } from '@tauri-apps/api'
 import { KeyContentDetail, AddKeyInfo, KeyInfo } from '@/types/redis'
 import FormmatViewer from './FormmatViewer.vue'
@@ -15,9 +14,8 @@ const props = defineProps<StringProps>()
 const id = ref(props.id)
 const db = ref(props.db)
 const key = ref(props.keyLabel)
-const mitt = useMitt()
 
-const keyDetail = ref<KeyContentDetail>({
+const keyDetail = ref<KeyContentDetail<string>>({
   key: unref(key),
   type: props.keyinfo.type,
   label: '',
@@ -27,14 +25,14 @@ const keyDetail = ref<KeyContentDetail>({
 })
 
 const fetchKeyDetail = async () => {
-  const detail = await invoke<KeyContentDetail>('get_key_detail', {
+  const detail = await invoke<KeyContentDetail<string>>('get_key_detail', {
     id: unref(id),
     db: unref(db),
     key: unref(key),
   })
 
   keyDetail.value = detail
-  content.value = keyDetail.value.value
+  content.value = detail.value
 }
 
 const content = ref('')

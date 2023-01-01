@@ -201,7 +201,7 @@ const objToString = (obj: Record<string, any>) => {
       border
       stripe
     >
-      <el-table-column type="index" :width="160" :label="`ID（Total: ${keyDetail.size}）`" />
+      <el-table-column type="index" :width="140" :label="`ID（Total: ${keyDetail.size}）`" />
       <el-table-column prop="id" label="ID" sortable />
       <el-table-column prop="value" label="value" sortable />
       <el-table-column label="Operation">
@@ -244,7 +244,7 @@ const objToString = (obj: Record<string, any>) => {
       :model="addKeyinfo"
       :readonly="readonly"
       :is-edit="isEdit"
-      :title="isEdit ? '修改行' : '添加新行'"
+      :title="isEdit ? '查看行' : '添加新行'"
       @cancel="handleCancel"
       @confirm="handleConfirm"
     />

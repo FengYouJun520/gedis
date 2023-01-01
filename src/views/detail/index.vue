@@ -20,7 +20,8 @@ const initialData: KeyInfo = {
   key: '',
   label: '',
   ttl: -1,
-  type: 'string',
+  // 必须为 ''?
+  type: '',
 }
 
 const tabsState = useTabs()
@@ -158,12 +159,15 @@ const components: Record<string, any> = {
   hash: KeyHash,
   stream: KeyStream,
 }
-const comp = computed(() => {
-  if (components[keyinfo.value.type]) {
-    return components[keyinfo.value.type]
+
+const comp = shallowRef()
+watch(() => keyinfo.value.type, t => {
+  console.log(t)
+
+  if (components[t]) {
+    comp.value = components[t]
   } else {
-    ElMessage.error(`键的类型: ${keyinfo.value.type}是不支持的`)
-    return null
+    ElMessage.error(`键的类型: ${t}是不支持的`)
   }
 })
 </script>
@@ -222,7 +226,7 @@ const comp = computed(() => {
     </el-form>
 
     <component
-      :is="comp"
+      :is="comp && comp"
       :id="id"
       :db="db"
       :key-label="key"
