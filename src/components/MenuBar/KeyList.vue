@@ -14,6 +14,8 @@ const configOps = useConfig()
 const treeKeys = computed(() =>configOps!.treeKeys.value)
 const search = ref('')
 const treeRef = ref<InstanceType<typeof ElTree>|null>(null)
+const id = computed(() => configOps!.config.id)
+const db = computed(() => unref(configOps!.db))
 
 mitt.on('searchKeyTree', ({ id, query }) => {
   if (configOps?.config.id !== id) {
@@ -44,16 +46,16 @@ const handleNodeClick = (data: TreeNode, node: any) => {
     return
   }
 
-  const key = `${configOps?.config.id}-${configOps?.db.value}-${data.value}`
+  const key = `${unref(id)}-${unref(db)}-${data.value}`
 
   tabsState.addTab({
-    id: configOps!.config.id,
-    db: configOps?.db.value || 0,
+    id: unref(id),
+    db: unref(db),
     type: 'detail',
     key,
     value: data.value,
     name: configOps!.config.name,
-    label: `${data.value} | ${configOps?.config.name} | DB${configOps?.db.value}`,
+    label: `${data.value} | ${configOps?.config.name} | DB${unref(db)}`,
     icon: 'fxemoji:key',
   })
 }
@@ -81,20 +83,20 @@ const handleContextmenu = (event: MouseEvent, data: TreeNode, node: Node) => {
 const handleDeleteKey = async () => {
   try {
     await invoke('del_key', {
-      id: configOps?.config.id,
-      db: configOps?.db.value,
+      id: unref(id),
+      db: unref(db),
       key: contextmenuData.value?.data.value,
     })
 
-    configOps?.fetchTreeKeys(configOps.config.id, configOps.db.value)
+    configOps?.fetchTreeKeys(unref(id), unref(db))
     ElMessage.success(`删除键: ${contextmenuData.value?.data.value}成功`)
     // 如果有选项卡，删除选项卡
     tabsState.removeTab(
-      `${configOps?.config.id}-${configOps?.db.value}-${contextmenuData.value?.data.value}`
+      `${unref(id)}-${unref(db)}-${contextmenuData.value?.data.value}`
     )
 
-    mitt.emit('fetchInfo', configOps!.config.id)
-    mitt.emit('fetchTreeKeys', { id: configOps!.config.id, db: configOps!.db.value })
+    mitt.emit('fetchInfo', unref(id))
+    mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
   } catch (error) {
     ElMessage.error(error as string)
   }
@@ -103,8 +105,8 @@ const handleDeleteKey = async () => {
 const handleDeleteFolder = async () => {
   try {
     await invoke('del_match_keys', {
-      id: configOps?.config.id,
-      db: configOps?.db.value,
+      id: unref(id),
+      db: unref(db),
       matchKey: `${contextmenuData.value?.data.value}*`,
     })
 
@@ -112,11 +114,11 @@ const handleDeleteFolder = async () => {
     ElMessage.success(`删除键: ${contextmenuData.value?.data.value}成功`)
     // 如果有选项卡，删除目录下所有相关的选项卡
     tabsState.removeTab(
-      `${configOps?.config.id}-${configOps?.db.value}-${contextmenuData.value?.data.value}`
+      `${unref(id)}-${unref(db)}-${contextmenuData.value?.data.value}`
     )
 
-    mitt.emit('fetchInfo', configOps!.config.id)
-    mitt.emit('fetchTreeKeys', { id: configOps!.config.id, db: configOps!.db.value })
+    mitt.emit('fetchInfo', unref(id))
+    mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
   } catch (error) {
     ElMessage.error(error as string)
   }

@@ -17,12 +17,14 @@ const mitt = useMitt()
 const configState = useRedis()
 const configOps = useConfig()
 const tabsState = useTabs()
+const id = computed(() => props.config.id)
+const db = computed(() => props.db)
 
 const handleClick = (_event: MouseEvent) => {
 }
 
 const handleRefresh = async () => {
-  await configOps?.refresh(props.config.id, props.db)
+  await configOps?.refresh(unref(id), unref(db))
 }
 
 const handleHome = async () => {
@@ -33,12 +35,12 @@ const handleConsole = async () => {
   await configOps?.connection(
     props.config,
     {
-      id: props.config.id,
-      key: `${props.config.id}-${props.db}`,
-      value: props.config.id,
+      id: unref(id),
+      key: `${unref(id)}-${unref(db)}`,
+      value: unref(id),
       name: props.config.name,
       label: `${props.config.name} | redis-cli: ${props.config.port}`,
-      db: props.db,
+      db: unref(db),
       type: 'terminal',
       icon: 'mdi:console',
     }
@@ -46,7 +48,7 @@ const handleConsole = async () => {
 }
 
 const handleClose = async () => {
-  const isConnection = await invoke<boolean>('is_connection', { id: props.config.id })
+  const isConnection = await invoke<boolean>('is_connection', { id: unref(id) })
   if (!isConnection) {
     return
   }
@@ -57,8 +59,8 @@ const handleClose = async () => {
     cancelButtonText: '取消',
   }).then(async () => {
     try {
-      await configOps?.disConnection(props.config.id)
-      tabsState.removeTabById(props.config.id)
+      await configOps?.disConnection(unref(id))
+      tabsState.removeTabById(unref(id))
     } catch (error) {
       ElMessage.error(error as string)
     }
@@ -73,12 +75,12 @@ const handleDelete = async () => {
     cancelButtonText: '取消',
   }).then(async () => {
     try {
-      const isConnection = await invoke<boolean>('is_connection', { id: props.config.id })
+      const isConnection = await invoke<boolean>('is_connection', { id: unref(id) })
       if (isConnection) {
-        await configOps?.disConnection(props.config.id)
+        await configOps?.disConnection(unref(id))
       }
-      tabsState.removeTabById(props.config.id)
-      configState.removeConfig(props.config.id)
+      tabsState.removeTabById(unref(id))
+      configState.removeConfig(unref(id))
     } catch (error) {
       ElMessage.error(error as string)
     }
@@ -93,11 +95,11 @@ const isEdit = ref(false)
 const visibleDialog = async (edit: boolean) => {
   try {
     isEdit.value = edit
-    const isConnection = await invoke('is_connection', { id: props.config.id })
+    const isConnection = await invoke('is_connection', { id: unref(id) })
     // 如果是编辑并且没有连接
     if (!isConnection && unref(isEdit)) {
       configModel.value = { ...props.config }
-      tabsState.removeTab(props.config.id)
+      tabsState.removeTab(unref(id))
       visible.value = true
       return
     }
@@ -109,9 +111,9 @@ const visibleDialog = async (edit: boolean) => {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
       }).then(async () => {
-        await configOps?.disConnection(props.config.id)
+        await configOps?.disConnection(unref(id))
         configModel.value = { ...props.config }
-        tabsState.removeTabById(props.config.id)
+        tabsState.removeTabById(unref(id))
         visible.value = true
       })
         .catch(() => {})
