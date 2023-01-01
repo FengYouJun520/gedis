@@ -374,7 +374,11 @@ pub async fn get_key_detail(
         _ => return Err(format!("key不存在: {}, type: {}", key, typ).into()),
     };
 
-    info!(?keyinfo, "获取key详细信息成功");
+    info!(
+        key = keyinfo.key,
+        r#type = keyinfo.r#type,
+        "获取key详细信息成功"
+    );
 
     Ok(keyinfo)
 }
