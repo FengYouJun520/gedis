@@ -92,6 +92,22 @@ mitt.on('clearLogs', async () => {
   await clearLogs()
 })
 
+const autoScrollBottom = ref(false)
+// 实时获取日志
+const syncLog = ref(false)
+
+watchEffect(cleanup => {
+  let timer: number|undefined
+  if (unref(visibleLog) && unref(syncLog)) {
+    timer && clearInterval(timer)
+    timer = setInterval(async () => {
+      await fetchlogs()
+      unref(autoScrollBottom) && handleOpenLog()
+    }, 2000)
+  }
+  cleanup(() => timer && clearInterval(timer))
+})
+
 onUnmounted(() => {
   mitt.off('clearLogs')
 })
@@ -358,12 +374,30 @@ const copyCommand = (log: string) => {
       </ElScrollbar>
 
       <template #footer>
-        <el-button type="danger" text bg @click="clearLogs">
-          清空日志
-        </el-button>
-        <el-button type="primary" @click="visibleLog = false">
-          取消
-        </el-button>
+        <div flex items-center justify-between>
+          <el-space :size="24">
+            <el-tooltip content="自动滚动都底部">
+              <div>
+                <span>滚动：</span>
+                <el-switch v-model="autoScrollBottom" />
+              </div>
+            </el-tooltip>
+            <el-tooltip content="实时同步日志">
+              <div>
+                <span>实时：</span>
+                <el-switch v-model="syncLog" />
+              </div>
+            </el-tooltip>
+          </el-space>
+          <el-space>
+            <el-button type="danger" text bg @click="clearLogs">
+              清空日志
+            </el-button>
+            <el-button type="primary" @click="visibleLog = false">
+              取消
+            </el-button>
+          </el-space>
+        </div>
       </template>
     </el-dialog>
   </div>

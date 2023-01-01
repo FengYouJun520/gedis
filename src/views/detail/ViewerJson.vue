@@ -36,7 +36,7 @@ onMounted(() => {
       links: false,
       readOnly: props.readonly,
       cursorStyle: props.readonly ? 'underline-thin' : 'line',
-      lineNumbers: 'off',
+      lineNumbers: 'on',
       contextmenu: false,
       tabSize: 2,
       fontSize: 16,
@@ -127,10 +127,5 @@ watch(() => uiState.theme, newTheme => {
   min-width: 350px;
 	height: 100%;
   width: 100%;
-}
-
-
-.monaco-editor :deep(.decorationsOverviewRuler) {
-  display: none !important;
 }
 </style>
