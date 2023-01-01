@@ -88,15 +88,13 @@ const handleDeleteKey = async () => {
       key: contextmenuData.value?.data.value,
     })
 
-    configOps?.fetchTreeKeys(unref(id), unref(db))
     ElMessage.success(`删除键: ${contextmenuData.value?.data.value}成功`)
     // 如果有选项卡，删除选项卡
     tabsState.removeTab(
       `${unref(id)}-${unref(db)}-${contextmenuData.value?.data.value}`
     )
 
-    mitt.emit('fetchInfo', unref(id))
-    mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
+    mitt.emit('refresh', { id: unref(id), db: unref(db) })
   } catch (error) {
     ElMessage.error(error as string)
   }
@@ -110,15 +108,13 @@ const handleDeleteFolder = async () => {
       matchKey: `${contextmenuData.value?.data.value}*`,
     })
 
-    configOps?.fetchTreeKeys(configOps.config.id, configOps.db.value)
     ElMessage.success(`删除键: ${contextmenuData.value?.data.value}成功`)
     // 如果有选项卡，删除目录下所有相关的选项卡
     tabsState.removeTab(
       `${unref(id)}-${unref(db)}-${contextmenuData.value?.data.value}`
     )
 
-    mitt.emit('fetchInfo', unref(id))
-    mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
+    mitt.emit('refresh', { id: unref(id), db: unref(db) })
   } catch (error) {
     ElMessage.error(error as string)
   }

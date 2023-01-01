@@ -50,8 +50,6 @@ const handleConfirm = async () => {
       keyinfo: keyModel.value,
     })
 
-    await configOps?.fetchTreeKeys(unref(id), unref(db))
-
     // 添加新的选项卡并且跳转
     if (configOps) {
       tabsState.addTab({
@@ -66,8 +64,7 @@ const handleConfirm = async () => {
     }
 
     visibleDialog.value = false
-    mitt.emit('fetchInfo', unref(id))
-    mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
+    mitt.emit('refresh', { id: unref(id), db: unref(db) })
   } catch (error) {
     ElMessage.error(error as string)
   }

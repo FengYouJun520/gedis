@@ -123,7 +123,7 @@ const clearLogs = async () => {
 }
 
 const alertType = (log: string) => {
-  const arg = log.split(/\s+/)[0]
+  const arg = log.split(/\s+/)[1]
   if (arg.match(/(.*add.*)|(.*set.*)|(.*push*)/)) {
     return 'success'
   } else if (arg.match(/(.*del.*)|(.*pop.*)/)) {

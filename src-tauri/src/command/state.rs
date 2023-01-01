@@ -49,6 +49,15 @@ impl Redis {
         let con = self.connections.get_mut(id).context("客户端未连接")?;
         Ok(con)
     }
+
+    pub async fn get_con_and_config(
+        &mut self,
+        id: &str,
+    ) -> Result<(&mut redis::aio::Connection, &RedisConfig)> {
+        let con = self.connections.get_mut(id).context("客户端未连接")?;
+        let config = self.configs.get_mut(id).context("客户端未连接")?;
+        Ok((con, config))
+    }
 }
 
 const MAX_HISTORY: usize = 5000;
@@ -57,7 +66,7 @@ const MAX_HISTORY: usize = 5000;
 pub struct History(pub Arc<std::sync::Mutex<Vec<String>>>);
 
 impl History {
-    pub fn add_log(&self, value: String) {
+    pub fn add_log(&self, value: String, config: &RedisConfig) {
         let mut histories = self.0.lock().unwrap();
         if histories.len() == MAX_HISTORY {
             histories.reverse();
@@ -66,12 +75,12 @@ impl History {
             }
             histories.reverse();
         }
-        histories.push(value);
+        histories.push(format!("[{}] {}", config.name, value));
     }
 
-    pub fn add_log_vec(&self, values: Vec<String>) {
+    pub fn add_log_vec(&self, values: Vec<String>, config: &RedisConfig) {
         let log: String = values.join(" ").to_lowercase();
-        self.add_log(log)
+        self.add_log(log, config)
     }
 }
 
@@ -83,16 +92,16 @@ impl Clone for History {
 
 #[async_trait]
 pub trait CmdLog: Send {
-    fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>) -> &Self;
+    fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>, config: &RedisConfig) -> &Self;
 }
 
 /// 这个不起作用？
 #[async_trait]
 impl CmdLog for Pipeline {
-    fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>) -> &Self {
+    fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>, config: &RedisConfig) -> &Self {
         let iter = self.cmd_iter();
         for cmd in iter {
-            _ = cmd.log(history.clone());
+            _ = cmd.log(history.clone(), config);
         }
 
         self
@@ -101,7 +110,7 @@ impl CmdLog for Pipeline {
 
 #[async_trait]
 impl CmdLog for Cmd {
-    fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>) -> &Self {
+    fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>, config: &RedisConfig) -> &Self {
         let mut logs: Vec<String> = vec![];
         let iter = self.args_iter();
         for arg in iter {
@@ -114,7 +123,10 @@ impl CmdLog for Cmd {
         }
 
         let log: String = logs.join(" ");
-        history.lock().unwrap().push(log);
+        history
+            .lock()
+            .unwrap()
+            .push(format!("[{}] {}", config.name, log));
 
         self
     }

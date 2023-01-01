@@ -167,13 +167,12 @@ const handleClearKeys = async () => {
     cancelButtonText: '取消',
   }).then(async () => {
     try {
-      await invoke('clear_keys', { id: props.config.id, db: configOps?.db.value })
+      await invoke('clear_keys', { id: unref(id), db: unref(db) })
 
       // 删除所有相关的选项卡(DB)
-      tabsState.removeTabByDb(props.db)
+      tabsState.removeTabByDb(unref(db))
 
-      mitt.emit('fetchInfo', props.config.id)
-      mitt.emit('fetchTreeKeys', { id: props.config.id, db: props.db })
+      mitt.emit('fetchInfo', unref(id))
     } catch (error) {
       ElMessage.error(error as string)
     }

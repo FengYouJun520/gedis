@@ -111,10 +111,7 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
       connected.value = true
     }
 
-    await fetchInfo(props.config.id)
-
-    // 获取所有key
-    await fetchTreeKeys(config.id, unref(selectDb))
+    await refresh(props.config.id, unref(selectDb))
 
     isOpen.value = true
 

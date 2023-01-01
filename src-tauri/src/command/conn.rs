@@ -8,12 +8,14 @@ use crate::{config::RedisConfig, error::Result, CmdLog, History, RedisState};
 /// 测试连接
 #[tauri::command]
 #[instrument(skip_all, fields(name=config.name, host=config.host, port=config.port))]
-pub async fn test_connection(config: RedisConfig) -> Result<()> {
+pub async fn test_connection(history: State<'_, History>, config: RedisConfig) -> Result<()> {
     let url = config.get_url();
     info!(?url);
     let client = redis::Client::open(config.get_url())?;
     let mut con = client.get_connection_with_timeout(Duration::from_secs(10))?;
-    redis::cmd("PING").query(&mut con)?;
+    redis::cmd("PING")
+        .log(history.0.clone(), &config)
+        .query(&mut con)?;
 
     info!(?config, "测试连接成功");
     Ok(())
@@ -30,7 +32,7 @@ pub async fn connection(
     let client = redis::Client::open(config.get_url())?;
     let mut con = client.get_async_connection().await?;
     redis::cmd("PING")
-        .log(history.0.clone())
+        .log(history.0.clone(), &config)
         .query_async(&mut con)
         .await?;
 
@@ -62,10 +64,10 @@ pub async fn ping(
     id: String,
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
-    let con = redis_state.get_con_mut(&id).await?;
+    let (con, config) = redis_state.get_con_and_config(&id).await?;
 
     redis::cmd("PING")
-        .log(history.0.clone())
+        .log(history.0.clone(), config)
         .query_async(con)
         .await?;
 
@@ -104,10 +106,10 @@ pub async fn get_info(
     id: String,
 ) -> Result<HashMap<String, String>> {
     let mut redis_state = state.0.lock().await;
-    let con = redis_state.get_con_mut(&id).await?;
+    let (con, config) = redis_state.get_con_and_config(&id).await?;
 
     let info: InfoDict = redis::cmd("INFO")
-        .log(history.0.clone())
+        .log(history.0.clone(), config)
         .query_async(con)
         .await?;
 
