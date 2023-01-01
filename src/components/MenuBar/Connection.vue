@@ -26,20 +26,49 @@ const loading = ref(false)
 const isOpen = ref(false)
 const selectDb = ref(0)
 
+const isCurrent = (id: string) => props.config.id === id
+
 const changeDb = (db: number) => {
   selectDb.value = db
   mitt.emit('changeDb', db)
 }
 
-mitt.on('fetchInfo', id=> fetchInfo(id))
-mitt.on('fetchTreeKeys', ({ id, db }) => fetchTreeKeys(id, db))
-mitt.on('disConnection', async () => await handleDisConnection(props.config.id))
+mitt.on('fetchInfo', id=> {
+  if (!isCurrent(id)) {
+    return
+  }
+  fetchInfo(id)
+})
+mitt.on('fetchTreeKeys', ({ id, db }) => {
+  if (!isCurrent(id)) {
+    return
+  }
+  fetchTreeKeys(id, db)
+})
+mitt.on('disConnection', async id => {
+  if (!isCurrent(id)) {
+    return
+  }
+  await handleDisConnection(props.config.id)
+})
+
+mitt.on('refresh', async ({ id, db }) => {
+  if (!isCurrent(id)) {
+    return
+  }
+  await refresh(id, db)
+})
 
 onUnmounted(() => {
   mitt.off('fetchInfo')
   mitt.off('fetchTreeKeys')
   mitt.off('disConnection')
 })
+
+const refresh = async (id: string, db: number) => {
+  await fetchInfo(id)
+  await fetchTreeKeys(id, db)
+}
 
 let ping: number|null = null
 const pingTime = 60 * 1000
@@ -186,6 +215,8 @@ createConfigContext({
   treeKeys,
   keyspaces,
   changeDb,
+  refresh,
+  fetchInfo,
   fetchTreeKeys,
   connection: handleConnection,
   disConnection: handleDisConnection,
@@ -213,7 +244,7 @@ createConfigContext({
 
       <div v-if="isOpen">
         <!-- 操作 -->
-        <MenuOperation />
+        <MenuOperation :keyspaces="keyspaces" />
         <!-- key列表 -->
         <KeyList />
       </div>

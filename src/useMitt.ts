@@ -1,15 +1,19 @@
 import mitt, { Emitter } from 'mitt'
 
 type Events = {
-  changeDb: number,
-  disConnection?: void,
-  fetchInfo: string,
-  searchKeyTree: string,
+  changeDb: number
+  disConnection: string
+  fetchInfo: string
+  searchKeyTree: string
+  refresh: {
+    id: string,
+    db: number
+  }
   fetchTreeKeys: {
     id: string,
     db: number
-  },
-  fetchKeyInfo?: void,
+  }
+  fetchKeyInfo: string
   clearLogs?: void
 }
 

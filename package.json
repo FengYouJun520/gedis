@@ -49,5 +49,9 @@
     "src/**/*.{js,ts,jsx,tsx,vue}": [
       "eslint --fix"
     ]
-  }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@7.14.0"
 }

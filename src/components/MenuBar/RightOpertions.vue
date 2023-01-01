@@ -22,7 +22,7 @@ const handleClick = (_event: MouseEvent) => {
 }
 
 const handleRefresh = async () => {
-  await configOps?.fetchTreeKeys(props.config.id, props.db)
+  await configOps?.refresh(props.config.id, props.db)
 }
 
 const handleHome = async () => {

@@ -1,29 +1,19 @@
 <script setup lang="ts">
 import { useTabs } from '@/store/tabs'
-import { AddKeyInfo } from '@/types/redis'
+import { AddKeyInfo, Keyspace } from '@/types/redis'
 import { useMitt } from '@/useMitt'
 import { invoke } from '@tauri-apps/api'
 import { useConfig } from './useConfig'
+
+const props = defineProps<{
+  keyspaces: Keyspace[]
+}>()
 
 const tabsState = useTabs()
 const mitt = useMitt()
 const configOps = useConfig()
 const selectDB = ref(configOps?.db || 0)
 const search = ref('')
-
-const createOptions = () => {
-  const result = []
-  for (let i = 0; i < 16; i++) {
-    result.push({
-      label: `DB${i}`,
-      value: i,
-    })
-  }
-
-  return result
-}
-
-const options = createOptions()
 
 const handleChange = (val: number) => {
   configOps?.changeDb(val)
@@ -104,10 +94,10 @@ const handleCloseDialog = () => {
         @change="handleChange"
       >
         <el-option
-          v-for="(item, index) in options"
-          :key="item.value"
-          :label="`${item.label} (${configOps?.keyspaces.value[index].len || 0})`"
-          :value="item.value"
+          v-for="item in props.keyspaces"
+          :key="item.db"
+          :label="`DB${item.db} (${item.len})`"
+          :value="item.db"
         />
       </el-select>
       <el-button text bg @click="handleAddDialog">

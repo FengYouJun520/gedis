@@ -4,7 +4,6 @@ import ViewerText from './ViewerText.vue'
 import ViewerJson from './ViewerJson.vue'
 
 interface StringProps {
-  redisKey: string
   content: string
   readonly?: boolean
 }

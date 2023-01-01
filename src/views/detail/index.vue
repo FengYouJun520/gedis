@@ -30,7 +30,10 @@ const db = computed(() => props.tabItem.db)
 const key = ref(props.tabItem.value)
 const keyinfo = ref<KeyInfo>({ ...initialData })
 
-mitt.on('fetchKeyInfo', async () => {
+mitt.on('fetchKeyInfo', async id => {
+  if (unref(id) !== id) {
+    return
+  }
   await fetchKeyInfo()
 })
 
@@ -126,7 +129,7 @@ const handleDeleteKey = () => {
       await invoke('del_key', { id: unref(id), db: unref(db), key: unref(key) })
 
       tabsState.removeTab(`${unref(id)}-${unref(db)}-${unref(key)}`)
-      mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
+      mitt.emit('refresh', { id: unref(id), db: unref(db) })
     } catch (error) {
       ElMessage.error(error as string
       )
