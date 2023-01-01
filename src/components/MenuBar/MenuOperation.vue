@@ -14,13 +14,15 @@ const mitt = useMitt()
 const configOps = useConfig()
 const selectDB = ref(configOps?.db || 0)
 const search = ref('')
+const id = computed(() => configOps!.config.id)
+const db = computed(() => unref(configOps!.db))
 
 const handleChange = (val: number) => {
   configOps?.changeDb(val)
 }
 
 const handleSearchChange = () => {
-  mitt.emit('searchKeyTree', unref(search))
+  mitt.emit('searchKeyTree', { id: unref(id), query: unref(search) })
 }
 
 const visibleDialog = ref(false)
@@ -43,20 +45,20 @@ const handleConfirm = async () => {
       keyModel.value.value = '{"New key": "New value"}'
     }
     await invoke('set_key', {
-      id: configOps?.config.id,
-      db: configOps?.db.value,
+      id: unref(id),
+      db: unref(db),
       keyinfo: keyModel.value,
     })
 
-    await configOps?.fetchTreeKeys(configOps.config.id, configOps.db.value)
+    await configOps?.fetchTreeKeys(unref(id), unref(db))
 
     // 添加新的选项卡并且跳转
     if (configOps) {
       tabsState.addTab({
-        id: configOps.config.id,
-        db: configOps.db.value,
+        id: unref(id),
+        db: unref(db),
         type: 'detail',
-        key: `${configOps.config.id}-${configOps.db.value}-${keyModel.value.key}`,
+        key: `${unref(id)}-${unref(db)}-${keyModel.value.key}`,
         value: keyModel.value.key,
         name: configOps.config.name,
         label: keyModel.value.key,
@@ -64,8 +66,8 @@ const handleConfirm = async () => {
     }
 
     visibleDialog.value = false
-    mitt.emit('fetchInfo', configOps!.config.id)
-    mitt.emit('fetchTreeKeys', { id: configOps!.config.id, db: configOps!.db.value })
+    mitt.emit('fetchInfo', unref(id))
+    mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
   } catch (error) {
     ElMessage.error(error as string)
   }

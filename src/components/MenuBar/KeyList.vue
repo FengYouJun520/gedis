@@ -15,7 +15,10 @@ const treeKeys = computed(() =>configOps!.treeKeys.value)
 const search = ref('')
 const treeRef = ref<InstanceType<typeof ElTree>|null>(null)
 
-mitt.on('searchKeyTree', query => {
+mitt.on('searchKeyTree', ({ id, query }) => {
+  if (configOps?.config.id !== id) {
+    return
+  }
   search.value = query
   treeRef.value?.filter(query)
 })

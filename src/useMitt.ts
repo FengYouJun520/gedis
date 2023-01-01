@@ -4,7 +4,10 @@ type Events = {
   changeDb: number
   disConnection: string
   fetchInfo: string
-  searchKeyTree: string
+  searchKeyTree: {
+    id: string,
+    query: string
+  }
   refresh: {
     id: string,
     db: number
