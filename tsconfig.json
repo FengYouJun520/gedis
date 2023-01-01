@@ -17,6 +17,10 @@
     "types": [
       "element-plus/global"
     ],
+    "typeRoots": [
+      "node_modules/@types",
+      "src/types"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",

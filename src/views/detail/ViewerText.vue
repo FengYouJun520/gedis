@@ -22,7 +22,7 @@ defineExpose({
 
 <template>
   <div class="viewer-text">
-    <el-input v-model="newContent" :readonly="readonly" :rows="12" type="textarea" />
+    <el-input v-model="newContent" :readonly="readonly" :rows="18" type="textarea" />
   </div>
 </template>
 

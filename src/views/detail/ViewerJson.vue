@@ -15,7 +15,7 @@ let monacoEditor: monaco.editor.IStandaloneCodeEditor
 const jsonContent = computed(() => {
   try {
     const obj = JSON.parse(props.content)
-    return JSON.stringify(obj, null, 4)
+    return JSON.stringify(obj, null, 2)
   } catch (error) {
     return props.content
   }
@@ -38,6 +38,7 @@ onMounted(() => {
       cursorStyle: props.readonly ? 'underline-thin' : 'line',
       lineNumbers: 'off',
       contextmenu: false,
+      tabSize: 2,
       fontSize: 16,
       showFoldingControls: 'always',
       wordWrap: 'on',
@@ -49,18 +50,20 @@ onMounted(() => {
       folding: true,
       colorDecorators: false,
       minimap: {
-        enabled: false,
+        enabled: true,
       },
       // vertical line
       guides: {
-        indentation: false,
-        highlightActiveIndentation: false,
+        indentation: true,
+        highlightActiveIndentation: true,
+        bracketPairs: true,
       },
       scrollbar: {
         useShadows: false,
         verticalScrollbarSize: 10,
         horizontalScrollbarSize: 10,
       },
+      wordWrapOverride2: 'off',
     })
   }
 })
@@ -124,5 +127,10 @@ watch(() => uiState.theme, newTheme => {
   min-width: 350px;
 	height: 100%;
   width: 100%;
+}
+
+
+.monaco-editor :deep(.decorationsOverviewRuler) {
+  display: none !important;
 }
 </style>
