@@ -150,9 +150,7 @@ watch(() => uiState.theme, newTheme => {
 
 <style lang="css" scoped>
 .monaco-editor {
-  min-height: 300px;
-  min-width: 300px;
-	height: 100%;
+	height: calc(100vh - 402px);
   width: 100%;
 }
 </style>

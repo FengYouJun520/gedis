@@ -21,16 +21,15 @@ defineExpose({
 </script>
 
 <template>
-  <div class="viewer-text">
-    <el-input v-model="newContent" :readonly="readonly" :rows="16" type="textarea" />
+  <div>
+    <el-input
+      v-model="newContent"
+      type="textarea"
+      :readonly="readonly"
+      :autosize="{ minRows: 18, maxRows: 20 }"
+    />
   </div>
 </template>
 
 <style lang="css" scoped>
-.viewer-text {
-  min-width: 350px;
-  min-height: 350px;
-  height: 100%;
-  width: 100%;
-}
 </style>
