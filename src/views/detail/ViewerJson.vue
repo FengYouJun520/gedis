@@ -91,6 +91,10 @@ defineExpose({
   },
 })
 
+useResizeObserver(document.body, () => {
+  monacoEditor && monacoEditor.layout()
+})
+
 
 watch(() => uiState.theme, newTheme => {
   let theme = newTheme
@@ -114,11 +118,9 @@ watch(() => uiState.theme, newTheme => {
 </script>
 
 <template>
-  <div class="text-formated-container">
-    <el-card>
-      <div ref="editorRef" class="monaco-editor" />
-    </el-card>
-  </div>
+  <el-card>
+    <div ref="editorRef" class="monaco-editor" />
+  </el-card>
 </template>
 
 <style lang="css" scoped>
