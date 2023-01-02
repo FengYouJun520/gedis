@@ -92,6 +92,7 @@ watch(selectComponent, value => {
           </span>
         </template>
       </el-button>
+      <span>显示行号: </span>
       <el-switch v-model="lineNumber" />
     </div>
 

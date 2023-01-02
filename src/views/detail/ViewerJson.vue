@@ -61,7 +61,7 @@ onMounted(() => {
       links: false,
       readOnly: props.readonly,
       cursorStyle: props.readonly ? 'underline-thin' : 'line',
-      lineNumbers: 'off',
+      lineNumbers: props.showLineNumber ? 'on' : 'off',
       contextmenu: false,
       tabSize: 2,
       fontSize: 16,
