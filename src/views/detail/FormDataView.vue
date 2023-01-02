@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { AddKeyInfo } from '@/types/redis'
-import { clipboard } from '@tauri-apps/api'
 import type { ElForm } from 'element-plus'
+import FormatViewer from './FormatViewer.vue'
 
 interface FormDataViewProps {
   title: string
@@ -20,16 +20,17 @@ const emit = defineEmits<{
 
 const formRef = ref<InstanceType<typeof ElForm> | null>(null)
 const addKeyinfo = ref<AddKeyInfo>({ ...props.model })
-const copyValue = () => {
-  clipboard.writeText(unref(addKeyinfo).value)
-}
+const viewRef = ref<InstanceType<typeof FormatViewer> | null>(null)
+const content = ref('')
 
 const handleOpen = () => {
   addKeyinfo.value = { ...props.model }
+  content.value = props.model.value
 }
 
 const handleCancel = () => {
   emit('cancel')
+  content.value = ''
 }
 
 const handleConfirm = () => {
@@ -40,27 +41,25 @@ const handleConfirm = () => {
       return
     }
 
+    addKeyinfo.value.value = viewRef.value!.getRowContent()
     emit('confirm', unref(addKeyinfo), valid)
   })
 }
-
-const streamViewJson = computed(() => {
-  const obj:Record<string, any> = JSON.parse(props.model.value)
-  return JSON.stringify(obj, null, 2)
-})
 </script>
 
 <template>
   <el-dialog
     :model-value="modelValue"
     :title="title"
-    width="50%"
+    width="80%"
     append-to-body
+    align-center
+    destroy-on-close
     @open="handleOpen"
     @update:model-value="($event) => emit('update:modelValue', $event)"
     @close="handleCancel"
   >
-    <ElForm ref="formRef" :model="addKeyinfo">
+    <ElForm ref="formRef" :model="addKeyinfo" label-position="top">
       <el-form-item v-if="addKeyinfo.type === 'zset'" label="分数" prop="score">
         <el-input-number v-model="addKeyinfo.score" />
       </el-form-item>
@@ -71,37 +70,12 @@ const streamViewJson = computed(() => {
         <el-input v-model="addKeyinfo.id" :disabled="readonly" />
       </el-form-item>
 
-      <el-form-item>
-        <el-space>
-          <span>Value</span>
-          <el-tag size="small">
-            Size:&nbsp;{{ addKeyinfo.value.length }}B
-          </el-tag>
-          <el-button text size="small" @click="copyValue">
-            <template #icon>
-              <span>
-                <i class="ant-design:copy-outlined" />
-              </span>
-            </template>
-          </el-button>
-        </el-space>
-      </el-form-item>
-
-      <el-form-item v-if="addKeyinfo.type === 'stream' && isEdit">
-        <el-input
-          v-model="streamViewJson"
-          :readonly="readonly"
-          type="textarea"
-          :rows="8"
-        />
-      </el-form-item>
-      <el-form-item v-else>
-        <el-input
-          v-model="addKeyinfo.value"
-          type="textarea"
-          :rows="8"
-        />
-      </el-form-item>
+      <FormatViewer
+        ref="viewRef"
+        :content="content"
+        :readonly="readonly"
+        :selected="addKeyinfo.type === 'stream' ? 'json' : 'text'"
+      />
     </ElForm>
 
     <template #footer>

@@ -3,14 +3,17 @@ import { clipboard } from '@tauri-apps/api'
 import ViewerText from './ViewerText.vue'
 import ViewerJson from './ViewerJson.vue'
 
-interface StringProps {
+interface FormatViewProps {
   content: string
   readonly?: boolean
+  selected?: string
 }
 
-defineProps<StringProps>()
-const selected = ref('text')
+const props = defineProps<FormatViewProps>()
+
+const selectComponent = ref('text')
 const viewRef = ref<InstanceType<typeof ViewerJson|typeof ViewerText>|null>(null)
+const lineNumber = ref(false)
 
 const views = [
   {
@@ -24,6 +27,10 @@ const views = [
     component: ViewerJson,
   },
 ]
+
+watch(props, newprops => {
+  selectComponent.value = newprops.selected || 'text'
+})
 
 const copyContent = () => {
   const newContent = viewRef.value!.getContent()
@@ -47,10 +54,10 @@ const viewComponentMap = computed(() => {
 const viewComponent = shallowRef(ViewerText)
 
 const handleChange = (value: string) => {
-  selected.value = value
+  selectComponent.value = value
 }
 
-watch(selected, value => {
+watch(selectComponent, value => {
   nextTick(() => {
     viewComponent.value = viewComponentMap.value[value]
   })
@@ -58,9 +65,9 @@ watch(selected, value => {
 </script>
 
 <template>
-  <div flex flex-col gap-y-4 w-full>
-    <el-space>
-      <el-select v-model="selected" @change="handleChange">
+  <div w-full flex flex-col space-y-5>
+    <div flex items-center space-x-2>
+      <el-select v-model="selectComponent" @change="handleChange">
         <el-option
           v-for="view in views"
           :key="view.value"
@@ -85,13 +92,15 @@ watch(selected, value => {
           </span>
         </template>
       </el-button>
-    </el-space>
+      <el-switch v-model="lineNumber" />
+    </div>
 
     <component
       :is="viewComponent"
       ref="viewRef"
       :content="content"
       :readonly="readonly"
+      :show-line-number="lineNumber"
     />
   </div>
 </template>

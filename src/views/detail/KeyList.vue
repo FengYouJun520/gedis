@@ -109,6 +109,8 @@ const handleCancel = () => {
 }
 
 const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
+  console.log(keyinfo)
+
   try {
     if (!valid || !keyinfo.value) {
       return
@@ -154,7 +156,7 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
       stripe
     >
       <el-table-column type="index" :width="180" :label="`ID（Total: ${keyDetail.size}）`" />
-      <el-table-column prop="value" label="Value" sortable />
+      <el-table-column prop="value" label="Value" sortable show-tooltip-when-overflow />
       <el-table-column label="Operation">
         <template #default="scope">
           <el-space>

@@ -175,8 +175,8 @@ watch(() => keyinfo.value.type, t => {
 </script>
 
 <template>
-  <div>
-    <el-form :model="keyinfo" inline flex>
+  <div class="h-[calc(100vh-109px)]">
+    <el-form :model="keyinfo" inline flex grow-0>
       <el-form-item flex-1>
         <el-input v-model="keyinfo.key">
           <template #prepend>

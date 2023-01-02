@@ -202,8 +202,8 @@ const objToString = (obj: Record<string, any>) => {
       stripe
     >
       <el-table-column type="index" :width="140" :label="`ID（Total: ${keyDetail.size}）`" />
-      <el-table-column prop="id" label="ID" sortable />
-      <el-table-column prop="value" label="value" sortable />
+      <el-table-column prop="id" label="ID" sortable show-tooltip-when-overflow />
+      <el-table-column prop="value" label="value" sortable show-tooltip-when-overflow />
       <el-table-column label="Operation">
         <template #default="scope">
           <el-space>

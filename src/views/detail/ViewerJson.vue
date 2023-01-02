@@ -5,6 +5,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
 interface ViewerJsonProps {
   content: string
   readonly?: boolean
+  showLineNumber?: boolean
 }
 
 const props = defineProps<ViewerJsonProps>()
@@ -26,6 +27,30 @@ watch(() => props.content, () => {
   monacoEditor.setValue(unref(jsonContent))
 })
 
+watch(() => props.showLineNumber, showLine => {
+  nextTick(() => {
+    monacoEditor && monacoEditor.updateOptions({
+      lineNumbers: showLine ? 'on' : 'off',
+    })
+  })
+})
+
+watchEffect(() => {
+  let theme = uiState.theme
+  if (theme === 'system') {
+    const isDark = usePreferredDark()
+    if (unref(isDark)) {
+      theme = 'dark'
+    } else {
+      theme = 'light'
+    }
+  }
+  nextTick(() => {
+    monacoEditor && monacoEditor.updateOptions({
+      theme: theme === 'dark' ? 'vs-dark' : 'vs',
+    })
+  })
+})
 
 onMounted(() => {
   if (editorRef.value && !monacoEditor) {
@@ -36,7 +61,7 @@ onMounted(() => {
       links: false,
       readOnly: props.readonly,
       cursorStyle: props.readonly ? 'underline-thin' : 'line',
-      lineNumbers: 'on',
+      lineNumbers: 'off',
       contextmenu: false,
       tabSize: 2,
       fontSize: 16,
@@ -125,8 +150,8 @@ watch(() => uiState.theme, newTheme => {
 
 <style lang="css" scoped>
 .monaco-editor {
-  min-height: 350px;
-  min-width: 350px;
+  min-height: 300px;
+  min-width: 300px;
 	height: 100%;
   width: 100%;
 }

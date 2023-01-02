@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api'
 import { KeyContentDetail, AddKeyInfo, KeyInfo } from '@/types/redis'
-import FormmatViewer from './FormmatViewer.vue'
+import FormatViewer from './FormatViewer.vue'
 
 interface StringProps {
   id: string
@@ -36,6 +36,7 @@ const fetchKeyDetail = async () => {
 }
 
 const content = ref('')
+const viewRef = ref<InstanceType<typeof FormatViewer> | null>(null)
 
 onMounted(() => {
   fetchKeyDetail()
@@ -70,15 +71,13 @@ const handleSave = () => {
   })
     .catch(() => {})
 }
-
-const viewRef = ref<InstanceType<typeof FormmatViewer> | null>(null)
 </script>
 
 <template>
   <div flex flex-col gap-y-2>
     <el-form :model="keyDetail">
       <el-form-item prop="value">
-        <FormmatViewer
+        <FormatViewer
           ref="viewRef"
           :content="content"
           :redis-key="keyLabel"

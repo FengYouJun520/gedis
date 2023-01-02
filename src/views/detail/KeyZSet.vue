@@ -164,8 +164,8 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
       stripe
     >
       <el-table-column type="index" :width="200" :label="`ID（Total: ${keyDetail.size}）`" />
-      <el-table-column prop="score" label="Score" sortable />
-      <el-table-column prop="member" label="Member" sortable />
+      <el-table-column prop="score" label="Score" sortable show-tooltip-when-overflow />
+      <el-table-column prop="member" label="Member" sortable show-tooltip-when-overflow />
       <el-table-column label="Operation">
         <template #default="scope">
           <el-space>
