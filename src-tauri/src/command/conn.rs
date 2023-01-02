@@ -9,9 +9,7 @@ use crate::{config::RedisConfig, error::Result, CmdLog, History, RedisState};
 #[tauri::command]
 #[instrument(skip_all, fields(name=config.name, host=config.host, port=config.port))]
 pub async fn test_connection(history: State<'_, History>, config: RedisConfig) -> Result<()> {
-    let url = config.get_url();
-    info!(?url);
-    let client = redis::Client::open(config.get_url())?;
+    let client = redis::Client::open(config.clone())?;
     let mut con = client.get_connection_with_timeout(Duration::from_secs(10))?;
     redis::cmd("PING")
         .log(history.0.clone(), &config)
@@ -29,7 +27,7 @@ pub async fn connection(
     history: State<'_, History>,
     config: RedisConfig,
 ) -> Result<()> {
-    let client = redis::Client::open(config.get_url())?;
+    let client = redis::Client::open(config.clone())?;
     let mut con = client.get_async_connection().await?;
     redis::cmd("PING")
         .log(history.0.clone(), &config)

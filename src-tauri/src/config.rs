@@ -1,6 +1,7 @@
+use redis::{ConnectionInfo, IntoConnectionInfo};
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct RedisConfig {
     pub id: String,
     pub name: String,
@@ -11,22 +12,15 @@ pub struct RedisConfig {
     pub split: String,
 }
 
-impl RedisConfig {
-    pub fn get_url(&self) -> String {
-        match (&self.username, &self.password) {
-            (Some(username), Some(password)) if !username.is_empty() && !password.is_empty() => {
-                format!(
-                    "redis://{}:{}@{}:{}/",
-                    username, password, self.host, self.port
-                )
-            }
-            (Some(username), Some(password)) if username.is_empty() && !password.is_empty() => {
-                format!("redis://:{}@{}:{}/", password, self.host, self.port)
-            }
-            (None, Some(password)) if !password.is_empty() => {
-                format!("redis://:{}@{}:{}/", password, self.host, self.port)
-            }
-            _ => format!("redis://{}:{}/", self.host, self.port),
-        }
+impl IntoConnectionInfo for RedisConfig {
+    fn into_connection_info(self) -> redis::RedisResult<ConnectionInfo> {
+        Ok(ConnectionInfo {
+            addr: redis::ConnectionAddr::Tcp(self.host, self.port),
+            redis: redis::RedisConnectionInfo {
+                db: 0,
+                username: self.username,
+                password: self.password,
+            },
+        })
     }
 }
