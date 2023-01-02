@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import MenuHeader from '@/components/MenuBar/MenuHeader.vue'
+import MenuHeader from '@/components/MenuHeader.vue'
 import { useUiState } from '@/store/ui'
 import { useResizeAsideWidth } from './useResizeAsideWidth'
 import { useRedis } from '@/store/redis'
-import Connection from '@/components/MenuBar/Connection.vue'
+import Connection from '@/components/Connection.vue'
 
 const uiState = useUiState()
 const redisState = useRedis()

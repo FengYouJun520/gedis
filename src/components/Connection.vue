@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import RightOpertions from '@/components/MenuBar/RightOpertions.vue'
-import MenuOperation from '@/components/MenuBar/MenuOperation.vue'
-import KeyList from '@/components/MenuBar/KeyList.vue'
+import RightOpertions from '@/components/RightOpertions.vue'
+import MenuOperation from '@/components/MenuOperation.vue'
+import KeyList from '@/components/KeyList.vue'
 import { TabsProps, useTabs } from '@/store/tabs'
 import { invoke } from '@tauri-apps/api'
 import { Keyspace, RedisConfig } from '@/types/redis'
@@ -89,7 +89,6 @@ watch(connected, newConnected => {
     handlePing()
   } else {
     ping && clearInterval(ping)
-    handleDisConnection(props.config.id)
   }
 })
 
