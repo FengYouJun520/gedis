@@ -23,8 +23,8 @@ const db = computed(() => props.db)
 const handleClick = (_event: MouseEvent) => {
 }
 
-const handleRefresh = async () => {
-  await configOps?.refresh(unref(id), unref(db))
+const handleRefresh = () => {
+  mitt.emit('refresh', { id: unref(id), db: unref(db) })
 }
 
 const handleHome = async () => {

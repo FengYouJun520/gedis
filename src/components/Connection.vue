@@ -28,44 +28,27 @@ const selectDb = ref(0)
 
 const isCurrent = (id: string) => props.config.id === id
 
-const changeDb = (db: number) => {
-  selectDb.value = db
-}
-
 mitt.on('changeDb', ({ id, db }) => isCurrent(id) && changeDb(db))
 mitt.on('fetchInfo', async id => isCurrent(id) && await fetchInfo(id))
 mitt.on('fetchTreeKeys', async ({ id, db }) => isCurrent(id) && await fetchTreeKeys(id, db))
+mitt.on('refresh', async ({ id, db }) => isCurrent(id) && await refresh(id, db))
 mitt.on('disConnection', async id => isCurrent(id) && await handleDisConnection(props.config.id))
-mitt.on('refresh', async ({ id, db }) => {
-  if (!isCurrent(id)) {
-    return
-  }
-  await refresh(id, db)
-})
 
 onUnmounted(() => {
   mitt.off('changeDb')
   mitt.off('fetchInfo')
   mitt.off('fetchTreeKeys')
-  mitt.off('disConnection')
   mitt.off('refresh')
+  mitt.off('disConnection')
 })
+
+const changeDb = (db: number) => {
+  selectDb.value = db
+}
 
 const refresh = async (id: string, db: number) => {
   await fetchInfo(id)
   await fetchTreeKeys(id, db)
-}
-
-// 获取指定数据库的所有树型key列表
-const fetchTreeKeys = async (id: string, db: number) => {
-  try {
-    const keys = await invoke<string[]>('get_keys_by_db', { id, db })
-    treeKeys.value = keysToTree(keys)
-  } catch (error) {
-    ElMessage.error(error as string)
-    isOpen.value = false
-    connected.value = false
-  }
 }
 
 onUnmounted(() => {
@@ -101,6 +84,18 @@ const fetchInfo = async (id: string) => {
     keyspaces.value = parseKeyspaces(info)
   } catch (error) {
     ElMessage.error(error as string)
+  }
+}
+
+// 获取指定数据库的所有树型key列表
+const fetchTreeKeys = async (id: string, db: number) => {
+  try {
+    const keys = await invoke<string[]>('get_keys_by_db', { id, db })
+    treeKeys.value = keysToTree(keys)
+  } catch (error) {
+    ElMessage.error(error as string)
+    isOpen.value = false
+    connected.value = false
   }
 }
 
@@ -197,9 +192,6 @@ createConfigContext({
   db: selectDb,
   treeKeys,
   keyspaces,
-  refresh,
-  fetchInfo,
-  fetchTreeKeys,
   connection: handleConnection,
   disConnection: handleDisConnection,
 })
