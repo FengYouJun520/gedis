@@ -12,7 +12,6 @@ interface ConfigOps {
   fetchTreeKeys: (id: string, db: number) => Promise<void>,
   connection: (config: RedisConfig, tabs?: TabsProps) => Promise<void>,
   disConnection: (id: string) => Promise<void>,
-  changeDb: (db: number) => void
 }
 
 

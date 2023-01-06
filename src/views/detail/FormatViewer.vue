@@ -92,8 +92,10 @@ watch(selectComponent, value => {
           </span>
         </template>
       </el-button>
-      <span>显示行号: </span>
-      <el-switch v-model="lineNumber" />
+      <template v-if="selectComponent === 'json'">
+        <span>显示行号: </span>
+        <el-switch v-model="lineNumber" />
+      </template>
     </div>
 
     <component

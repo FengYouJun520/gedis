@@ -342,17 +342,19 @@ const copyCommand = (log: string) => {
           px-4
         >
           <li
+            v-for="(log, index) in logs"
+            :key="index"
             flex
-            flex-col
-            gap-y-3
+            flex-col gap-y-3
           >
             <el-alert
-              v-for="(log, index) in logs" :key="index"
               :closable="false"
               :type="alertType(log)"
               relative
             >
-              <span text-1rem>{{ log }}</span>
+              <span text-1rem>
+                {{ log.length >= 100 ? `${log.substring(0, 100)}...` : log }}
+              </span>
 
               <el-tooltip content="复制命令" :show-after="1000">
                 <el-button

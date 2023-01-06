@@ -1,7 +1,10 @@
 import mitt, { Emitter } from 'mitt'
 
 type Events = {
-  changeDb: number
+  changeDb: {
+    id: string,
+    db: number
+  }
   disConnection: string
   fetchInfo: string
   searchKeyTree: {

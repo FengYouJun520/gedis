@@ -30,28 +30,12 @@ const isCurrent = (id: string) => props.config.id === id
 
 const changeDb = (db: number) => {
   selectDb.value = db
-  mitt.emit('changeDb', db)
 }
 
-mitt.on('fetchInfo', id=> {
-  if (!isCurrent(id)) {
-    return
-  }
-  fetchInfo(id)
-})
-mitt.on('fetchTreeKeys', ({ id, db }) => {
-  if (!isCurrent(id)) {
-    return
-  }
-  fetchTreeKeys(id, db)
-})
-mitt.on('disConnection', async id => {
-  if (!isCurrent(id)) {
-    return
-  }
-  await handleDisConnection(props.config.id)
-})
-
+mitt.on('changeDb', ({ id, db }) => isCurrent(id) && changeDb(db))
+mitt.on('fetchInfo', async id => isCurrent(id) && await fetchInfo(id))
+mitt.on('fetchTreeKeys', async ({ id, db }) => isCurrent(id) && await fetchTreeKeys(id, db))
+mitt.on('disConnection', async id => isCurrent(id) && await handleDisConnection(props.config.id))
 mitt.on('refresh', async ({ id, db }) => {
   if (!isCurrent(id)) {
     return
@@ -60,9 +44,11 @@ mitt.on('refresh', async ({ id, db }) => {
 })
 
 onUnmounted(() => {
+  mitt.off('changeDb')
   mitt.off('fetchInfo')
   mitt.off('fetchTreeKeys')
   mitt.off('disConnection')
+  mitt.off('refresh')
 })
 
 const refresh = async (id: string, db: number) => {
@@ -70,19 +56,36 @@ const refresh = async (id: string, db: number) => {
   await fetchTreeKeys(id, db)
 }
 
-let ping: number|null = null
-const pingTime = 60 * 1000
-const handlePing = () => {
-  ping && clearInterval(ping)
-  ping = setInterval(async () => {
-    try {
-      await invoke('ping', { id: props.config.id })
-    } catch (error) {
-      ElMessage.error(error as string)
-      await handleDisConnection(props.config.id)
-    }
-  }, pingTime)
+// 获取指定数据库的所有树型key列表
+const fetchTreeKeys = async (id: string, db: number) => {
+  try {
+    const keys = await invoke<string[]>('get_keys_by_db', { id, db })
+    treeKeys.value = keysToTree(keys)
+  } catch (error) {
+    ElMessage.error(error as string)
+    isOpen.value = false
+    connected.value = false
+  }
 }
+
+onUnmounted(() => {
+  ping && clearInterval(ping)
+})
+
+
+watch(selectDb, async db => {
+  try {
+    if (!unref(isOpen) || !unref(connected)) {
+      return
+    }
+
+    await fetchTreeKeys(props.config.id, db)
+  } catch (error) {
+    ElMessage.error(error as string)
+    isOpen.value = false
+    connected.value = false
+  }
+})
 
 watch(connected, newConnected => {
   if (newConnected) {
@@ -99,6 +102,20 @@ const fetchInfo = async (id: string) => {
   } catch (error) {
     ElMessage.error(error as string)
   }
+}
+
+let ping: number|null = null
+const pingTime = 60 * 1000
+const handlePing = () => {
+  ping && clearInterval(ping)
+  ping = setInterval(async () => {
+    try {
+      await invoke('ping', { id: props.config.id })
+    } catch (error) {
+      ElMessage.error(error as string)
+      await handleDisConnection(props.config.id)
+    }
+  }, pingTime)
 }
 
 const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
@@ -175,42 +192,11 @@ const handleOpen = async () => {
   }
 }
 
-// 获取指定数据库的所有树型key列表
-const fetchTreeKeys = async (id: string, db: number) => {
-  try {
-    const keys = await invoke<string[]>('get_keys_by_db', { id, db })
-    treeKeys.value = keysToTree(keys)
-  } catch (error) {
-    ElMessage.error(error as string)
-    isOpen.value = false
-    connected.value = false
-  }
-}
-
-watch(selectDb, async db => {
-  try {
-    if (!unref(isOpen) || !unref(connected)) {
-      return
-    }
-
-    await fetchTreeKeys(props.config.id, db)
-  } catch (error) {
-    ElMessage.error(error as string)
-    isOpen.value = false
-    connected.value = false
-  }
-})
-
-onUnmounted(() => {
-  ping && clearInterval(ping)
-})
-
 createConfigContext({
   config: props.config,
   db: selectDb,
   treeKeys,
   keyspaces,
-  changeDb,
   refresh,
   fetchInfo,
   fetchTreeKeys,
