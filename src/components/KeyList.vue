@@ -67,11 +67,33 @@ onClickOutside(contextmenuRef, () => {
   showContextmenu.value = false
 })
 
+const hideMenusOnClick = (e: MouseEvent) => {
+  showContextmenu.value = false
+}
+const HideMenusOnEsc = (ev: KeyboardEvent) => {
+  if (ev.key === 'Escape') {
+    showContextmenu.value = false
+  }
+}
+
+
 const handleContextmenu = (event: MouseEvent, data: TreeNode, node: Node) => {
   showContextmenu.value = true
-  contextmenuRef.value!.style.left = `${event.clientX}px`
-  contextmenuRef.value!.style.top = `${event.clientY}px`
   contextmenuData.value = { event, data, node }
+
+  nextTick(() => {
+    // 等待contextmenuRef有高度才计算
+    let top = event.clientY
+    if (document.body.clientHeight - top < contextmenuRef.value!.clientHeight) {
+      top -= contextmenuRef.value!.clientHeight
+    }
+
+    contextmenuRef.value!.style.left = `${event.clientX}px`
+    contextmenuRef.value!.style.top = `${top}px`
+
+    document.addEventListener('click', hideMenusOnClick, { once: true })
+    document.addEventListener('keyup', HideMenusOnEsc, { once: true })
+  })
 }
 
 const handleDeleteKey = async () => {
@@ -176,65 +198,63 @@ const handleCommand = (command: string) => {
       ref="contextmenuRef"
       class="tree-contextmenu-ops"
     >
-      <div>
-        <!-- folder -->
-        <template v-if="!contextmenuData?.node.isLeaf">
-          <div
-            class="contextmenu-item"
-            flex
-            items-center
-            space-x2
-            justify-start
-            @click="handleCommand('copy-key')"
-          >
-            <i class="material-symbols:content-copy-outline" />
-            <span>
-              复制
-            </span>
-          </div>
-          <div
-            class="contextmenu-item"
-            flex
-            items-center
-            space-x2
-            justify-start
-            @click="handleCommand('delete-folder')"
-          >
-            <i class="material-symbols:content-copy-outline" />
-            <span>
-              删除文件
-            </span>
-          </div>
-        </template>
+      <!-- folder -->
+      <template v-if="!contextmenuData?.node.isLeaf">
+        <div
+          class="contextmenu-item"
+          flex
+          items-center
+          space-x2
+          justify-start
+          @click="handleCommand('copy-key')"
+        >
+          <i class="material-symbols:content-copy-outline" />
+          <span>
+            复制
+          </span>
+        </div>
+        <div
+          class="contextmenu-item"
+          flex
+          items-center
+          space-x2
+          justify-start
+          @click="handleCommand('delete-folder')"
+        >
+          <i class="material-symbols:content-copy-outline" />
+          <span>
+            删除文件
+          </span>
+        </div>
+      </template>
 
-        <!-- key -->
-        <template v-else>
-          <div
-            class="contextmenu-item"
-            flex
-            items-center
-            space-x2
-            @click="handleCommand('copy-key')"
-          >
-            <i class="material-symbols:content-copy-outline" />
-            <span>
-              复制
-            </span>
-          </div>
-          <div
-            class="contextmenu-item"
-            flex
-            items-center
-            space-x2
-            @click="handleCommand('delete-key')"
-          >
-            <i class="material-symbols:delete-outline" />
-            <span>
-              删除
-            </span>
-          </div>
-        </template>
-      </div>
+      <!-- key -->
+      <template v-else>
+        <div
+          class="contextmenu-item"
+          flex
+          items-center
+          space-x2
+          @click="handleCommand('copy-key')"
+        >
+          <i class="material-symbols:content-copy-outline" />
+          <span>
+            复制
+          </span>
+        </div>
+        <div
+          class="contextmenu-item"
+          flex
+          items-center
+          space-x2
+          @click="handleCommand('delete-key')"
+        >
+          <i class="material-symbols:delete-outline" />
+          <span>
+            删除
+          </span>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -249,18 +269,19 @@ const handleCommand = (command: string) => {
   padding: 0;
 }
 
+
 .tree-contextmenu-ops {
   position: fixed;
-  transition: .2s;
-  z-index: 999;
+  z-index: 99999;
   background-color: var(--el-bg-color);
   border: 1px solid var(--el-border-color);
-  padding: 12px 0;
+  padding: 6px 0;
   border-radius: 4px;
 }
 
 .contextmenu-item {
   padding: 6px 12px;
+  transition: 0.2s;
 }
 
 .contextmenu-item:hover {
