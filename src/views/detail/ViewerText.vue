@@ -26,7 +26,7 @@ defineExpose({
       v-model="newContent"
       type="textarea"
       :readonly="readonly"
-      :autosize="{ minRows: 18, maxRows: 20 }"
+      :autosize="{ minRows: 16, maxRows: 18 }"
     />
   </div>
 </template>

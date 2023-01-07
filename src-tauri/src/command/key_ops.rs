@@ -88,7 +88,7 @@ pub async fn del_match_keys(
         keys.push(key);
     }
 
-    con.del(&keys).await.context(format!("删除多个键失败"))?;
+    con.del(&keys).await.context("删除多个键失败".to_string())?;
     let mut logs = LogArgs!["del"];
     logs.extend(keys);
     history.add_log_vec(logs, config);
@@ -472,7 +472,7 @@ pub async fn set_key(
             match keyinfo.old_field {
                 Some(ref old_field) if *old_field != field => {
                     con.hset(&keyinfo.key, &field, &keyinfo.value).await?;
-                    con.hdel(&keyinfo.key, &old_field).await?;
+                    con.hdel(&keyinfo.key, old_field).await?;
 
                     history.add_log_vec(
                         LogArgs!["hset", &keyinfo.key, &field, &keyinfo.value],
