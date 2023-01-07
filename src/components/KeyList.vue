@@ -12,18 +12,12 @@ const tabsState = useTabs()
 const mitt = useMitt()
 const configOps = useConfig()
 const treeKeys = computed(() =>configOps!.treeKeys.value)
-const search = ref('')
 const treeRef = ref<InstanceType<typeof ElTree>|null>(null)
 const id = computed(() => configOps!.config.id)
 const db = computed(() => unref(configOps!.db))
+const isCurrent = (otherId: string) => unref(id) === otherId
 
-mitt.on('searchKeyTree', ({ id, query }) => {
-  if (configOps?.config.id !== id) {
-    return
-  }
-  search.value = query
-  treeRef.value?.filter(query)
-})
+mitt.on('searchKeyTree', ({ id, query }) => isCurrent(id) && treeRef.value?.filter(query))
 
 onUnmounted(() => {
   mitt.off('searchKeyTree')
