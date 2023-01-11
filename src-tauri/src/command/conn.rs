@@ -111,7 +111,7 @@ pub async fn get_info(
         .query_async(con)
         .await?;
 
-    let mut info_result: HashMap<String, String> = HashMap::new();
+    let mut info_result = HashMap::new();
 
     for entry in info.iter() {
         if let Ok(val) = redis::from_redis_value(entry.1) {

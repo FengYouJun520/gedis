@@ -1,9 +1,5 @@
 use super::state::RedisState;
-use crate::{
-    error::{Result, SerializeError},
-    model::*,
-    CmdLog, History, LogArgs,
-};
+use crate::{error::Result, model::*, CmdLog, History, LogArgs};
 use anyhow::Context;
 use redis::{AsyncCommands, AsyncIter};
 use serde_json::json;
@@ -549,7 +545,7 @@ pub async fn set_key_ttl(
         .await?;
 
     if ttl < -1 {
-        return Err(SerializeError::from("过期的值不能小于-1"));
+        return Err("过期的值不能小于-1".into());
     }
 
     if ttl == -1 {

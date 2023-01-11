@@ -20,6 +20,6 @@ where
     M: Display + Debug + Send + Sync + 'static,
 {
     fn from(value: M) -> Self {
-        SerializeError(Error::msg(value))
+        Self(Error::msg(value))
     }
 }
