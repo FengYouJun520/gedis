@@ -54,7 +54,7 @@ pub async fn del_key(
     con.del(&key)
         .await
         .context(format!("删除键失败, id: {id}, key: {key}"))?;
-    history.add_log(format!("del {}", key), config);
+    history.add_log(format!("del {key}"), config);
 
     info!("删除key: {}成功", key);
     Ok(())
@@ -146,7 +146,7 @@ pub async fn del_key_by_value(
             con.xdel(&key, &[&value]).await?;
             LogArgs!["xdel", &key, &value]
         }
-        _ => return Err(format!("不支持的类型: {}", typ).into()),
+        _ => return Err(format!("不支持的类型: {typ}").into()),
     };
 
     history.add_log_vec(logs, config);
@@ -367,7 +367,7 @@ pub async fn get_key_detail(
             history.add_log_vec(LogArgs!["xlen", &key], config);
             history.add_log_vec(LogArgs!["xrevrange", &key, "+", "-", "count", 200], config);
         }
-        _ => return Err(format!("key不存在: {}, type: {}", key, typ).into()),
+        _ => return Err(format!("key不存在: {key}, type: {typ}").into()),
     };
 
     info!(

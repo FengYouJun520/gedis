@@ -5,6 +5,7 @@ import type { ElAutocomplete, ElScrollbar } from 'element-plus'
 import { v4 } from 'uuid'
 import { History } from './history'
 import { allCommands, CommandType } from './command'
+import { useMitt } from '@/useMitt'
 
 interface TerminalProps {
   tabItem: TabsProps
@@ -16,6 +17,8 @@ interface Message {
 }
 
 const props = defineProps<TerminalProps>()
+const mitt = useMitt()
+const id = ref(props.tabItem.id)
 const db = ref(props.tabItem.db)
 const scrollRef = ref<InstanceType<typeof ElScrollbar> | null>(null)
 const divRef = ref<InstanceType<typeof HTMLDivElement> | null>(null)
@@ -123,11 +126,13 @@ const onExecCmd = async () => {
     break
   }
 
-  if (unref(content).toLowerCase()
-    .includes('select')) {
+  if (unref(content).toUpperCase()
+    .includes('SELECT')) {
     const values = content.value.split(' ')
-    if (values.length === 2 && allCommands[values[1].toUpperCase() as CommandType]) {
-      db.value = parseInt(values[1]) || db.value
+    if (values.length === 2 && allCommands[values[0].toUpperCase() as CommandType]) {
+      const newDb = parseInt(values[1].trim())
+      db.value = newDb
+      mitt.emit('changeDb', { id: unref(id), db: newDb })
     }
   }
 
@@ -148,10 +153,6 @@ const onExecCmd = async () => {
   addMessage(`>> ${content.value}`)
   addHistroy(unref(content))
   clearContent()
-
-  if (args.length > 1 && args[0].toLowerCase() === 'select') {
-    db.value = parseInt(args[1])
-  }
 
   invoke('terminal', {
     id: props.tabItem.id,
@@ -192,6 +193,7 @@ const parseResult = (result: any) => {
       <ElAutocomplete
         ref="autoRef"
         v-model="content"
+        fit-input-width
         autocomplete="off"
         :trigger-on-focus="false"
         :fetch-suggestions="handleFetchSuggestions"

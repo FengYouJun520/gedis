@@ -33,6 +33,7 @@ fn main() {
             connection,
             is_connection,
             ping,
+            change_db,
             dis_connection,
             dis_connection_all,
             get_key_type,

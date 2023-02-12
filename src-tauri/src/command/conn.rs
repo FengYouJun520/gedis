@@ -73,6 +73,27 @@ pub async fn ping(
     Ok(())
 }
 
+/// change db
+#[tauri::command]
+#[instrument(skip(state, history))]
+pub async fn change_db(
+    state: State<'_, RedisState>,
+    history: State<'_, History>,
+    id: String,
+    db: u16
+) -> Result<()> {
+    let mut redis_state = state.0.lock().await;
+    let (con, config) = redis_state.get_con_and_config(&id).await?;
+
+    redis::cmd("SELECT").arg(db)
+        .log(history.0.clone(), config)
+        .query_async(con)
+        .await?;
+
+    info!("change db: {}", db);
+    Ok(())
+}
+
 /// 断开连接
 #[tauri::command]
 #[instrument(skip(state))]

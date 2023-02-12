@@ -42,10 +42,6 @@ onUnmounted(() => {
   mitt.off('disConnection')
 })
 
-const changeDb = (db: number) => {
-  selectDb.value = db
-}
-
 const refresh = async (id: string, db: number) => {
   await fetchInfo(id)
   await fetchTreeKeys(id, db)
@@ -55,10 +51,13 @@ onUnmounted(() => {
   ping && clearInterval(ping)
 })
 
+const changeDb = (db: number) => {
+  selectDb.value = db
+}
 
 watch(selectDb, async db => {
   try {
-    if (!unref(isOpen) || !unref(connected)) {
+    if (!unref(connected)) {
       return
     }
 
