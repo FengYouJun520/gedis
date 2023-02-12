@@ -13,6 +13,7 @@ const initConfig: RedisConfig = {
   host: '127.0.0.1',
   port: 6379,
   split: ':',
+  cluster: false,
 }
 
 const uiState = useUiState()
@@ -215,6 +216,7 @@ const copyCommand = (log: string) => {
                 v-model="configData.password"
                 type="password"
                 placeholder="密码"
+                show-password
               />
             </el-form-item>
           </el-col>
@@ -235,6 +237,14 @@ const copyCommand = (log: string) => {
                 v-model="configData.split"
                 placeholder=":"
               />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="24">
+          <el-col :span="8">
+            <el-form-item>
+              <el-checkbox v-model="configData.cluster" label="集群" />
             </el-form-item>
           </el-col>
         </el-row>

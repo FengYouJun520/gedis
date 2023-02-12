@@ -10,6 +10,7 @@ pub struct RedisConfig {
     pub username: Option<String>,
     pub password: Option<String>,
     pub split: String,
+    pub cluster: bool,
 }
 
 impl IntoConnectionInfo for RedisConfig {

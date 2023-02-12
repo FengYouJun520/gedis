@@ -303,6 +303,7 @@ const handleCommand = async (command: string) => {
                 v-model="configModel.password"
                 type="password"
                 placeholder="密码"
+                show-password
               />
             </el-form-item>
           </el-col>
@@ -323,6 +324,14 @@ const handleCommand = async (command: string) => {
                 v-model="configModel.split"
                 placeholder="分隔符"
               />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="24">
+          <el-col :span="8">
+            <el-form-item>
+              <el-checkbox v-model="configModel.cluster" label="集群" />
             </el-form-item>
           </el-col>
         </el-row>

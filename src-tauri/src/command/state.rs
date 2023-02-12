@@ -62,7 +62,7 @@ impl Redis {
 
 const MAX_HISTORY: usize = 5000;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct History(pub Arc<std::sync::Mutex<Vec<String>>>);
 
 impl History {
@@ -84,19 +84,10 @@ impl History {
     }
 }
 
-impl Clone for History {
-    fn clone(&self) -> Self {
-        Self(self.0.clone())
-    }
-}
-
-#[async_trait]
-pub trait CmdLog: Send {
+pub trait CmdLog {
     fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>, config: &RedisConfig) -> &Self;
 }
 
-/// 这个不起作用？
-#[async_trait]
 impl CmdLog for Pipeline {
     fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>, config: &RedisConfig) -> &Self {
         let iter = self.cmd_iter();

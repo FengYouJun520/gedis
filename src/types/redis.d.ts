@@ -6,6 +6,7 @@ export interface RedisConfig {
   username?: string
   password?: string
   split: string
+  cluster: bool
 }
 
 // redis 信息对象封装
