@@ -1,19 +1,18 @@
 use redis::InfoDict;
-use std::{collections::HashMap, time::Duration};
+use std::collections::HashMap;
 use tauri::State;
 use tracing::{info, instrument};
 
-use crate::{config::RedisConfig, error::Result, CmdLog, History, RedisState};
+use crate::{config::RedisConfig, error::Result, CmdLog, History, RedisConnection, RedisState};
 
 /// 测试连接
 #[tauri::command]
 #[instrument(skip_all, fields(name=config.name, host=config.host, port=config.port))]
 pub async fn test_connection(history: State<'_, History>, config: RedisConfig) -> Result<()> {
-    let client = redis::Client::open(config.clone())?;
-    let mut con = client.get_connection_with_timeout(Duration::from_secs(10))?;
+    let mut redis_conn = RedisConnection::new(&config)?;
     redis::cmd("PING")
         .log(history.0.clone(), &config)
-        .query(&mut con)?;
+        .query(&mut redis_conn)?;
 
     info!(?config, "测试连接成功");
     Ok(())
@@ -27,17 +26,15 @@ pub async fn connection(
     history: State<'_, History>,
     config: RedisConfig,
 ) -> Result<()> {
-    let client = redis::Client::open(config.clone())?;
-    let mut con = client.get_async_connection().await?;
+    let mut redis_conn = RedisConnection::new(&config)?;
     redis::cmd("PING")
         .log(history.0.clone(), &config)
-        .query_async(&mut con)
-        .await?;
+        .query(&mut redis_conn)?;
 
     let mut redis_state = state.0.lock().await;
 
     info!(?config, "连接成功");
-    redis_state.add_con(con, config)?;
+    redis_state.add_con(redis_conn, config)?;
 
     Ok(())
 }
@@ -62,12 +59,11 @@ pub async fn ping(
     id: String,
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
-    let (con, config) = redis_state.get_con_and_config(&id).await?;
+    let (con, config) = redis_state.get_con_and_config(&id)?;
 
     redis::cmd("PING")
         .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+        .query(con)?;
 
     info!("ping");
     Ok(())
@@ -83,13 +79,12 @@ pub async fn change_db(
     db: u16,
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
-    let (con, config) = redis_state.get_con_and_config(&id).await?;
+    let (con, config) = redis_state.get_con_and_config(&id)?;
 
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+        .query(con)?;
 
     info!("change db: {}", db);
     Ok(())
@@ -126,12 +121,11 @@ pub async fn get_info(
     id: String,
 ) -> Result<HashMap<String, String>> {
     let mut redis_state = state.0.lock().await;
-    let (con, config) = redis_state.get_con_and_config(&id).await?;
+    let (con, config) = redis_state.get_con_and_config(&id)?;
 
     let info: InfoDict = redis::cmd("INFO")
         .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+        .query(con)?;
 
     let mut info_result = HashMap::new();
 

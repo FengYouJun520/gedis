@@ -17,12 +17,11 @@ pub async fn terminal(
     info!(?args);
 
     let mut client = state.0.lock().await;
-    let (con, config) = client.get_con_and_config(&id).await?;
+    let (con, config) = client.get_con_and_config(&id)?;
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+        .query(con)?;
 
     let Some(args) = args else {
         return Ok(json!(""));
@@ -42,8 +41,7 @@ pub async fn terminal(
     let res: redis::Value = redis::cmd(cmd_name.as_ref())
         .arg(args)
         .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+        .query(con)?;
 
     let json_result = parse_result(res);
 

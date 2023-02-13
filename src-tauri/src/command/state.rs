@@ -1,13 +1,75 @@
 use crate::{config::RedisConfig, error::Result};
 use anyhow::Context;
-use async_trait::async_trait;
-use redis::{Cmd, Pipeline};
-use std::{collections::HashMap, fmt::Debug, sync::Arc};
+use redis::{cluster::ClusterClient, Cmd, ConnectionLike, Pipeline};
+use std::{collections::HashMap, fmt::Debug, sync::Arc, time::Duration};
 use tauri::async_runtime::Mutex;
 #[derive(Default)]
 pub struct Redis {
     configs: HashMap<String, RedisConfig>,
-    connections: HashMap<String, redis::aio::Connection>,
+    connections: HashMap<String, RedisConnection>,
+}
+
+pub enum RedisConnection {
+    Connection(redis::Connection),
+    ClusterConnection(redis::cluster::ClusterConnection),
+}
+
+impl RedisConnection {
+    pub fn new(config: &RedisConfig) -> Result<RedisConnection> {
+        if config.cluster {
+            let client = ClusterClient::builder(vec![config.clone()])
+                .read_from_replicas()
+                .build()?;
+            let con = client.get_connection()?;
+            Ok(RedisConnection::ClusterConnection(con))
+        } else {
+            let client = redis::Client::open(config.clone())?;
+            let con = client.get_connection_with_timeout(Duration::from_secs(5))?;
+            Ok(RedisConnection::Connection(con))
+        }
+    }
+}
+
+impl ConnectionLike for RedisConnection {
+    fn req_packed_command(&mut self, cmd: &[u8]) -> redis::RedisResult<redis::Value> {
+        match self {
+            RedisConnection::Connection(con) => con.req_packed_command(cmd),
+            RedisConnection::ClusterConnection(con) => con.req_packed_command(cmd),
+        }
+    }
+
+    fn req_packed_commands(
+        &mut self,
+        cmd: &[u8],
+        offset: usize,
+        count: usize,
+    ) -> redis::RedisResult<Vec<redis::Value>> {
+        match self {
+            RedisConnection::Connection(con) => con.req_packed_commands(cmd, offset, count),
+            RedisConnection::ClusterConnection(con) => con.req_packed_commands(cmd, offset, count),
+        }
+    }
+
+    fn get_db(&self) -> i64 {
+        match self {
+            RedisConnection::Connection(con) => con.get_db(),
+            RedisConnection::ClusterConnection(con) => con.get_db(),
+        }
+    }
+
+    fn check_connection(&mut self) -> bool {
+        match self {
+            RedisConnection::Connection(con) => con.check_connection(),
+            RedisConnection::ClusterConnection(con) => con.check_connection(),
+        }
+    }
+
+    fn is_open(&self) -> bool {
+        match self {
+            RedisConnection::Connection(con) => con.is_open(),
+            RedisConnection::ClusterConnection(con) => con.is_open(),
+        }
+    }
 }
 
 impl Debug for Redis {
@@ -22,7 +84,7 @@ impl Debug for Redis {
 pub struct RedisState(pub Mutex<Redis>);
 
 impl Redis {
-    pub fn add_con(&mut self, con: redis::aio::Connection, config: RedisConfig) -> Result<()> {
+    pub fn add_con(&mut self, con: RedisConnection, config: RedisConfig) -> Result<()> {
         self.connections.insert(config.id.to_string(), con);
         self.configs.insert(config.id.to_string(), config);
 
@@ -45,15 +107,12 @@ impl Redis {
         self.connections.contains_key(id)
     }
 
-    pub async fn get_con_mut(&mut self, id: &str) -> Result<&mut redis::aio::Connection> {
+    pub fn get_con_mut(&mut self, id: &str) -> Result<&mut RedisConnection> {
         let con = self.connections.get_mut(id).context("客户端未连接")?;
         Ok(con)
     }
 
-    pub async fn get_con_and_config(
-        &mut self,
-        id: &str,
-    ) -> Result<(&mut redis::aio::Connection, &RedisConfig)> {
+    pub fn get_con_and_config(&mut self, id: &str) -> Result<(&mut RedisConnection, &RedisConfig)> {
         let con = self.connections.get_mut(id).context("客户端未连接")?;
         let config = self.configs.get_mut(id).context("客户端未连接")?;
         Ok((con, config))
@@ -99,7 +158,6 @@ impl CmdLog for Pipeline {
     }
 }
 
-#[async_trait]
 impl CmdLog for Cmd {
     fn log(&self, history: Arc<std::sync::Mutex<Vec<String>>>, config: &RedisConfig) -> &Self {
         let mut logs: Vec<String> = vec![];
