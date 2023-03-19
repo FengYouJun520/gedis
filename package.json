@@ -14,7 +14,7 @@
   "dependencies": {
     "@tauri-apps/api": "^1.2.0",
     "@vueuse/core": "^9.6.0",
-    "element-plus": "^2.2.26",
+    "element-plus": "^2.3.0",
     "mitt": "^3.0.0",
     "monaco-editor": "^0.34.1",
     "pinia": "^2.0.28",

@@ -14,7 +14,7 @@ specifiers:
   '@unocss/transformer-variant-group': ^0.47.6
   '@vitejs/plugin-vue': ^4.0.0
   '@vueuse/core': ^9.6.0
-  element-plus: ^2.2.26
+  element-plus: ^2.3.0
   eslint: ^8.29.0
   eslint-plugin-vue: ^9.8.0
   husky: ^8.0.2
@@ -35,7 +35,7 @@ specifiers:
 dependencies:
   '@tauri-apps/api': 1.2.0
   '@vueuse/core': 9.6.0_vue@3.2.45
-  element-plus: 2.2.26_vue@3.2.45
+  element-plus: 2.3.0_vue@3.2.45
   mitt: 3.0.0
   monaco-editor: 0.34.1
   pinia: 2.0.28_prq2uz4lho2pwp6irk4cfkrxwu
@@ -1751,8 +1751,8 @@ packages:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
     dev: true
 
-  /element-plus/2.2.26_vue@3.2.45:
-    resolution: {integrity: sha512-O/rdY5m9DkclpVg8r3GynyqCunm7MxSR142xSsjrZA77bi7bcwA3SIy6SPEDqHi5R4KqgkGYgKSp4Q4e3irbYg==}
+  /element-plus/2.3.0_vue@3.2.45:
+    resolution: {integrity: sha512-3s3JO4+LHLi61tFwF2emIHx6nxwKKdj5YWcj3GUBoXKhbuRjhq6xqaxWpBlPk7jySr/8Eci5++T2THbvrpGn7A==}
     peerDependencies:
       vue: ^3.2.0
     dependencies:

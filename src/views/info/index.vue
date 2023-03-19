@@ -90,11 +90,11 @@ const filterData = computed(() => Object.keys(unref(info))
             </el-space>
             <el-space overflow-hidden>
               <el-tag>OS:</el-tag>
-              <el-tag type="success">
-                <el-tooltip :content="info.os" :effect="uiState.theme === 'dark' ? 'light' : 'dark'">
+              <el-tooltip :content="info.os" :effect="uiState.theme === 'dark' ? 'light' : 'dark'">
+                <el-text truncated type="success">
                   {{ info.os }}
-                </el-tooltip>
-              </el-tag>
+                </el-text>
+              </el-tooltip>
             </el-space>
             <el-space>
               <el-tag>进程ID:</el-tag>
