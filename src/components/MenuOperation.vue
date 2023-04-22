@@ -18,7 +18,7 @@ const id = computed(() => configOps!.config.id)
 const db = computed(() => unref(configOps!.db))
 
 const handleChange = (val: number) => {
-  mitt.emit('changeDb', { id: unref(id), db: unref(selectDB) })
+  mitt.emit('changeDb', { id: unref(id), db: unref(val) })
 }
 
 const handleSearchChange = () => {

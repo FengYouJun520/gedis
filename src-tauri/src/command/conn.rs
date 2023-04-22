@@ -9,10 +9,11 @@ use crate::{config::RedisConfig, error::Result, CmdLog, History, RedisConnection
 #[tauri::command]
 #[instrument(skip_all, fields(name=config.name, host=config.host, port=config.port))]
 pub async fn test_connection(history: State<'_, History>, config: RedisConfig) -> Result<()> {
-    let mut redis_conn = RedisConnection::new(&config)?;
+    let mut redis_conn = RedisConnection::new(&config).await?;
     redis::cmd("PING")
         .log(history.0.clone(), &config)
-        .query(&mut redis_conn)?;
+        .query_async(&mut redis_conn)
+        .await?;
 
     info!(?config, "测试连接成功");
     Ok(())
@@ -26,10 +27,11 @@ pub async fn connection(
     history: State<'_, History>,
     config: RedisConfig,
 ) -> Result<()> {
-    let mut redis_conn = RedisConnection::new(&config)?;
+    let mut redis_conn = RedisConnection::new(&config).await?;
     redis::cmd("PING")
         .log(history.0.clone(), &config)
-        .query(&mut redis_conn)?;
+        .query_async(&mut redis_conn)
+        .await?;
 
     let mut redis_state = state.0.lock().await;
 
@@ -63,7 +65,8 @@ pub async fn ping(
 
     redis::cmd("PING")
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     info!("ping");
     Ok(())
@@ -84,7 +87,8 @@ pub async fn change_db(
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     info!("change db: {}", db);
     Ok(())
@@ -125,7 +129,8 @@ pub async fn get_info(
 
     let info: InfoDict = redis::cmd("INFO")
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     let mut info_result = HashMap::new();
 

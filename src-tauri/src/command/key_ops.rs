@@ -1,7 +1,7 @@
 use super::state::RedisState;
 use crate::{error::Result, model::*, CmdLog, History, LogArgs};
 use anyhow::Context;
-use redis::{Commands, Iter};
+use redis::{AsyncCommands, AsyncIter};
 use serde_json::json;
 use std::collections::HashMap;
 use tauri::State;
@@ -22,12 +22,14 @@ pub async fn get_key_type(
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     let typ: String = redis::cmd("TYPE")
         .arg(&key)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
     Ok(typ)
 }
 
@@ -46,9 +48,11 @@ pub async fn del_key(
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     con.del(&key)
+        .await
         .context(format!("删除键失败, id: {id}, key: {key}"))?;
     history.add_log(format!("del {key}"), config);
 
@@ -71,15 +75,19 @@ pub async fn del_match_keys(
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
-    let iter: Iter<String> = con.scan_match(&match_key)?;
     let mut keys = vec![];
-    for key in iter {
-        keys.push(key);
+    // 防止二次mutable
+    {
+        let mut iter: AsyncIter<'_, String> = con.scan_match(&match_key).await?;
+        while let Some(key) = iter.next_item().await {
+            keys.push(key);
+        }
     }
 
-    con.del(&keys).context("删除多个键失败".to_string())?;
+    con.del(&keys).await.context("删除多个键失败".to_string())?;
     let mut logs = LogArgs!["del"];
     logs.extend(keys);
     history.add_log_vec(logs, config);
@@ -107,36 +115,38 @@ pub async fn del_key_by_value(
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     let typ: String = redis::cmd("TYPE")
         .arg(&key)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     let logs = match typ.as_str() {
         "string" => {
-            con.del(&key)?;
+            con.del(&key).await?;
             LogArgs!["del", &key]
         }
         "list" => {
-            con.lrem(&key, 1, &value)?;
+            con.lrem(&key, 1, &value).await?;
             LogArgs!["lrem", &key, "1", &value]
         }
         "set" => {
-            con.srem(&key, &value)?;
+            con.srem(&key, &value).await?;
             LogArgs!["srem", &key, &value]
         }
         "zset" => {
-            con.zrem(&key, &value)?;
+            con.zrem(&key, &value).await?;
             LogArgs!["zrem", &key, &value]
         }
         "hash" => {
-            con.hdel(&key, &value)?;
+            con.hdel(&key, &value).await?;
             LogArgs!["hdel", &key, &value]
         }
         "stream" => {
-            con.xdel(&key, &[&value])?;
+            con.xdel(&key, &[&value]).await?;
             LogArgs!["xdel", &key, &value]
         }
         _ => return Err(format!("不支持的类型: {typ}").into()),
@@ -166,7 +176,8 @@ pub async fn clear_keys(
         .arg(db)
         .cmd("FLUSHDB")
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     info!("清空所有key成功");
     Ok(())
@@ -187,14 +198,15 @@ pub async fn get_keys_by_db(
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
-    let iter: Iter<'_, String> = con.scan()?;
+    let mut iter: AsyncIter<'_, String> = con.scan().await?;
     let logs = LogArgs!["scan", 0, "MATCH", "*", 2000];
     history.add_log_vec(logs, config);
 
     let mut keys = vec![];
-    for val in iter {
+    while let Some(val) = iter.next_item().await {
         keys.push(val);
     }
 
@@ -218,14 +230,16 @@ pub async fn get_key_info(
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     let (typ, ttl): (String, i64) = redis::pipe()
         .cmd("TYPE")
         .arg(&key)
         .ttl(&key)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     let label = typ[0..1].to_uppercase() + &typ[1..];
 
@@ -262,7 +276,8 @@ pub async fn get_key_detail(
         .arg(&key)
         .ttl(&key)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     let mut keyinfo = KeyContentDetail {
         key: key.clone(),
@@ -275,15 +290,15 @@ pub async fn get_key_detail(
 
     match typ.as_str() {
         "string" => {
-            let val: String = con.get(&key)?;
+            let val: String = con.get(&key).await?;
             keyinfo.size = val.len();
             keyinfo.value = RedisValue::String(val);
 
             history.add_log_vec(LogArgs!["get", &key], config);
         }
         "list" => {
-            let count: usize = con.llen(&key)?;
-            let values: Vec<String> = con.lrange(&key, 0, (count as isize) - 1)?;
+            let count: usize = con.llen(&key).await?;
+            let values: Vec<String> = con.lrange(&key, 0, (count as isize) - 1).await?;
             keyinfo.size = count;
             keyinfo.value = RedisValue::List(values);
 
@@ -291,10 +306,10 @@ pub async fn get_key_detail(
             history.add_log_vec(LogArgs!["lrange", &key, 0, count - 1], config);
         }
         "set" => {
-            let count: usize = con.scard(&key)?;
-            let iter: Iter<'_, String> = con.sscan_match(&key, "*")?;
+            let count: usize = con.scard(&key).await?;
+            let mut iter: AsyncIter<'_, String> = con.sscan_match(&key, "*").await?;
             let mut values = vec![];
-            for val in iter {
+            while let Some(val) = iter.next_item().await {
                 values.push(val);
             }
             keyinfo.size = count;
@@ -304,8 +319,9 @@ pub async fn get_key_detail(
             history.add_log_vec(LogArgs!["sscan", &key, "MATCH", "*"], config);
         }
         "zset" => {
-            let count: usize = con.zcard(&key)?;
-            let data: Vec<(String, f64)> = con.zrange_withscores(&key, 0, (count as isize) - 1)?;
+            let count: usize = con.zcard(&key).await?;
+            let data: Vec<(String, f64)> =
+                con.zrange_withscores(&key, 0, (count as isize) - 1).await?;
 
             let length = data.len();
             let values: Vec<Z> = data.into_iter().map(|d| Z::new(d.1, d.0)).collect();
@@ -317,10 +333,10 @@ pub async fn get_key_detail(
             history.add_log_vec(LogArgs!["zrange", &key, 0, count - 1, "withscores"], config);
         }
         "hash" => {
-            let count: usize = con.hlen(&key)?;
-            let iter: Iter<'_, (String, String)> = con.hscan_match(&key, "*")?;
+            let count: usize = con.hlen(&key).await?;
+            let mut iter: AsyncIter<'_, (String, String)> = con.hscan_match(&key, "*").await?;
             let mut values = vec![];
-            for (key, value) in iter {
+            while let Some((key, value)) = iter.next_item().await {
                 values.push(HashResult::new(key, value));
             }
 
@@ -331,9 +347,9 @@ pub async fn get_key_detail(
             history.add_log_vec(LogArgs!["hscan", &key, "MATCH", "*"], config);
         }
         "stream" => {
-            let count: usize = con.xlen(&key)?;
+            let count: usize = con.xlen(&key).await?;
             let replay: redis::streams::StreamRangeReply =
-                con.xrevrange_count(&key, "+", "-", 200)?;
+                con.xrevrange_count(&key, "+", "-", 200).await?;
 
             let value = replay
                 .ids
@@ -386,7 +402,8 @@ pub async fn rename_key(
         .ignore()
         .rename_nx(&key, &new_key)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     info!("重命名key成功, key: {}, new_key: {}", key, new_key);
 
@@ -408,27 +425,28 @@ pub async fn set_key(
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query(con)?;
-    let expired: isize = con.ttl(&keyinfo.key)?;
+        .query_async(con)
+        .await?;
+    let expired: isize = con.ttl(&keyinfo.key).await?;
     history.add_log_vec(LogArgs!["ttl", &keyinfo.key], config);
 
     match keyinfo.r#type.as_str() {
         "string" => {
-            con.set(&keyinfo.key, &keyinfo.value)?;
+            con.set(&keyinfo.key, &keyinfo.value).await?;
             history.add_log_vec(LogArgs!["set", &keyinfo.key, &keyinfo.value], config);
         }
         "list" => {
             // 键不存在
             if expired == -2 {
-                con.lpush(&keyinfo.key, &keyinfo.value)?;
+                con.lpush(&keyinfo.key, &keyinfo.value).await?;
                 history.add_log_vec(LogArgs!["lpush", &keyinfo.key, &keyinfo.value], config);
             } else {
-                con.rpush(&keyinfo.key, &keyinfo.value)?;
+                con.rpush(&keyinfo.key, &keyinfo.value).await?;
                 history.add_log_vec(LogArgs!["rpush", &keyinfo.key, &keyinfo.value], config)
             }
         }
         "set" => {
-            con.sadd(&keyinfo.key, &keyinfo.value)?;
+            con.sadd(&keyinfo.key, &keyinfo.value).await?;
             history.add_log_vec(LogArgs!["sadd", &keyinfo.key, &keyinfo.value], config);
         }
         "zset" => {
@@ -436,7 +454,8 @@ pub async fn set_key(
                 &keyinfo.key,
                 &keyinfo.value,
                 keyinfo.score.unwrap_or_default(),
-            )?;
+            )
+            .await?;
             history.add_log_vec(
                 LogArgs![
                     "zadd",
@@ -451,8 +470,8 @@ pub async fn set_key(
             let field = keyinfo.field.clone().unwrap_or_default();
             match keyinfo.old_field {
                 Some(ref old_field) if *old_field != field => {
-                    con.hset(&keyinfo.key, &field, &keyinfo.value)?;
-                    con.hdel(&keyinfo.key, old_field)?;
+                    con.hset(&keyinfo.key, &field, &keyinfo.value).await?;
+                    con.hdel(&keyinfo.key, old_field).await?;
 
                     history.add_log_vec(
                         LogArgs!["hset", &keyinfo.key, &field, &keyinfo.value],
@@ -461,7 +480,7 @@ pub async fn set_key(
                     history.add_log_vec(LogArgs!["hdel", &keyinfo.key, &old_field], config);
                 }
                 _ => {
-                    con.hset(&keyinfo.key, &field, &keyinfo.value)?;
+                    con.hset(&keyinfo.key, &field, &keyinfo.value).await?;
                     history.add_log_vec(
                         LogArgs!["hset", &keyinfo.key, &field, &keyinfo.value],
                         config,
@@ -476,7 +495,8 @@ pub async fn set_key(
                 &keyinfo.key,
                 keyinfo.id.clone().unwrap_or_else(|| "*".to_string()),
                 &value,
-            )?;
+            )
+            .await?;
 
             let mut logs = LogArgs![
                 "xadd",
@@ -493,13 +513,13 @@ pub async fn set_key(
     match expired {
         // 键不存在(-2)
         -2 => {
-            con.persist(&keyinfo.key)?;
+            con.persist(&keyinfo.key).await?;
             history.add_log_vec(LogArgs!["persist", &keyinfo.key], config);
         }
         // 已持久化的(-1)
         -1 => return Ok(()),
         _ => {
-            con.expire(&keyinfo.key, expired as usize)?;
+            con.expire(&keyinfo.key, expired as usize).await?;
             history.add_log_vec(LogArgs!["persist", &keyinfo.key, expired], config);
         }
     };
@@ -524,17 +544,18 @@ pub async fn set_key_ttl(
     redis::cmd("SELECT")
         .arg(db)
         .log(history.0.clone(), config)
-        .query(con)?;
+        .query_async(con)
+        .await?;
 
     if ttl < -1 {
         return Err("过期的值不能小于-1".into());
     }
 
     if ttl == -1 {
-        con.persist(&key)?;
+        con.persist(&key).await?;
         history.add_log_vec(LogArgs!["persist", &key], config);
     } else {
-        con.expire(&key, ttl as usize)?;
+        con.expire(&key, ttl as usize).await?;
         history.add_log_vec(LogArgs!["expire", &key, ttl], config);
     }
 

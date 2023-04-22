@@ -1,7 +1,7 @@
 use crate::{config::RedisConfig, error::Result};
 use anyhow::Context;
-use redis::{cluster::ClusterClient, Cmd, ConnectionLike, Pipeline};
-use std::{collections::HashMap, fmt::Debug, sync::Arc, time::Duration};
+use redis::{aio::ConnectionLike, Cmd, Pipeline};
+use std::{collections::HashMap, fmt::Debug, sync::Arc};
 use tauri::async_runtime::Mutex;
 #[derive(Default)]
 pub struct Redis {
@@ -10,40 +10,38 @@ pub struct Redis {
 }
 
 pub enum RedisConnection {
-    Connection(redis::Connection),
-    ClusterConnection(redis::cluster::ClusterConnection),
+    Connection(redis::aio::Connection),
+    ClusterConnection(redis::cluster_async::ClusterConnection),
 }
 
 impl RedisConnection {
-    pub fn new(config: &RedisConfig) -> Result<RedisConnection> {
+    pub async fn new(config: &RedisConfig) -> Result<RedisConnection> {
         if config.cluster {
-            let client = ClusterClient::builder(vec![config.clone()])
-                .read_from_replicas()
-                .build()?;
-            let con = client.get_connection()?;
+            let client = redis::cluster::ClusterClient::new(vec![config.clone()])?;
+            let con = client.get_async_connection().await?;
             Ok(RedisConnection::ClusterConnection(con))
         } else {
             let client = redis::Client::open(config.clone())?;
-            let con = client.get_connection_with_timeout(Duration::from_secs(5))?;
+            let con = client.get_async_connection().await?;
             Ok(RedisConnection::Connection(con))
         }
     }
 }
 
 impl ConnectionLike for RedisConnection {
-    fn req_packed_command(&mut self, cmd: &[u8]) -> redis::RedisResult<redis::Value> {
+    fn req_packed_command<'a>(&'a mut self, cmd: &'a Cmd) -> redis::RedisFuture<'a, redis::Value> {
         match self {
             RedisConnection::Connection(con) => con.req_packed_command(cmd),
             RedisConnection::ClusterConnection(con) => con.req_packed_command(cmd),
         }
     }
 
-    fn req_packed_commands(
-        &mut self,
-        cmd: &[u8],
+    fn req_packed_commands<'a>(
+        &'a mut self,
+        cmd: &'a redis::Pipeline,
         offset: usize,
         count: usize,
-    ) -> redis::RedisResult<Vec<redis::Value>> {
+    ) -> redis::RedisFuture<'a, Vec<redis::Value>> {
         match self {
             RedisConnection::Connection(con) => con.req_packed_commands(cmd, offset, count),
             RedisConnection::ClusterConnection(con) => con.req_packed_commands(cmd, offset, count),
@@ -54,20 +52,6 @@ impl ConnectionLike for RedisConnection {
         match self {
             RedisConnection::Connection(con) => con.get_db(),
             RedisConnection::ClusterConnection(con) => con.get_db(),
-        }
-    }
-
-    fn check_connection(&mut self) -> bool {
-        match self {
-            RedisConnection::Connection(con) => con.check_connection(),
-            RedisConnection::ClusterConnection(con) => con.check_connection(),
-        }
-    }
-
-    fn is_open(&self) -> bool {
-        match self {
-            RedisConnection::Connection(con) => con.is_open(),
-            RedisConnection::ClusterConnection(con) => con.is_open(),
         }
     }
 }

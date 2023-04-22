@@ -15,15 +15,25 @@ tauri-build = {version = "1.2", features = [] }
 
 [dependencies]
 serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 tauri = {version = "1.2", features = ["api-all"] }
-redis = { version = "0.22", features = ["tokio-comp", "tokio-native-tls-comp", "cluster", "r2d2", "connection-manager", "ahash"] }
-chrono = { version = "0.4.23", features = ["serde"] }
-anyhow = "1.0.66"
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.16", features = ["local-time", "time"] }
-async-trait = "0.1.60"
-enum_dispatch = "0.3.11"
+chrono = { version = "0.4", features = ["serde"] }
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["local-time", "time"] }
+async-trait = "0.1"
+enum_dispatch = "0.3"
+
+[dependencies.redis]
+version = "0.23"
+features = [
+  "tokio-native-tls-comp", 
+  "cluster-async", 
+  "r2d2", 
+  "connection-manager", 
+  "ahash"
+]
 
 [features]
 # by default Tauri runs in production mode
