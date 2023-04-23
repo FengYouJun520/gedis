@@ -32,7 +32,12 @@ mitt.on('changeDb', ({ id, db }) => isCurrent(id) && changeDb(db))
 mitt.on('fetchInfo', async id => isCurrent(id) && await fetchInfo(id))
 mitt.on('fetchTreeKeys', async ({ id, db }) => isCurrent(id) && await fetchTreeKeys(id, db))
 mitt.on('refresh', async ({ id, db }) => isCurrent(id) && await refresh(id, db))
-mitt.on('disConnection', async id => isCurrent(id) && await handleDisConnection(props.config.id))
+mitt.on('disConnection', async id => {
+  if (isCurrent(id)) {
+    await handleDisConnection(props.config.id)
+    selectDb.value = 0
+  }
+})
 
 onUnmounted(() => {
   mitt.off('changeDb')

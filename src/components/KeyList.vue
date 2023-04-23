@@ -60,7 +60,7 @@ interface ContextmenuProps {
   node: Node
 }
 
-const contextmenuRef = ref<HTMLDivElement|null>(null)
+const contextmenuRef = ref<HTMLDivElement>()
 const showContextmenu = ref(false)
 const contextmenuData = ref<ContextmenuProps>()
 onClickOutside(contextmenuRef, () => {

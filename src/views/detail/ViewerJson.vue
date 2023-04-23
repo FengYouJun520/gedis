@@ -10,7 +10,7 @@ interface ViewerJsonProps {
 
 const props = defineProps<ViewerJsonProps>()
 const uiState = useUiState()
-const editorRef = ref<HTMLDivElement | null>(null)
+const editorRef = ref<HTMLDivElement>()
 let monacoEditor: monaco.editor.IStandaloneCodeEditor
 
 const jsonContent = computed(() => {
@@ -54,7 +54,7 @@ watchEffect(() => {
 
 onMounted(() => {
   if (editorRef.value && !monacoEditor) {
-    monacoEditor = monaco.editor.create(editorRef.value!, {
+    monacoEditor = monaco.editor.create(editorRef.value, {
       value: unref(jsonContent),
       theme: 'vs-dark',
       language: 'json',

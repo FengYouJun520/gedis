@@ -1,7 +1,7 @@
 import { MousePressedOptions } from '@vueuse/core'
 
 // 动态改变侧边栏的宽度
-export function useResizeAsideWidth(options: MousePressedOptions | undefined, handleMouse: (event: MouseEvent) => void) {
+export function useResizeAsideWidth(handleMouse: (event: MouseEvent) => void, options?: MousePressedOptions) {
   const { pressed } = useMousePressed(options)
 
   watch(pressed, () => {

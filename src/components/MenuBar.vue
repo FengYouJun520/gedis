@@ -9,12 +9,12 @@ const uiState = useUiState()
 const redisState = useRedis()
 const resizeWidth = computed(() => `${uiState.asideWidth}px`)
 
-const resizeRef = ref<HTMLDivElement|null>(null)
+const resizeRef = ref<HTMLDivElement>()
 const handleMouse = (event: MouseEvent) => {
   uiState.setAsideWidth(event.clientX)
 }
 
-const { pressed } = useResizeAsideWidth({ target: resizeRef, touch: false }, handleMouse)
+const { pressed } = useResizeAsideWidth(handleMouse, { target: resizeRef, touch: false })
 </script>
 
 <template>
