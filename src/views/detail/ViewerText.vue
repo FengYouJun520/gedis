@@ -1,7 +1,7 @@
 <script setup lang="ts">
 interface ViewerTextProps {
   content: string
-  readonly: boolean
+  readonly?: boolean
 }
 
 const props = defineProps<ViewerTextProps>()
