@@ -59,7 +59,7 @@ onUnmounted(() => {
 const changeDb = (db: number) => {
   if (props.config.cluster) {
     selectDb.value = 0
-    console.warn('当前为集群模式，不允许切换数据库')
+    ElMessage.warning('当前为集群模式，不允许切换数据库')
     return
   }
 

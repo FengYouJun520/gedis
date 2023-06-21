@@ -1,7 +1,9 @@
 use super::state::RedisState;
-use crate::{error::Result, model::*, select_db, CmdLog, History, LogArgs};
+use crate::{error::Result, model::*, node_info::NodesInfo, select_db, CmdLog, History, LogArgs};
 use anyhow::Context;
-use redis::{AsyncCommands, AsyncIter};
+use csv::StringRecord;
+use redis::{AsyncCommands, AsyncIter, ConnectionInfo};
+
 use serde_json::json;
 use std::collections::HashMap;
 use tauri::State;
@@ -179,16 +181,58 @@ pub async fn get_keys_by_db(
 
     select_db(config, db, con, &history).await?;
 
-    let mut iter: AsyncIter<'_, String> = con.scan().await?;
-    let logs = LogArgs!["scan", 0, "MATCH", "*", 2000];
-    history.add_log_vec(logs, config);
-
     let mut keys = vec![];
-    while let Some(val) = iter.next_item().await {
-        keys.push(val);
+
+    if config.cluster {
+        let nodes: String = redis::cmd("CLUSTER").arg("nodes").query_async(con).await?;
+        let records = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .delimiter(b' ')
+            .double_quote(false)
+            .flexible(true)
+            .from_reader(nodes.as_bytes())
+            .records()
+            .collect::<Result<Vec<StringRecord>, csv::Error>>()?;
+
+        let nodes: NodesInfo = records.try_into()?;
+        let infos: Vec<_> = nodes
+            .master_nodes()
+            .into_iter()
+            .map(|node| {
+                let res: Vec<_> = node.host.split(':').collect();
+                let port: Option<u16> = res[1].split('@').next().and_then(|p| p.parse().ok());
+
+                ConnectionInfo {
+                    addr: redis::ConnectionAddr::Tcp(res[0].to_string(), port.unwrap_or(6379)),
+                    redis: redis::RedisConnectionInfo {
+                        db: db as i64,
+                        username: config.username.clone(),
+                        password: config.password.clone(),
+                    },
+                }
+            })
+            .collect();
+
+        info!(?infos);
+        for info in infos {
+            let client = redis::Client::open(info)?;
+            let mut con = client.get_async_connection().await?;
+            let mut iter: AsyncIter<'_, String> = con.scan().await?;
+            while let Some(val) = iter.next_item().await {
+                keys.push(val);
+            }
+        }
+    } else {
+        let mut iter: AsyncIter<'_, String> = con.scan().await?;
+        let logs = LogArgs!["scan", 0, "MATCH", "*", 2000];
+        history.add_log_vec(logs, config);
+
+        while let Some(val) = iter.next_item().await {
+            keys.push(val);
+        }
     }
 
-    info!("获取指定数据库key列表信息成功");
+    info!(?keys, "获取指定数据库key列表信息成功");
 
     Ok(keys)
 }
