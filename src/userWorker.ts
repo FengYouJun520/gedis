@@ -9,6 +9,7 @@ self.MonacoEnvironment = {
     }
     return new editorWorker()
   },
+  createTrustedTypesPolicy: () => undefined,
 }
 
 monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true)
