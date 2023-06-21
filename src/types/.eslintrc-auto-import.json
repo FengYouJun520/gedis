@@ -36,6 +36,7 @@
     "defineAsyncComponent": true,
     "defineComponent": true,
     "defineStore": true,
+    "defineModel": true,
     "eagerComputed": true,
     "effectScope": true,
     "extendRef": true,

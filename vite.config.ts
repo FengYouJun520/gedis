@@ -19,7 +19,11 @@ export default defineConfig({
     ],
   },
   plugins: [
-    vue(),
+    vue({
+      script: {
+        defineModel: true,
+      },
+    }),
     Unocss({
       presets: [
         presetAttributify({ }),
@@ -40,9 +44,6 @@ export default defineConfig({
       ],
       rules: [
       ],
-      preprocess(matcher) {
-        return matcher.startsWith('el-') ? undefined : matcher
-      },
     }),
     AutoImport({
       imports: ['vue', 'pinia', '@vueuse/core'],

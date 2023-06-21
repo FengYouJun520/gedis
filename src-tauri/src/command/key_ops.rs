@@ -1,5 +1,5 @@
 use super::state::RedisState;
-use crate::{error::Result, model::*, CmdLog, History, LogArgs};
+use crate::{error::Result, model::*, select_db, CmdLog, History, LogArgs};
 use anyhow::Context;
 use redis::{AsyncCommands, AsyncIter};
 use serde_json::json;
@@ -19,11 +19,7 @@ pub async fn get_key_type(
 ) -> Result<String> {
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
-    redis::cmd("SELECT")
-        .arg(db)
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    select_db(config, db, con, &history).await?;
 
     let typ: String = redis::cmd("TYPE")
         .arg(&key)
@@ -45,11 +41,7 @@ pub async fn del_key(
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
-    redis::cmd("SELECT")
-        .arg(db)
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    select_db(config, db, con, &history).await?;
 
     con.del(&key)
         .await
@@ -72,11 +64,7 @@ pub async fn del_match_keys(
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
-    redis::cmd("SELECT")
-        .arg(db)
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    select_db(config, db, con, &history).await?;
 
     let mut keys = vec![];
     // 防止二次mutable
@@ -112,11 +100,7 @@ pub async fn del_key_by_value(
 
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
-    redis::cmd("SELECT")
-        .arg(db)
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    select_db(config, db, con, &history).await?;
 
     let typ: String = redis::cmd("TYPE")
         .arg(&key)
@@ -170,11 +154,9 @@ pub async fn clear_keys(
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
+    select_db(config, db, con, &history).await?;
 
-    redis::pipe()
-        .cmd("SELECT")
-        .arg(db)
-        .cmd("FLUSHDB")
+    redis::cmd("FLUSHDB")
         .log(history.0.clone(), config)
         .query_async(con)
         .await?;
@@ -195,11 +177,7 @@ pub async fn get_keys_by_db(
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
 
-    redis::cmd("SELECT")
-        .arg(db)
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    select_db(config, db, con, &history).await?;
 
     let mut iter: AsyncIter<'_, String> = con.scan().await?;
     let logs = LogArgs!["scan", 0, "MATCH", "*", 2000];
@@ -227,11 +205,7 @@ pub async fn get_key_info(
 ) -> Result<KeyInfo> {
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
-    redis::cmd("SELECT")
-        .arg(db)
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    select_db(config, db, con, &history).await?;
 
     let (typ, ttl): (String, i64) = redis::pipe()
         .cmd("TYPE")
@@ -267,11 +241,9 @@ pub async fn get_key_detail(
 ) -> Result<KeyContentDetail> {
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
+    select_db(config, db, con, &history).await?;
 
     let (typ, ttl): (String, i64) = redis::pipe()
-        .cmd("SELECT")
-        .arg(db)
-        .ignore()
         .cmd("TYPE")
         .arg(&key)
         .ttl(&key)
@@ -395,11 +367,8 @@ pub async fn rename_key(
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
-
+    select_db(config, db, con, &history).await?;
     redis::pipe()
-        .cmd("SELECT")
-        .arg(db)
-        .ignore()
         .rename_nx(&key, &new_key)
         .log(history.0.clone(), config)
         .query_async(con)
@@ -422,11 +391,8 @@ pub async fn set_key(
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
-    redis::cmd("SELECT")
-        .arg(db)
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    select_db(config, db, con, &history).await?;
+
     let expired: isize = con.ttl(&keyinfo.key).await?;
     history.add_log_vec(LogArgs!["ttl", &keyinfo.key], config);
 
@@ -541,11 +507,7 @@ pub async fn set_key_ttl(
 ) -> Result<()> {
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
-    redis::cmd("SELECT")
-        .arg(db)
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    select_db(config, db, con, &history).await?;
 
     if ttl < -1 {
         return Err("过期的值不能小于-1".into());

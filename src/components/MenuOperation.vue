@@ -12,7 +12,7 @@ const props = defineProps<{
 const tabsState = useTabs()
 const mitt = useMitt()
 const configOps = useConfig()
-const selectDB = ref(configOps?.db || 0)
+const selectDB = defineModel('db', { default: 0, required: true })
 const search = ref('')
 const id = computed(() => configOps!.config.id)
 const db = computed(() => unref(configOps!.db))

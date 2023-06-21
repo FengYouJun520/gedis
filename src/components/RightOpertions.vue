@@ -9,7 +9,6 @@ import { useConfig } from './useConfig'
 
 interface MenuOperationProps {
   config: RedisConfig
-  db: number
 }
 
 const props = defineProps<MenuOperationProps>()
@@ -18,13 +17,13 @@ const configState = useRedis()
 const configOps = useConfig()
 const tabsState = useTabs()
 const id = computed(() => props.config.id)
-const db = computed(() => props.db)
+const selectDb = defineModel('db', { default: 0, required: true })
 
 const handleClick = (_event: MouseEvent) => {
 }
 
 const handleRefresh = () => {
-  mitt.emit('refresh', { id: unref(id), db: unref(db) })
+  mitt.emit('refresh', { id: unref(id), db: unref(selectDb) })
 }
 
 const handleHome = async () => {
@@ -36,11 +35,11 @@ const handleConsole = async () => {
     props.config,
     {
       id: unref(id),
-      key: `${unref(id)}-${unref(db)}`,
+      key: `${unref(id)}-${unref(selectDb)}`,
       value: unref(id),
       name: props.config.name,
       label: `${props.config.name} | redis-cli: ${props.config.port}`,
-      db: unref(db),
+      db: unref(selectDb),
       type: 'terminal',
       icon: 'mdi:console',
     }
@@ -167,10 +166,10 @@ const handleClearKeys = async () => {
     cancelButtonText: '取消',
   }).then(async () => {
     try {
-      await invoke('clear_keys', { id: unref(id), db: unref(db) })
+      await invoke('clear_keys', { id: unref(id), db: unref(selectDb) })
 
       // 删除所有相关的选项卡(DB)
-      tabsState.removeTabByDb(unref(db))
+      tabsState.removeTabByDb(unref(selectDb))
 
       mitt.emit('fetchInfo', unref(id))
     } catch (error) {

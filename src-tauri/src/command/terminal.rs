@@ -2,7 +2,7 @@ use serde_json::json;
 use tauri::State;
 use tracing::{info, instrument};
 
-use crate::{error::Result, CmdLog, History, RedisState};
+use crate::{error::Result, select_db, CmdLog, History, RedisState};
 
 /// 在终端执行执行
 #[tauri::command]
@@ -18,11 +18,7 @@ pub async fn terminal(
 
     let mut client = state.0.lock().await;
     let (con, config) = client.get_con_and_config(&id)?;
-    redis::cmd("SELECT")
-        .arg(db)
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    select_db(config, db, con, &history).await?;
 
     let Some(args) = args else {
         return Ok(json!(""));

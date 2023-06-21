@@ -57,10 +57,18 @@ onUnmounted(() => {
 })
 
 const changeDb = (db: number) => {
+  if (props.config.cluster) {
+    selectDb.value = 0
+    console.warn('当前为集群模式，不允许切换数据库')
+    return
+  }
+
   selectDb.value = db
 }
 
 watch(selectDb, async db => {
+  console.log('changeDb')
+
   try {
     if (!unref(connected)) {
       return
@@ -169,6 +177,7 @@ const handleDisConnection = async (id: string) => {
     mitt.emit('clearLogs')
     isOpen.value = false
     connected.value = false
+    selectDb.value = 0
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     menuRef.value.close(id, [id])
@@ -216,13 +225,13 @@ createConfigContext({
         <div flex-1 flex justify-between items-center>
           <span>{{ config.name }}</span>
           <i v-if="loading" class="uiw:loading animate-spin" />
-          <RightOpertions v-else :config="config" :db="selectDb" />
+          <RightOpertions v-else v-model:db="selectDb" :config="config" />
         </div>
       </template>
 
       <div v-if="isOpen">
         <!-- 操作 -->
-        <MenuOperation :keyspaces="keyspaces" />
+        <MenuOperation v-model:db="selectDb" :keyspaces="keyspaces" />
         <!-- key列表 -->
         <KeyList />
       </div>
