@@ -18,6 +18,18 @@ pub struct NodeInfo {
     pub slot: Option<u64>,
 }
 
+impl NodeInfo {
+    pub fn addr_or_default_port(&self, default_port: u16) -> (String, u16) {
+        let res: Vec<_> = self.host.split(':').collect();
+        let port: Option<u16> = res[1].split('@').next().and_then(|p| p.parse().ok());
+        (res[0].to_string(), port.unwrap_or(default_port))
+    }
+
+    pub fn is_master(&self) -> bool {
+        self.flags.contains("master")
+    }
+}
+
 impl TryFrom<StringRecord> for NodeInfo {
     type Error = SerializeError;
 
@@ -54,7 +66,7 @@ impl NodesInfo {
     pub fn master_nodes(&self) -> Vec<NodeInfo> {
         self.nodes
             .iter()
-            .filter(|n| n.flags.contains("master"))
+            .filter(|n| n.is_master())
             .cloned()
             .collect()
     }

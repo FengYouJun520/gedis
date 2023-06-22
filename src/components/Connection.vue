@@ -231,7 +231,7 @@ createConfigContext({
 
       <div v-if="isOpen">
         <!-- 操作 -->
-        <MenuOperation v-model:db="selectDb" :keyspaces="keyspaces" />
+        <MenuOperation v-model:db="selectDb" :keyspaces="keyspaces" :config="config" />
         <!-- key列表 -->
         <KeyList />
       </div>

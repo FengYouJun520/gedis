@@ -1,8 +1,7 @@
 use super::state::RedisState;
-use crate::{error::Result, model::*, node_info::NodesInfo, select_db, CmdLog, History, LogArgs};
+use crate::{error::Result, get_cluster_clients, model::*, select_db, CmdLog, History, LogArgs};
 use anyhow::Context;
-use csv::StringRecord;
-use redis::{AsyncCommands, AsyncIter, ConnectionInfo};
+use redis::{AsyncCommands, AsyncIter};
 
 use serde_json::json;
 use std::collections::HashMap;
@@ -183,39 +182,10 @@ pub async fn get_keys_by_db(
 
     let mut keys = vec![];
 
+    // 集群模式
     if config.cluster {
-        let nodes: String = redis::cmd("CLUSTER").arg("nodes").query_async(con).await?;
-        let records = csv::ReaderBuilder::new()
-            .has_headers(false)
-            .delimiter(b' ')
-            .double_quote(false)
-            .flexible(true)
-            .from_reader(nodes.as_bytes())
-            .records()
-            .collect::<Result<Vec<StringRecord>, csv::Error>>()?;
-
-        let nodes: NodesInfo = records.try_into()?;
-        let infos: Vec<_> = nodes
-            .master_nodes()
-            .into_iter()
-            .map(|node| {
-                let res: Vec<_> = node.host.split(':').collect();
-                let port: Option<u16> = res[1].split('@').next().and_then(|p| p.parse().ok());
-
-                ConnectionInfo {
-                    addr: redis::ConnectionAddr::Tcp(res[0].to_string(), port.unwrap_or(6379)),
-                    redis: redis::RedisConnectionInfo {
-                        db: db as i64,
-                        username: config.username.clone(),
-                        password: config.password.clone(),
-                    },
-                }
-            })
-            .collect();
-
-        info!(?infos);
-        for info in infos {
-            let client = redis::Client::open(info)?;
+        let clients = get_cluster_clients(config, con).await?;
+        for client in clients {
             let mut con = client.get_async_connection().await?;
             let mut iter: AsyncIter<'_, String> = con.scan().await?;
             while let Some(val) = iter.next_item().await {
@@ -223,6 +193,7 @@ pub async fn get_keys_by_db(
             }
         }
     } else {
+        // 单机模式
         let mut iter: AsyncIter<'_, String> = con.scan().await?;
         let logs = LogArgs!["scan", 0, "MATCH", "*", 2000];
         history.add_log_vec(logs, config);
@@ -232,7 +203,7 @@ pub async fn get_keys_by_db(
         }
     }
 
-    info!(?keys, "获取指定数据库key列表信息成功");
+    info!("获取指定数据库key列表信息成功");
 
     Ok(keys)
 }

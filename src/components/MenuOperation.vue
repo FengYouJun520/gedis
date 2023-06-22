@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useTabs } from '@/store/tabs'
-import { AddKeyInfo, Keyspace } from '@/types/redis'
+import { AddKeyInfo, Keyspace, RedisConfig } from '@/types/redis'
 import { useMitt } from '@/useMitt'
 import { invoke } from '@tauri-apps/api'
 import { useConfig } from './useConfig'
 
 const props = defineProps<{
   keyspaces: Keyspace[]
+  config: RedisConfig
 }>()
 
 const tabsState = useTabs()
@@ -16,6 +17,7 @@ const selectDB = defineModel('db', { default: 0, required: true })
 const search = ref('')
 const id = computed(() => configOps!.config.id)
 const db = computed(() => unref(configOps!.db))
+const isCluster = computed(() => props.config.cluster)
 
 const handleChange = (val: number) => {
   mitt.emit('changeDb', { id: unref(id), db: unref(val) })
@@ -92,12 +94,20 @@ const handleCloseDialog = () => {
         size="large"
         @change="handleChange"
       >
-        <el-option
-          v-for="item in props.keyspaces"
-          :key="item.db"
-          :label="`DB${item.db} (${item.len})`"
-          :value="item.db"
-        />
+        <template v-if="isCluster">
+          <el-option
+            :label="`DB0 (${configOps?.treeKeys.value.length})`"
+            :value="0"
+          />
+        </template>
+        <template v-else>
+          <el-option
+            v-for="item in props.keyspaces"
+            :key="item.db"
+            :label="`DB${item.db} (${item.len})`"
+            :value="item.db"
+          />
+        </template>
       </el-select>
       <el-button text bg @click="handleAddDialog">
         新增key
