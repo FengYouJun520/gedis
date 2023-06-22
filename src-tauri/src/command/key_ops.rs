@@ -157,10 +157,21 @@ pub async fn clear_keys(
     let (con, config) = redis_state.get_con_and_config(&id)?;
     select_db(config, db, con, &history).await?;
 
-    redis::cmd("FLUSHDB")
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    if config.cluster {
+        let clients = get_cluster_clients(config, con).await?;
+        for client in clients {
+            let mut con = client.get_async_connection().await?;
+            redis::cmd("FLUSHDB")
+                .log(history.0.clone(), config)
+                .query_async(&mut con)
+                .await?;
+        }
+    } else {
+        redis::cmd("FLUSHDB")
+            .log(history.0.clone(), config)
+            .query_async(con)
+            .await?;
+    }
 
     info!("清空所有key成功");
     Ok(())

@@ -222,8 +222,17 @@ createConfigContext({
     >
       <!-- 标题 -->
       <template #title>
-        <div flex-1 flex justify-between items-center>
-          <span>{{ config.name }}</span>
+        <div w-full flex-1 flex justify-between items-center>
+          <el-tooltip :content="config.name" :show-after="1000">
+            <span
+              text-nowrap
+              overflow-hidden
+              w-full
+              text-ellipsis
+            >
+              {{ config.name }}
+            </span>
+          </el-tooltip>
           <i v-if="loading" class="uiw:loading animate-spin" />
           <RightOpertions v-else v-model:db="selectDb" :config="config" />
         </div>

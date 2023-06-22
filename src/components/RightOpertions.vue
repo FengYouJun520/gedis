@@ -171,7 +171,7 @@ const handleClearKeys = async () => {
       // 删除所有相关的选项卡(DB)
       tabsState.removeTabByDb(unref(selectDb))
 
-      mitt.emit('fetchInfo', unref(id))
+      mitt.emit('refresh', { id: unref(id), db: unref(selectDb) })
     } catch (error) {
       ElMessage.error(error as string)
     }

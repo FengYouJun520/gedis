@@ -9,7 +9,7 @@ import type { ElScrollbar } from 'element-plus'
 
 const initConfig: RedisConfig = {
   id: '',
-  name: 'localhost',
+  name: 'localhost@6379',
   host: '127.0.0.1',
   port: 6379,
   split: ':',
