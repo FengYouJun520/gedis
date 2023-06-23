@@ -12,6 +12,7 @@ interface MenuOperationProps {
 }
 
 const props = defineProps<MenuOperationProps>()
+const message = useMessage()
 const mitt = useMitt()
 const configState = useRedis()
 const configOps = useConfig()
@@ -61,7 +62,7 @@ const handleClose = async () => {
       await configOps?.disConnection(unref(id))
       tabsState.removeTabById(unref(id))
     } catch (error) {
-      ElMessage.error(error as string)
+      message.error(error as string)
     }
   })
     .catch(() => {})
@@ -81,7 +82,7 @@ const handleDelete = async () => {
       tabsState.removeTabById(unref(id))
       configState.removeConfig(unref(id))
     } catch (error) {
-      ElMessage.error(error as string)
+      message.error(error as string)
     }
   })
     .catch(() => {})
@@ -122,7 +123,7 @@ const visibleDialog = async (edit: boolean) => {
       visible.value = true
     }
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 }
 
@@ -151,9 +152,9 @@ const handleTestConnection = async () => {
   try {
     editLoading.value = true
     await invoke('test_connection', { config: configModel.value })
-    ElMessage.success('连接成功')
+    message.success('连接成功')
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   } finally {
     editLoading.value = false
   }
@@ -173,7 +174,7 @@ const handleClearKeys = async () => {
 
       mitt.emit('refresh', { id: unref(id), db: unref(selectDb) })
     } catch (error) {
-      ElMessage.error(error as string)
+      message.error(error as string)
     }
   })
     .catch(() => {})

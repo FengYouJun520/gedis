@@ -16,7 +16,7 @@ interface HashDetail {
 }
 
 const props = defineProps<HashProps>()
-
+const message = useMessage()
 const id = ref(props.id)
 const db = ref(props.db)
 const key = ref(props.keyLabel)
@@ -58,7 +58,7 @@ onMounted(async () => {
   try {
     await fetchKeyDetail()
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 })
 
@@ -66,7 +66,7 @@ watch(() => props.keyinfo, async () => {
   try {
     await fetchKeyDetail()
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 })
 
@@ -89,7 +89,7 @@ const deleteValueByKey = (scope: any) => {
 
       await fetchKeyDetail()
     } catch (error) {
-      ElMessage.error(error as string)
+      message.error(error as string)
     }
   })
     .catch(() => {})
@@ -149,7 +149,7 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
     isEdit.value = false
     showDialog.value = false
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 }
 </script>

@@ -9,6 +9,8 @@ interface ViewerJsonProps {
 }
 
 const props = defineProps<ViewerJsonProps>()
+
+const message = useMessage()
 const uiState = useUiState()
 const editorRef = ref<HTMLDivElement>()
 let monacoEditor: monaco.editor.IStandaloneCodeEditor
@@ -110,7 +112,7 @@ defineExpose({
     try {
       return JSON.stringify(JSON.parse(unref(content)), null, 0)
     } catch (error: any) {
-      ElMessage.error(error.message)
+      message.error(error.message)
       return ''
     }
   },

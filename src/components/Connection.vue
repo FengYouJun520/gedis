@@ -16,6 +16,7 @@ interface ConnectionProps {
 
 const props = defineProps<ConnectionProps>()
 
+const message = useMessage()
 const mitt = useMitt()
 const tabsState = useTabs()
 const treeKeys = ref<string[]>([])
@@ -59,7 +60,7 @@ onUnmounted(() => {
 const changeDb = (db: number) => {
   if (props.config.cluster) {
     selectDb.value = 0
-    ElMessage.warning('当前为集群模式，不允许切换数据库')
+    message.warning('当前为集群模式，不允许切换数据库')
     return
   }
 
@@ -76,7 +77,7 @@ watch(selectDb, async db => {
 
     await fetchTreeKeys(props.config.id, db)
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
     isOpen.value = false
     connected.value = false
   }
@@ -95,7 +96,7 @@ const fetchInfo = async (id: string) => {
     const info = await invoke<Record<string, string>>('get_info', { id })
     keyspaces.value = parseKeyspaces(info)
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 }
 
@@ -105,7 +106,7 @@ const fetchTreeKeys = async (id: string, db: number) => {
     const keys = await invoke<string[]>('get_keys_by_db', { id, db })
     treeKeys.value = keysToTree(keys)
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
     isOpen.value = false
     connected.value = false
   }
@@ -119,7 +120,7 @@ const handlePing = () => {
     try {
       await invoke('ping', { id: props.config.id })
     } catch (error) {
-      ElMessage.error(error as string)
+      message.error(error as string)
       await handleDisConnection(props.config.id)
     }
   }, pingTime)
@@ -160,7 +161,7 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
       menuRef.value?.open?.(config.id, [config.id])
     })
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
     isOpen.value = false
     connected.value = false
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -182,7 +183,7 @@ const handleDisConnection = async (id: string) => {
     // @ts-ignore
     menuRef.value.close(id, [id])
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   } finally {
     loading.value = false
   }
@@ -196,7 +197,7 @@ const handleOpen = async () => {
 
     await handleConnection(props.config)
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 }
 

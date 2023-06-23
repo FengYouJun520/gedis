@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
 import { resolve } from 'path'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import { ElementPlusResolver, NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Unocss from 'unocss/vite'
 import { presetAttributify, presetUno, presetIcons } from 'unocss'
 import transformerDirectives from '@unocss/transformer-directives'
@@ -24,6 +25,7 @@ export default defineConfig({
         defineModel: true,
       },
     }),
+    vueJsx(),
     Unocss({
       presets: [
         presetAttributify({ }),
@@ -46,7 +48,17 @@ export default defineConfig({
       ],
     }),
     AutoImport({
-      imports: ['vue', 'pinia', '@vueuse/core'],
+      imports: ['vue',
+        'pinia',
+        '@vueuse/core',
+        {
+          'naive-ui': [
+            'useDialog',
+            'useMessage',
+            'useNotification',
+            'useLoadingBar',
+          ],
+        }],
       dts: resolve(__dirname, 'src/types/auto-import.d.ts'),
       resolvers: [ElementPlusResolver()],
       eslintrc: {
@@ -57,7 +69,7 @@ export default defineConfig({
     }),
     Components({
       dts: false,
-      resolvers: [ElementPlusResolver()],
+      resolvers: [ElementPlusResolver(), NaiveUiResolver()],
     }),
   ],
 

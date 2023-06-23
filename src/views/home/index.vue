@@ -32,17 +32,19 @@ onMounted(async () => {
         h200px
       />
       <div>
-        <span text-center>{{ projectName }} {{ version }}</span>
+        <n-tag type="success">
+          {{ projectName }}: {{ version }}
+        </n-tag>
       </div>
       <div flex items-center>
-        <el-button size="large" circle text @click="openGithub">
+        <n-button size="large" circle text @click="openGithub">
           <template #icon>
             <i
               class="mdi:github"
               p3
             />
           </template>
-        </el-button>
+        </n-button>
       </div>
     </div>
   </div>

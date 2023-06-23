@@ -2,6 +2,7 @@
 import { useUiState } from './store/ui'
 import Layout from '@/layout/index.vue'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import { darkTheme } from 'naive-ui'
 
 onMounted(() => {
   window.addEventListener('contextmenu', event => {
@@ -18,7 +19,7 @@ onMounted(() => {
 })
 
 const uiState = useUiState()
-
+const darkMode = ref(false)
 watchEffect(() => {
   let theme = uiState.theme
   if (theme === 'system') {
@@ -31,8 +32,10 @@ watchEffect(() => {
   }
 
   if (theme === 'dark') {
+    darkMode.value = true
     document.documentElement.className = 'dark'
   } else {
+    darkMode.value = false
     document.documentElement.className = ''
   }
 })
@@ -40,7 +43,17 @@ watchEffect(() => {
 
 <template>
   <el-config-provider :locale="zhCn">
-    <Layout />
+    <n-config-provider style="height: 100%;" :theme="darkMode ? darkTheme : null">
+      <n-notification-provider>
+        <n-message-provider>
+          <n-dialog-provider>
+            <n-loading-bar-provider>
+              <Layout />
+            </n-loading-bar-provider>
+          </n-dialog-provider>
+        </n-message-provider>
+      </n-notification-provider>
+    </n-config-provider>
   </el-config-provider>
 </template>
 

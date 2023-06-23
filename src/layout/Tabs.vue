@@ -55,7 +55,7 @@ const handleCommand = (key: string, command: string) => {
       @tab-click="handleClick"
       @tab-remove="handleRemove"
     >
-      <el-scrollbar>
+      <n-scrollbar>
         <el-tab-pane
           v-for="tabItem in tabsState.tabs"
           :key="tabItem.key"
@@ -126,7 +126,7 @@ const handleCommand = (key: string, command: string) => {
             </el-dropdown>
           </template>
         </el-tab-pane>
-      </el-scrollbar>
+      </n-scrollbar>
     </el-tabs>
   </div>
 </template>

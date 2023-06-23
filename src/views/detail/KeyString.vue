@@ -11,6 +11,8 @@ interface StringProps {
 }
 
 const props = defineProps<StringProps>()
+
+const message = useMessage()
 const id = ref(props.id)
 const db = ref(props.db)
 const key = ref(props.keyLabel)
@@ -66,7 +68,7 @@ const handleSave = () => {
 
       await fetchKeyDetail()
     } catch (error) {
-      ElMessage.error(error as string)
+      message.error(error as string)
     }
   })
     .catch(() => {})

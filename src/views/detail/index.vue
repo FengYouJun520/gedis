@@ -15,7 +15,7 @@ interface DetailProps {
 }
 
 const props = defineProps<DetailProps>()
-
+const message = useMessage()
 const initialData: KeyInfo = {
   key: '',
   label: '',
@@ -61,7 +61,7 @@ onMounted(async () => {
   try {
     await fetchKeyInfo()
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 })
 
@@ -104,7 +104,7 @@ const handleTTL = async (ttl: number) => {
 
     await fetchKeyInfo()
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 }
 
@@ -136,7 +136,7 @@ const handleDeleteKey = () => {
       tabsState.removeTab(`${unref(id)}-${unref(db)}-${unref(key)}`)
       mitt.emit('refresh', { id: unref(id), db: unref(db) })
     } catch (error) {
-      ElMessage.error(error as string
+      message.error(error as string
       )
     }
   })
@@ -148,7 +148,7 @@ const handleRefresh = async () => {
     await fetchKeyInfo()
   } catch (error) {
     // key不存在
-    ElMessage.error(error as string)
+    message.error(error as string)
     tabsState.removeTab(`${unref(id)}-${unref(db)}-${props.tabItem.value}`)
     mitt.emit('refresh', { id: unref(id), db: unref(db) })
   }
@@ -169,7 +169,7 @@ watch(() => keyinfo.value.type, t => {
   if (components[t]) {
     comp.value = components[t]
   } else {
-    ElMessage.error(`键的类型: ${t}是不支持的`)
+    message.error(`键的类型: ${t}是不支持的`)
   }
 })
 </script>

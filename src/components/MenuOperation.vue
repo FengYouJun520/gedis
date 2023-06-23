@@ -10,6 +10,7 @@ const props = defineProps<{
   config: RedisConfig
 }>()
 
+const message = useMessage()
 const tabsState = useTabs()
 const mitt = useMitt()
 const configOps = useConfig()
@@ -68,7 +69,7 @@ const handleConfirm = async () => {
     visibleDialog.value = false
     mitt.emit('refresh', { id: unref(id), db: unref(db) })
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 }
 

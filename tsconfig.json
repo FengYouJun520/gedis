@@ -15,7 +15,8 @@
       "DOM"
     ],
     "types": [
-      "element-plus/global"
+      "element-plus/global",
+       "naive-ui/volar"
     ],
     "typeRoots": [
       "node_modules/@types",

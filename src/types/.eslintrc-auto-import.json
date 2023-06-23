@@ -291,6 +291,10 @@
     "watchTriggerable": true,
     "watchWithFilter": true,
     "whenever": true,
-    "toValue": true
+    "toValue": true,
+    "useDialog": true,
+    "useLoadingBar": true,
+    "useMessage": true,
+    "useNotification": true
   }
 }

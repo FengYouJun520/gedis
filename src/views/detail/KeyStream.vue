@@ -17,6 +17,7 @@ interface StreamDetail {
 
 const props = defineProps<StreamProps>()
 
+const message = useMessage()
 const id = ref(props.id)
 const db = ref(props.db)
 const key = ref(props.keyLabel)
@@ -58,7 +59,7 @@ onMounted(async () => {
   try {
     await fetchKeyDetail()
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 })
 
@@ -66,7 +67,7 @@ watch(() => props.keyinfo, async () => {
   try {
     await fetchKeyDetail()
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 })
 
@@ -89,7 +90,7 @@ const deleteValueByKey = (scope: any) => {
 
       await fetchKeyDetail()
     } catch (error) {
-      ElMessage.error(error as string)
+      message.error(error as string)
     }
   })
     .catch(() => {})
@@ -133,7 +134,7 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
     }
 
     if (!valid || !keyinfo.value || unref(readonly)) {
-      ElMessage.error('校验失败')
+      message.error('校验失败')
       return
     }
 
@@ -156,9 +157,9 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
     showDialog.value = false
   } catch (error) {
     if (error instanceof SyntaxError) {
-      ElMessage.error(error.message)
+      message.error(error.message)
     } else {
-      ElMessage.error(error as string)
+      message.error(error as string)
     }
   }
 }

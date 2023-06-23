@@ -16,6 +16,7 @@ const initConfig: RedisConfig = {
   cluster: false,
 }
 
+const message = useMessage()
 const uiState = useUiState()
 const configState = useRedis()
 const mitt = useMitt()
@@ -34,7 +35,7 @@ const fetchlogs = async () => {
     const res = await invoke<string[]>('get_logs')
     logs.value = res
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 }
 
@@ -54,9 +55,9 @@ const handleTestConnection = async () => {
   try {
     loading.value = true
     await invoke('test_connection', { config: configData.value })
-    ElMessage.success('连接成功')
+    message.success('连接成功')
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   } finally {
     loading.value = false
   }
@@ -119,7 +120,7 @@ const clearLogs = async () => {
     logs.value = []
     visibleLog.value = false
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 }
 

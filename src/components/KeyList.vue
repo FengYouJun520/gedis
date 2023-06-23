@@ -8,6 +8,7 @@ import Node from 'element-plus/es/components/tree/src/model/node'
 import { TreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
 import { useConfig } from './useConfig'
 
+const message = useMessage()
 const tabsState = useTabs()
 const mitt = useMitt()
 const configOps = useConfig()
@@ -104,7 +105,7 @@ const handleDeleteKey = async () => {
       key: contextmenuData.value?.data.value,
     })
 
-    ElMessage.success(`删除键: ${contextmenuData.value?.data.value}成功`)
+    message.success(`删除键: ${contextmenuData.value?.data.value}成功`)
     // 如果有选项卡，删除选项卡
     tabsState.removeTab(
       `${unref(id)}-${unref(db)}-${contextmenuData.value?.data.value}`
@@ -112,7 +113,7 @@ const handleDeleteKey = async () => {
 
     mitt.emit('refresh', { id: unref(id), db: unref(db) })
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 }
 
@@ -124,7 +125,7 @@ const handleDeleteFolder = async () => {
       matchKey: `${contextmenuData.value?.data.value}*`,
     })
 
-    ElMessage.success(`删除键: ${contextmenuData.value?.data.value}成功`)
+    message.success(`删除键: ${contextmenuData.value?.data.value}成功`)
     // 如果有选项卡，删除目录下所有相关的选项卡
     tabsState.removeTab(
       `${unref(id)}-${unref(db)}-${contextmenuData.value?.data.value}`
@@ -132,7 +133,7 @@ const handleDeleteFolder = async () => {
 
     mitt.emit('refresh', { id: unref(id), db: unref(db) })
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
   }
 }
 

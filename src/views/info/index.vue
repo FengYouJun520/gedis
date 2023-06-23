@@ -4,16 +4,49 @@ import { useUiState } from '@/store/ui'
 import { Keyspace } from '@/types/redis'
 import { parseKeyspaces } from '@/util'
 import { invoke } from '@tauri-apps/api'
+import { TableColumn } from 'naive-ui/es/data-table/src/interface'
 
 interface InfoProps {
   tabItem: TabsProps
 }
 
 const props = defineProps<InfoProps>()
+
+const keyspaceColumns: TableColumn[] = [
+  {
+    title: 'DB',
+    key: 'db',
+  },
+  {
+    title: 'Keys',
+    key: 'len',
+  },
+  {
+    title: 'Expires',
+    key: 'expires',
+  },
+  {
+    title: 'Avg TTL',
+    key: 'avg_ttl',
+  },
+]
+
+const infoListColumns: TableColumn[] = [
+  {
+    title: 'Key',
+    key: 'key',
+    ellipsis: {
+      tooltip: true,
+    },
+  },
+  {
+    title: 'Value',
+    key: 'value',
+  },
+]
+
+const message = useMessage()
 const id = ref(props.tabItem.id)
-const db = ref(props.tabItem.db)
-const key = ref(props.tabItem.value)
-const uiState = useUiState()
 const info = ref<Record<string, string>>({})
 const autoRefresh = ref(false)
 const keyspaces = ref<Keyspace[]>([])
@@ -27,7 +60,7 @@ const fetchInfo = async () => {
     info.value = redisInfo
     keyspaces.value = parseKeyspaces(redisInfo)
   } catch (error) {
-    ElMessage.error(error as string)
+    message.error(error as string)
     autoRefresh.value = false
     if (timer) {
       clearInterval(timer)
@@ -54,7 +87,7 @@ onUnmounted(() => {
 
 const keyspaceData = computed(() => unref(keyspaces).filter(key => key.len !== 0))
 
-const filterData = computed(() => Object.keys(unref(info))
+const infoListData = computed(() => Object.keys(unref(info))
   .filter(key => key.includes(unref(search)) || unref(info)[key].includes(unref(search)))
   .map(key => ({ key, value: unref(info)[key] })))
 </script>
@@ -62,163 +95,164 @@ const filterData = computed(() => Object.keys(unref(info))
 <template>
   <div flex flex-col gap-y-6 overflow-hidden>
     <!-- 自动刷新 -->
-    <el-space>
-      <el-tag>
+    <n-space>
+      <n-tag type="primary">
         自动刷新
-      </el-tag>
-      <el-switch v-model="autoRefresh" />
-    </el-space>
+      </n-tag>
+      <n-switch v-model:value="autoRefresh" />
+    </n-space>
     <!-- 状态信息 -->
-    <el-row :gutter="24">
-      <el-col :span="24" :md="8">
-        <el-card>
-          <template #header>
-            <el-space>
-              <span>
+    <n-card embedded>
+      <n-grid :cols="3" :x-gap="24" :y-gap="24" item-responsive responsive="screen">
+        <n-gi span="3 m:1">
+          <n-card>
+            <template #header>
+              <n-space>
                 <i class="ant-design:cloud-server-outlined" />
-              </span>
-              <span>服务器</span>
-            </el-space>
-          </template>
+                <span>服务器</span>
+              </n-space>
+            </template>
 
-          <el-space direction="vertical" alignment="start">
-            <el-space>
-              <el-tag>Redis版本:</el-tag>
-              <el-tag type="success">
-                {{ info.redis_version }}
-              </el-tag>
-            </el-space>
-            <el-space overflow-hidden>
-              <el-tag>OS:</el-tag>
-              <el-tooltip :content="info.os" :effect="uiState.theme === 'dark' ? 'light' : 'dark'">
-                <el-text truncated type="success">
+            <n-space vertical>
+              <n-space :wrap="false">
+                <n-tag type="info">
+                  Redis版本:
+                </n-tag>
+                <n-tag type="primary">
+                  {{ info.redis_version }}
+                </n-tag>
+              </n-space>
+              <n-space overflow-hidden :wrap="false">
+                <n-tag type="info">
+                  OS:
+                </n-tag>
+                <n-tooltip :content="info.os">
+                  <template #trigger>
+                    <n-tag truncated type="primary">
+                      {{ info.os }}
+                    </n-tag>
+                  </template>
                   {{ info.os }}
-                </el-text>
-              </el-tooltip>
-            </el-space>
-            <el-space>
-              <el-tag>进程ID:</el-tag>
-              <el-tag type="success">
-                {{ info.process_id }}
-              </el-tag>
-            </el-space>
-          </el-space>
-        </el-card>
-      </el-col>
+                </n-tooltip>
+              </n-space>
+              <n-space :wrap="false">
+                <n-tag type="info">
+                  进程ID:
+                </n-tag>
+                <n-tag type="success">
+                  {{ info.process_id }}
+                </n-tag>
+              </n-space>
+            </n-space>
+          </n-card>
+        </n-gi>
 
-      <el-col :span="24" :md="8">
-        <el-card>
-          <template #header>
-            <el-space>
-              <span>
+        <n-gi span="3 m:1">
+          <n-card>
+            <template #header>
+              <n-space>
                 <i class="mdi:memory" />
-              </span>
-              <span>内存</span>
-            </el-space>
-          </template>
+                <span>内存</span>
+              </n-space>
+            </template>
 
-          <el-space direction="vertical" alignment="start">
-            <el-space>
-              <el-tag>已用内存:</el-tag>
-              <el-tag type="success">
-                {{ info.used_memory_human }}
-              </el-tag>
-            </el-space>
-            <el-space>
-              <el-tag>内存占用峰值:</el-tag>
-              <el-tag type="success">
-                {{ info.used_memory_peak_human }}
-              </el-tag>
-            </el-space>
-            <el-space>
-              <el-tag>Lua占用内存:</el-tag>
-              <el-tag type="success">
-                {{ info.used_memory_lua_human }}
-              </el-tag>
-            </el-space>
-          </el-space>
-        </el-card>
-      </el-col>
+            <n-space vertical align="start">
+              <n-space :wrap="false">
+                <n-tag type="info">
+                  已用内存:
+                </n-tag>
+                <n-tag type="success">
+                  {{ info.used_memory_human }}
+                </n-tag>
+              </n-space>
+              <n-space :wrap="false">
+                <n-tag type="info">
+                  内存占用峰值:
+                </n-tag>
+                <n-tag type="success">
+                  {{ info.used_memory_peak_human }}
+                </n-tag>
+              </n-space>
+              <n-space :wrap="false">
+                <n-tag type="info">
+                  Lua占用内存:
+                </n-tag>
+                <n-tag type="success">
+                  {{ info.used_memory_lua_human }}
+                </n-tag>
+              </n-space>
+            </n-space>
+          </n-card>
+        </n-gi>
 
-      <el-col :span="24" :md="8">
-        <el-card>
-          <template #header>
-            <el-space>
-              <span>
+        <n-gi span="3 m:1">
+          <n-card>
+            <template #header>
+              <n-space>
                 <i class="carbon:status-partial-fail" />
-              </span>
-              <span>状态</span>
-            </el-space>
-          </template>
+                <span>状态</span>
+              </n-space>
+            </template>
 
-          <el-space direction="vertical" alignment="start">
-            <el-space>
-              <el-tag>客户端连接数:</el-tag>
-              <el-tag type="success">
-                {{ info.connected_clients }}
-              </el-tag>
-            </el-space>
-            <el-space>
-              <el-tag>历史连接数:</el-tag>
-              <el-tag type="success">
-                {{ info.total_connections_received }}
-              </el-tag>
-            </el-space>
-            <el-space>
-              <el-tag>历史命令数:</el-tag>
-              <el-tag type="success">
-                {{ info.total_commands_processed }}
-              </el-tag>
-            </el-space>
-          </el-space>
-        </el-card>
-      </el-col>
-    </el-row>
+            <n-space vertical alignment="start">
+              <n-space :wrap="false">
+                <n-tag type="info">
+                  客户端连接数:
+                </n-tag>
+                <n-tag type="success">
+                  {{ info.connected_clients }}
+                </n-tag>
+              </n-space>
+              <n-space :wrap="false">
+                <n-tag type="info">
+                  历史连接数:
+                </n-tag>
+                <n-tag type="success">
+                  {{ info.total_connections_received }}
+                </n-tag>
+              </n-space>
+              <n-space :wrap="false">
+                <n-tag type="info">
+                  历史命令数:
+                </n-tag>
+                <n-tag type="success">
+                  {{ info.total_commands_processed }}
+                </n-tag>
+              </n-space>
+            </n-space>
+          </n-card>
+        </n-gi>
+      </n-grid>
+    </n-card>
 
-    <el-row>
-      <el-col>
-        <el-card>
-          <template #header>
-            <el-space>
-              <i class="carbon:text-link-analysis" />
-              <p>键值统计</p>
-            </el-space>
-          </template>
-          <el-table :data="keyspaceData">
-            <el-table-column label="DB" prop="db" sortable />
-            <el-table-column label="Keys" prop="len" sortable />
-            <el-table-column label="Expires" prop="expires" sortable />
-            <el-table-column label="Avg TTL" prop="avg_ttl" sortable />
-          </el-table>
-        </el-card>
-      </el-col>
-    </el-row>
+    <n-card embedded>
+      <template #header>
+        <n-space>
+          <i class="carbon:text-link-analysis" />
+          <span>键值统计</span>
+        </n-space>
+      </template>
+      <n-data-table :data="keyspaceData" :columns="keyspaceColumns" />
+    </n-card>
 
-    <el-row>
-      <el-col>
-        <el-card>
-          <template #header>
-            <el-space w-full justify-between>
-              <el-space>
-                <i class="mdi:information" />
-                <p>Redis信息集合</p>
-              </el-space>
+    <n-card embedded>
+      <template #header>
+        <n-space justify="space-between">
+          <n-space>
+            <i class="mdi:information" />
+            <span>Redis信息集合</span>
+          </n-space>
 
-              <el-input v-model="search" placeholder="搜索">
-                <template #suffix>
-                  <i class="ant-design:search-outlined" />
-                </template>
-              </el-input>
-            </el-space>
-          </template>
+          <n-input v-model:value="search" placeholder="搜索">
+            <template #suffix>
+              <i class="ant-design:search-outlined" />
+            </template>
+          </n-input>
+        </n-space>
+      </template>
 
-          <el-table :data="filterData">
-            <el-table-column label="Key" prop="key" sortable />
-            <el-table-column label="Value" prop="value" sortable />
-          </el-table>
-        </el-card>
-      </el-col>
-    </el-row>
+      <n-data-table :data="infoListData" :columns="infoListColumns" />
+    </n-card>
   </div>
 </template>
 

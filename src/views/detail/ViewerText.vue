@@ -5,6 +5,8 @@ interface ViewerTextProps {
 }
 
 const props = defineProps<ViewerTextProps>()
+
+const message = useMessage()
 const newContent = ref(props.content)
 
 onMounted(() => {

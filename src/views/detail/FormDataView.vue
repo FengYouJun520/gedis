@@ -17,7 +17,7 @@ const emit = defineEmits<{
 (e: 'cancel'): void,
 (e: 'confirm', addKeyinfo: AddKeyInfo, valid: boolean): void
 }>()
-
+const message = useMessage()
 const formRef = ref<InstanceType<typeof ElForm> | null>(null)
 const addKeyinfo = ref<AddKeyInfo>({ ...props.model })
 const viewRef = ref<InstanceType<typeof FormatViewer> | null>(null)
@@ -36,7 +36,7 @@ const handleCancel = () => {
 const handleConfirm = () => {
   formRef.value?.validate(valid => {
     if (!valid) {
-      ElMessage.error('校验失败')
+      message.error('校验失败')
       emit('confirm', unref(addKeyinfo), valid)
       return
     }

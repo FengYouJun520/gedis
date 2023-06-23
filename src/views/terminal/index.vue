@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { TabsProps, useTabs } from '@/store/tabs'
 import { invoke, shell } from '@tauri-apps/api'
-import type { ElAutocomplete, ElScrollbar } from 'element-plus'
-import { v4 } from 'uuid'
-import { History } from './history'
 import { allCommands, CommandType } from './command'
 import { useMitt } from '@/useMitt'
+import { useThemeVars } from 'naive-ui'
+import { Terminal } from 'xterm'
+import { FitAddon } from 'xterm-addon-fit'
 
 interface TerminalProps {
   tabItem: TabsProps
@@ -13,122 +13,107 @@ interface TerminalProps {
 
 interface Message {
   type: 'normal' | 'error' | 'success'
-  content: string | number
+  content: string
 }
-
 const props = defineProps<TerminalProps>()
+// 在Linux脚本中以 \x1B[ 开始，中间前部分是样式+内容，以 \x1B[0m 结尾
+// 示例 \x1B[1;3;31m 内容 \x1B[0m
+// fontCss
+// 0;-4;字体样式（0;正常 1;加粗 2;变细 3;斜体 4;下划线）
+// bgColor
+// 30m-37m字体颜色（30m:黑色 31m:红色 32m:绿色 33m:棕色字 34m:蓝色 35m:洋红色/紫色 36m:蓝绿色/浅蓝色 37m:白色）
+// 40m-47m背景颜色（40m:黑色 41m:红色 42m:绿色 43m:棕色字 44m:蓝色 45m:洋红色/紫色 46m:蓝绿色/浅蓝色 47m:白色）
+// this.term.write(`\x1B[${fontCss}${bgColor}${txt}\x1B[0m`)
+
+const themeVars = useThemeVars()
 const mitt = useMitt()
 const id = ref(props.tabItem.id)
 const db = ref(props.tabItem.db)
-const scrollRef = ref<InstanceType<typeof ElScrollbar> | null>(null)
-const divRef = ref<InstanceType<typeof HTMLDivElement> | null>(null)
-const autoRef = ref<InstanceType<typeof ElAutocomplete> | null>(null)
-
+const terminalRef = ref<HTMLDivElement>()
 const argsRegex = /[\s*]|"(.*)"/
 const tabsState = useTabs()
 
-const content = ref('')
-const messages = ref<Message[]>([{
-  type: 'success',
-  content: `${props.tabItem.name} connected!`,
-}])
-const messageDepth = 2000
+onUnmounted(() => {
+  window.removeEventListener('resize', resize)
+  fitAddon.dispose()
+  terminal.dispose()
+})
 
-const addMessage = (message: string|number | Message) => {
-  if (unref(messages).length === messageDepth) {
-    messages.value.splice(0, messageDepth / 2)
-  }
+const fitAddon = new FitAddon()
+const command = ref('')
+let terminal: Terminal
 
-  if (typeof message === 'string' || typeof message === 'number') {
-    messages.value.push({ type: 'normal', content: message })
-  } else {
-    messages.value.push(message)
-  }
+const resize = () => {
+  fitAddon.fit()
 }
-
-let history = new History(500)
-
-const addHistroy = (value: string) => {
-  history.push(value)
-}
-
-const changePrev = () => {
-  if (autoRef.value?.activated) {
-    return
-  }
-
-  const value = history.prevHistroy()
-  content.value = value
-}
-
-const changeNext = () => {
-  if (autoRef.value?.activated) {
-    return
-  }
-
-  const value = history.nextHistroy()
-  content.value = value
-}
-
-const clearContent = () => {
-  content.value = ''
-  autoRef.value?.close()
-}
-
+window.addEventListener('resize', resize)
 
 onMounted(() => {
-  nextTick(()=>{
-    autoRef.value?.focus()
+  terminal = new Terminal({
+    tabStopWidth: 4,
+    rows: 30,
+    cursorBlink: true,
+    cursorStyle: 'block',
+    theme: {
+      background: themeVars.value.bodyColor,
+    },
+    fontSize: 16,
+    allowTransparency: true,
+  })
+
+  terminal.loadAddon(fitAddon)
+  terminal.open(terminalRef.value!)
+  // 第一次必须防抖才可以调整布局
+  useDebounceFn(() => {
+    terminal.focus()
+    fitAddon.fit()
+  }, 100)()
+  terminal.writeln('welcome')
+
+  terminal.onData(key => {
+    switch (key) {
+    case '\r': {
+      terminal.writeln('')
+      onExecCmd()
+      command.value = ''
+      return
+    }
+    case '\u007F': {
+      terminal.write('\b \b')
+      command.value = command.value.slice(0, command.value.length - 1)
+      return
+    }
+    default: {
+      command.value += key
+      if (key.length > 0) {
+        terminal.write(key)
+      }
+    }
+    }
   })
 })
 
-const handleFetchSuggestions = (query: string, cb: Function) => {
-  if (!query.trim()) {
-    cb([])
-    return
-  }
-
-  const result = Object.keys(allCommands)
-    .filter(key => key.includes(query.trim().toUpperCase()
-      .split(' ')[0]))
-    .map(key => ({ value: allCommands[key as CommandType] }))
-
-  cb(result)
-}
-const backBottom = () => {
-  nextTick(() => {
-    scrollRef.value?.scrollTo({ top: divRef.value?.scrollHeight })
-  })
-}
-
-
 const onExecCmd = async () => {
-  if (!unref(content)) {
-    addMessage('>> ')
-    backBottom()
+  let cmd = command.value.trim()
+  if (!unref(cmd)) {
     return
   }
 
-  switch (unref(content)) {
+  switch (unref(cmd)) {
   case 'exit':
     tabsState.removeTab(`${props.tabItem.id}-${props.tabItem.db}`)
-    clearContent()
-    backBottom()
     return
   case 'clear':
-    messages.value = []
-    addHistroy(unref(content))
-
-    clearContent()
-    backBottom()
+    command.value = ''
+    terminal.clear()
     return
   default:
     break
   }
 
-  if (unref(content).toUpperCase()
+  if (unref(cmd).toUpperCase()
     .includes('SELECT')) {
-    const values = content.value.split(' ')
+    const values = unref(cmd).split(' ')
     if (values.length === 2 && allCommands[values[0].toUpperCase() as CommandType]) {
       const newDb = parseInt(values[1].trim())
       db.value = newDb
@@ -136,23 +121,18 @@ const onExecCmd = async () => {
     }
   }
 
-  if (unref(content).toLowerCase()
+  if (unref(cmd).toLowerCase()
     .includes('help')) {
     // https://redis.io/commands/${command}/
-    const values = content.value.split(' ')
+    const values = unref(cmd).split(' ')
     if (values.length === 2 && allCommands[values[1].toUpperCase() as CommandType]) {
       const url = `https://redis.io/commands/${values[1]}/`
       shell.open(url)
-      addHistroy(unref(content))
-      clearContent()
       return
     }
   }
 
-  const args = content.value.split(argsRegex).filter(arg => arg && arg !== '')
-  addMessage(`>> ${content.value}`)
-  addHistroy(unref(content))
-  clearContent()
+  const args = cmd.split(argsRegex).filter(arg => arg && arg !== '')
 
   invoke('terminal', {
     id: props.tabItem.id,
@@ -162,10 +142,7 @@ const onExecCmd = async () => {
     parseResult(res)
   })
     .catch(error => {
-      addMessage({ type: 'error', content: error as string })
-    })
-    .finally(()=>{
-      backBottom()
+      terminal.writeln(`\x1B[31m${error}\x1B[0m`)
     })
 }
 
@@ -175,49 +152,17 @@ const parseResult = (result: any) => {
       parseResult(item)
     }
   } else {
-    addMessage(result)
+    terminal.writeln(`\x1B[33m${result}\x1B[0m`)
   }
 }
 </script>
 
 <template>
-  <div flex flex-col class="h-[calc(100vh-128px)]">
-    <ElScrollbar ref="scrollRef">
-      <div ref="divRef" flex-1 p-4 space-y-2>
-        <div v-for="(message, i) in messages" :key="v4() + i" :class="`content--${message.type}`">
-          {{ message.content }}
-        </div>
-      </div>
-    </ElScrollbar>
-    <div relative>
-      <ElAutocomplete
-        ref="autoRef"
-        v-model="content"
-        fit-input-width
-        autocomplete="off"
-        :trigger-on-focus="false"
-        :fetch-suggestions="handleFetchSuggestions"
-        :debounce="10"
-        @select="autoRef?.focus()"
-        @keyup.enter.stop="onExecCmd"
-        @keyup.up.stop="changePrev"
-        @keyup.down.stop="changeNext"
-      />
-    </div>
-  </div>
+  <div ref="terminalRef" />
 </template>
 
-<style lang="css" scoped>
-.content--success {
-  color: var(--el-color-success);
-}
-.content--error {
-  color: var(--el-color-danger);
-}
-:deep(.el-autocomplete) {
-  width: 100%;
-}
-.el-scrollbar__view {
-  height: 100%;
+<style lang="css">
+.terminal {
+  height: calc(100vh - 128px);
 }
 </style>
