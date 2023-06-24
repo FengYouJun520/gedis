@@ -70,6 +70,7 @@ pub async fn del_match_keys(
     let mut keys = vec![];
     // 防止二次mutable
     {
+        // TODO: 集群模式下删除失败
         let mut iter: AsyncIter<'_, String> = con.scan_match(&match_key).await?;
         while let Some(key) = iter.next_item().await {
             keys.push(key);

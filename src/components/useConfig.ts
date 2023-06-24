@@ -4,7 +4,7 @@ import { InjectionKey, Ref } from 'vue'
 
 interface ConfigOps {
   config: RedisConfig
-  treeKeys: Ref<string[]>
+  treeKeys: Ref<any[]>
   keyspaces: Ref<Keyspace[]>,
   db: Ref<number>,
   connection: (config: RedisConfig, tabs?: TabsProps) => Promise<void>,

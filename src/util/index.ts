@@ -52,6 +52,7 @@ function formatTreeData(tree: any, previousKey = '', separator = ':') {
        * for unique, add 'F' prefix
        */
       node.key = `F${tillNowKeylabel}`
+      node.isLeaf = false
       node.children = formatTreeData(tree[key], tillNowKeylabel, separator)
       node.keyCount = node.children.reduce((a: any, b: any) => a + (b.keyCount || 1), 0)
       /*
@@ -66,6 +67,7 @@ function formatTreeData(tree: any, previousKey = '', separator = ':') {
       // key node
       node.label = key.replace(/`k`$/, '')
       node.key = node.label.toString()
+      node.isLeaf = true
       node.value = key.replace(/`k`$/, '')
     }
 

@@ -1,40 +1,52 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import { useTabs } from '@/store/tabs'
 import { TreeNode } from '@/types/redis'
 import { useMitt } from '@/useMitt'
 import { clipboard, invoke } from '@tauri-apps/api'
-import type { ElTree } from 'element-plus'
 import Node from 'element-plus/es/components/tree/src/model/node'
 import { TreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
 import { useConfig } from './useConfig'
+import { DropdownOption, TreeOption } from 'naive-ui'
+import { RenderSwitcherIcon, TreeNodeProps } from 'naive-ui/es/tree/src/interface'
+import { onUpdateExpandedKeys } from 'naive-ui/es/tree/src/Tree'
+
+type TreeOptionExt = TreeOption & {
+  value: string
+}
 
 const message = useMessage()
 const tabsState = useTabs()
 const mitt = useMitt()
 const configOps = useConfig()
-const treeKeys = computed(() =>configOps!.treeKeys.value)
-const treeRef = ref<InstanceType<typeof ElTree>|null>(null)
+const treeKeys = computed<TreeOptionExt[]>(() => {
+  function generateOption(options: any[]) : TreeOptionExt[] {
+    return options.map(option => ({
+      ...option,
+      children: option.isLeaf ? option.children : generateOption(option.children),
+      prefix: option.isLeaf
+        ? () => <i class="fxemoji:key" w-6 h-6 />
+        : () => <i class="vscode-icons:folder-type-redis" w-6 h-6 />,
+    } as TreeOptionExt))
+  }
+
+  return generateOption(configOps?.treeKeys.value || [])
+})
+
 const id = computed(() => configOps!.config.id)
 const db = computed(() => unref(configOps!.db))
 const isCurrent = (otherId: string) => unref(id) === otherId
 
-mitt.on('searchKeyTree', ({ id, query }) => isCurrent(id) && treeRef.value?.filter(query))
+mitt.on('searchKeyTree', ({ id, query }) => {
+  if (isCurrent(id)) {
+    pattern.value = query
+  }
+})
 
 onUnmounted(() => {
   mitt.off('searchKeyTree')
 })
 
-const filterNode = (value: string, data: TreeNode | TreeNodeData, node: Node) => {
-  const rawData = data as TreeNode
-  if (node.isLeaf) {
-    return rawData.value.includes(value)
-  }
-  return rawData.label.includes(value)
-}
-
-const rendIcon = () => h('i', { class: 'bi:caret-right-fill w20px h20px' })
-
-const handleNodeClick = (data: TreeNode, node: any) => {
+const handleNodeClick = (data: TreeOptionExt) => {
   const isLeaf = !data.children
 
   if (!isLeaf) {
@@ -55,60 +67,22 @@ const handleNodeClick = (data: TreeNode, node: any) => {
   })
 }
 
-interface ContextmenuProps {
-  event: MouseEvent
-  data: TreeNode
-  node: Node
-}
-
-const contextmenuRef = ref<HTMLDivElement>()
-const showContextmenu = ref(false)
-const contextmenuData = ref<ContextmenuProps>()
-onClickOutside(contextmenuRef, () => {
-  showContextmenu.value = false
-})
-
-const hideMenusOnClick = (e: MouseEvent) => {
-  showContextmenu.value = false
-}
-const HideMenusOnEsc = (ev: KeyboardEvent) => {
-  if (ev.key === 'Escape') {
-    showContextmenu.value = false
-  }
-}
-
-
-const handleContextmenu = (event: MouseEvent, data: TreeNode, node: Node) => {
-  showContextmenu.value = true
-  contextmenuData.value = { event, data, node }
-
-  nextTick(() => {
-    // 等待contextmenuRef有高度才计算
-    let top = event.clientY
-    if (document.body.clientHeight - top < contextmenuRef.value!.clientHeight) {
-      top -= contextmenuRef.value!.clientHeight
-    }
-
-    contextmenuRef.value!.style.left = `${event.clientX}px`
-    contextmenuRef.value!.style.top = `${top}px`
-
-    document.addEventListener('click', hideMenusOnClick, { once: true })
-    document.addEventListener('keyup', HideMenusOnEsc, { once: true })
-  })
-}
-
 const handleDeleteKey = async () => {
+  if (!selectedOption.value) {
+    return
+  }
+
   try {
     await invoke('del_key', {
       id: unref(id),
       db: unref(db),
-      key: contextmenuData.value?.data.value,
+      key: selectedOption.value.key,
     })
 
-    message.success(`删除键: ${contextmenuData.value?.data.value}成功`)
+    message.success(`删除键: ${selectedOption.value.value}成功`)
     // 如果有选项卡，删除选项卡
     tabsState.removeTab(
-      `${unref(id)}-${unref(db)}-${contextmenuData.value?.data.value}`
+      `${unref(id)}-${unref(db)}-${selectedOption.value.value}`
     )
 
     mitt.emit('refresh', { id: unref(id), db: unref(db) })
@@ -117,18 +91,25 @@ const handleDeleteKey = async () => {
   }
 }
 
+// TODO: 删除失败bug
 const handleDeleteFolder = async () => {
+  if (!selectedOption.value) {
+    return
+  }
+
   try {
+    console.log(selectedOption.value)
+
     await invoke('del_match_keys', {
       id: unref(id),
       db: unref(db),
-      matchKey: `${contextmenuData.value?.data.value}*`,
+      matchKey: `${selectedOption.value.value}*`,
     })
 
-    message.success(`删除键: ${contextmenuData.value?.data.value}成功`)
+    message.success(`删除键: ${selectedOption.value.value}成功`)
     // 如果有选项卡，删除目录下所有相关的选项卡
     tabsState.removeTab(
-      `${unref(id)}-${unref(db)}-${contextmenuData.value?.data.value}`
+      `${unref(id)}-${unref(db)}-${selectedOption.value.value}`
     )
 
     mitt.emit('refresh', { id: unref(id), db: unref(db) })
@@ -138,8 +119,75 @@ const handleDeleteFolder = async () => {
 }
 
 const handleCopyKey = () => {
-  if (contextmenuData.value) {
-    clipboard.writeText(contextmenuData.value.data.value)
+  if (selectedOption.value) {
+    clipboard.writeText(selectedOption.value.value)
+  }
+}
+
+const showDropdown = ref(false)
+const pattern = ref('')
+const xRef = ref(0)
+const yRef = ref(0)
+const dropdownOptions = ref<DropdownOption[]>([])
+const selectedOption = ref<TreeOptionExt>()
+
+const nodeProps: TreeNodeProps = ({ option }) => ({
+  onClick() {
+    if (option.isLeaf) {
+      message.info(`[Click] ${option.label}`)
+      handleNodeClick(option as TreeOptionExt)
+    }
+  },
+  onContextmenu(e: MouseEvent): void {
+    e.preventDefault()
+
+    dropdownOptions.value = [{
+      label: '复制',
+      key: 'copy-key',
+      icon: () => <i class="material-symbols:content-copy-outline" />,
+    }]
+    if (option.isLeaf) {
+      dropdownOptions.value.push({
+        label: '删除',
+        key: 'delete-key',
+        icon: () => <i class="material-symbols:delete-outline" />,
+      })
+    } else {
+      dropdownOptions.value.push({
+        label: '删除文件',
+        key: 'delete-folder',
+        icon: () => <i class="material-symbols:content-copy-outline" />,
+      })
+    }
+    showDropdown.value = true
+    xRef.value = e.clientX
+    yRef.value = e.clientY
+    // 保存当前右键选中的节点
+    selectedOption.value = option as TreeOptionExt
+  },
+})
+
+const renderSwitcherIconWithExpaned: RenderSwitcherIcon = ({ expanded }) => (
+  <>
+    <i class="bi:caret-right-fill" />
+  </>
+)
+const updatePrefixWithExpaned: onUpdateExpandedKeys = (keys, option, meta) => {
+  if (!meta.node) {
+    return
+  }
+
+  if (meta.node.isLeaf) {
+    return
+  }
+
+  switch (meta.action) {
+  case 'collapse':
+    meta.node.prefix = () => <i class="vscode-icons:folder-type-redis" w-6 h-6 />
+    break
+  case 'expand':
+    meta.node.prefix = () => <i class="vscode-icons:folder-type-redis-opened" w-6 h-6 />
+    break
   }
 }
 
@@ -157,137 +205,47 @@ const handleCommand = (command: string) => {
   default:
     break
   }
+}
 
-  showContextmenu.value = false
+const handleSelect = (key: string) => {
+  showDropdown.value = false
+  console.log(key)
+  handleCommand(key)
+}
+
+const handleClickoutside = () => {
+  showDropdown.value = false
 }
 </script>
 
 <template>
   <div mt4>
-    <n-scrollbar>
-      <el-tree
-        ref="treeRef"
-        :data="treeKeys"
-        style="max-height: calc(100vh - 252px)"
-        :icon="rendIcon()"
-        :filter-node-method="filterNode"
-        @node-click="handleNodeClick"
-        @node-contextmenu="handleContextmenu"
-      >
-        <template #default="{ node, data }">
-          <template v-if="data.children">
-            <div flex items-center>
-              <i v-if="node.expanded" class="vscode-icons:folder-type-redis-opened w20px h20px" />
-              <i v-else class="vscode-icons:folder-type-redis w20px h20px" />
-              <span ml1>{{ node.label }} ({{ data.children.length }})</span>
-            </div>
-          </template>
+    <n-tree
+      block-line
+      expand-on-click
+      virtual-scroll
+      style="height: 350px;"
+      :data="treeKeys"
+      :pattern="pattern"
+      :show-irrelevant-nodes="false"
+      :node-props="nodeProps"
+      :render-switcher-icon="renderSwitcherIconWithExpaned"
+      @update:expanded-keys="updatePrefixWithExpaned"
+    />
 
-          <template v-else>
-            <div flex items-center>
-              <i class="fxemoji:key w20px h20px" />
-              <span ml1>{{ node.label }}</span>
-            </div>
-          </template>
-        </template>
-      </el-tree>
-    </n-scrollbar>
 
-    <!-- contextmenu -->
-    <div
-      v-show="showContextmenu"
-      ref="contextmenuRef"
-      class="tree-contextmenu-ops"
-    >
-      <!-- folder -->
-      <template v-if="!contextmenuData?.node.isLeaf">
-        <div
-          class="contextmenu-item"
-          flex
-          items-center
-          space-x2
-          justify-start
-          @click="handleCommand('copy-key')"
-        >
-          <i class="material-symbols:content-copy-outline" />
-          <span>
-            复制
-          </span>
-        </div>
-        <div
-          class="contextmenu-item"
-          flex
-          items-center
-          space-x2
-          justify-start
-          @click="handleCommand('delete-folder')"
-        >
-          <i class="material-symbols:content-copy-outline" />
-          <span>
-            删除文件
-          </span>
-        </div>
-      </template>
-
-      <!-- key -->
-      <template v-else>
-        <div
-          class="contextmenu-item"
-          flex
-          items-center
-          space-x2
-          @click="handleCommand('copy-key')"
-        >
-          <i class="material-symbols:content-copy-outline" />
-          <span>
-            复制
-          </span>
-        </div>
-        <div
-          class="contextmenu-item"
-          flex
-          items-center
-          space-x2
-          @click="handleCommand('delete-key')"
-        >
-          <i class="material-symbols:delete-outline" />
-          <span>
-            删除
-          </span>
-        </div>
-      </template>
-    </div>
+    <n-dropdown
+      trigger="manual"
+      placement="bottom-start"
+      :options="dropdownOptions"
+      :x="xRef"
+      :y="yRef"
+      :show="showDropdown"
+      @select="handleSelect"
+      @clickoutside="handleClickoutside"
+    />
   </div>
 </template>
 
 <style lang="css" scoped>
-:deep(.el-tree-node__label) {
-  flex: 1;
-}
-
-:deep(.el-tree-node__expand-icon) {
-  margin-right: 0;
-  padding: 0;
-}
-
-
-.tree-contextmenu-ops {
-  position: fixed;
-  z-index: 99999;
-  background-color: var(--el-bg-color);
-  border: 1px solid var(--el-border-color);
-  padding: 6px 0;
-  border-radius: 4px;
-}
-
-.contextmenu-item {
-  padding: 6px 12px;
-  transition: 0.2s;
-}
-
-.contextmenu-item:hover {
-  cursor: pointer;
-  color: var(--el-color-primary);
-  background-color: var(--el-color-primary-light-9);
-}
 </style>

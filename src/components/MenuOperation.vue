@@ -139,6 +139,7 @@ const handleCloseDialog = () => {
         v-model:value="selectDB"
         placeholder="Select"
         size="large"
+        :disabled="config.cluster"
         :options="selectOptions"
         @update:value="handleChange"
       />
