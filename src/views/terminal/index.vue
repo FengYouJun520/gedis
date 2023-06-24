@@ -58,7 +58,8 @@ onMounted(() => {
     cursorStyle: 'bar',
     theme: {
       background: themeVars.value.bodyColor,
-      foreground: themeVars.value.textColorBase,
+      foreground: themeVars.value.textColor1,
+      cursor: themeVars.value.textColor1,
     },
     fontSize: 16,
     allowTransparency: true,

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import RightOpertions from '@/components/RightOpertions.vue'
-import MenuOperation from '@/components/MenuOperation.vue'
 import KeyList from '@/components/KeyList.vue'
 import { TabsProps, useTabs } from '@/store/tabs'
 import { invoke } from '@tauri-apps/api'
@@ -9,6 +7,8 @@ import type { ElMenu } from 'element-plus'
 import { keysToTree, parseKeyspaces } from '@/util'
 import { createConfigContext } from './useConfig'
 import { useMitt } from '@/useMitt'
+import RightOperations from './RightOperations.vue'
+import MenuOperation from './MenuOperation.vue'
 
 interface ConnectionProps {
   config: RedisConfig
@@ -58,6 +58,9 @@ onUnmounted(() => {
 })
 
 const changeDb = (db: number) => {
+  if (db === unref(selectDb)) {
+    return
+  }
   if (props.config.cluster) {
     selectDb.value = 0
     message.warning('当前为集群模式，不允许切换数据库')
@@ -68,8 +71,6 @@ const changeDb = (db: number) => {
 }
 
 watch(selectDb, async db => {
-  console.log('changeDb')
-
   try {
     if (!unref(connected)) {
       return
@@ -238,7 +239,7 @@ createConfigContext({
             </template>
           </n-tooltip>
           <i v-if="loading" class="uiw:loading animate-spin" />
-          <right-opertions v-else v-model:db="selectDb" :config="config" />
+          <right-operations v-else v-model:db="selectDb" :config="config" />
         </div>
       </template>
 

@@ -257,9 +257,4 @@ const infoListData = computed(() => Object.keys(unref(info))
 </template>
 
 <style lang="css" scoped>
-.server {
-  width: 100%;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
-}
 </style>

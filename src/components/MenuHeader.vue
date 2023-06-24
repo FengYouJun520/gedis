@@ -21,7 +21,7 @@ const uiState = useUiState()
 const configState = useRedis()
 const mitt = useMitt()
 const themeVars = useThemeVars()
-const visible = ref(false)
+const visibleNewConn = ref(false)
 const loading = ref(false)
 const logLoading = ref(false)
 const configData = ref<RedisConfig>({ ...initConfig })
@@ -30,8 +30,6 @@ const visibleLog = ref(false)
 const logRef = ref<LogInst | null>(null)
 
 const borderColor = computed(() => themeVars.value.borderColor)
-console.log(borderColor.value)
-
 
 const fetchlogs = async () => {
   logLoading.value = true
@@ -45,13 +43,13 @@ const fetchlogs = async () => {
 }
 
 const handleNewConfigBtn = () => {
-  visible.value = true
+  visibleNewConn.value = true
 }
 
 const handleNewConfigConfirm = () => {
   configData.value.id = v4()
   configState.addConfig(unref(configData))
-  visible.value = false
+  visibleNewConn.value = false
   loading.value = false
   configData.value = { ...initConfig }
 }
@@ -69,7 +67,7 @@ const handleTestConnection = async () => {
 }
 
 const handleCancel = () => {
-  visible.value = false
+  visibleNewConn.value = false
   loading.value = false
   configData.value = { ...initConfig }
 }
@@ -132,7 +130,7 @@ const clearLogs = async () => {
 </script>
 
 <template>
-  <div flex justify-center items-center gap-x4 p4>
+  <div flex justify-center items-center gap-x-2 p-4>
     <n-button
       type="primary"
       flex-1
@@ -167,7 +165,7 @@ const clearLogs = async () => {
     </n-space>
 
     <n-modal
-      v-model:show="visible"
+      v-model:show="visibleNewConn"
       title="新建连接"
       :auto-focus="false"
       class="w-[60%]!"
@@ -207,7 +205,7 @@ const clearLogs = async () => {
           </n-form-item-gi>
 
           <n-form-item-gi span="2 m:1" label="集群" label-placement="left">
-            <n-checkbox v-model:value="configData.cluster" />
+            <n-checkbox v-model:checked="configData.cluster" />
           </n-form-item-gi>
         </n-grid>
       </n-form>
@@ -254,14 +252,14 @@ const clearLogs = async () => {
       :auto-focus="false"
       class="w-[60%!]"
       :style="{
-        '--theme-hover-color': themeVars.borderColor,
+        '--theme-hover-color': borderColor,
       }"
       @after-leave="handleCancel"
     >
       <div flex items-center space-x-4 justify-around>
         <div
           :style="{
-            backgroundColor: uiState.theme === 'system' ? themeVars.borderColor : undefined,
+            backgroundColor: uiState.theme === 'system' ? borderColor : undefined,
           }"
           hover="bg-[var(--theme-hover-color)]"
           rounded
@@ -276,7 +274,7 @@ const clearLogs = async () => {
         <div
           class="theme-hover"
           :style="{
-            backgroundColor: uiState.theme === 'dark' ? themeVars.borderColor : undefined,
+            backgroundColor: uiState.theme === 'dark' ? borderColor : undefined,
           }"
           hover="bg-[var(--theme-hover-color)]"
           rounded

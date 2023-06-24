@@ -4,6 +4,7 @@ import { AddKeyInfo, Keyspace, RedisConfig } from '@/types/redis'
 import { useMitt } from '@/useMitt'
 import { invoke } from '@tauri-apps/api'
 import { useConfig } from './useConfig'
+import { SelectOption } from 'naive-ui'
 
 const props = defineProps<{
   keyspaces: Keyspace[]
@@ -19,6 +20,46 @@ const search = ref('')
 const id = computed(() => configOps!.config.id)
 const db = computed(() => unref(configOps!.db))
 const isCluster = computed(() => props.config.cluster)
+
+const selectOptions = computed<SelectOption[]>(() => {
+  if (unref(isCluster)) {
+    return [{
+      label: `DB0 (${configOps?.treeKeys.value.length})`,
+      value: 0,
+    }]
+  }
+  return props.keyspaces.map(keyspace => ({
+    label: `DB${keyspace.db} (${keyspace.len})`,
+    value: keyspace.db,
+  }))
+})
+
+const typeOptions: SelectOption[] = [
+  {
+    label: 'String',
+    value: 'string',
+  },
+  {
+    label: 'List',
+    value: 'list',
+  },
+  {
+    label: 'Set',
+    value: 'set',
+  },
+  {
+    label: 'ZSet',
+    value: 'zset',
+  },
+  {
+    label: 'Hash',
+    value: 'hash',
+  },
+  {
+    label: 'Stream',
+    value: 'stream',
+  },
+]
 
 const handleChange = (val: number) => {
   mitt.emit('changeDb', { id: unref(id), db: unref(val) })
@@ -43,6 +84,11 @@ const handleAddDialog = () => {
 }
 
 const handleConfirm = async () => {
+  if (!keyModel.value.key) {
+    message.warning('key不能为空')
+    return
+  }
+
   try {
     if (keyModel.value.type === 'stream') {
       keyModel.value.value = '{"New key": "New value"}'
@@ -89,89 +135,52 @@ const handleCloseDialog = () => {
 <template>
   <div flex flex-col gap-y2 px2 my2>
     <div flex items-center gap-x2>
-      <el-select
-        v-model="selectDB"
+      <n-select
+        v-model:value="selectDB"
         placeholder="Select"
         size="large"
-        @change="handleChange"
-      >
-        <template v-if="isCluster">
-          <el-option
-            :label="`DB0 (${configOps?.treeKeys.value.length})`"
-            :value="0"
-          />
-        </template>
-        <template v-else>
-          <el-option
-            v-for="item in props.keyspaces"
-            :key="item.db"
-            :label="`DB${item.db} (${item.len})`"
-            :value="item.db"
-          />
-        </template>
-      </el-select>
-      <el-button text bg @click="handleAddDialog">
+        :options="selectOptions"
+        @update:value="handleChange"
+      />
+      <n-button type="primary" ghost @click="handleAddDialog">
         新增key
-      </el-button>
+      </n-button>
     </div>
     <div>
-      <el-input
-        v-model="search"
+      <n-input
+        v-model:value="search"
         clearable
         placeholder="搜索"
-        @update:model-value="handleSearchChange"
+        @update:value="handleSearchChange"
       />
     </div>
 
-    <el-dialog
-      v-model="visibleDialog"
+    <n-modal
+      v-model:show="visibleDialog"
       title="添加键"
-      width="50%"
-      append-to-body
-      destroy-on-close
-      @close="handleCloseDialog"
+      :auto-focus="false"
+      preset="dialog"
+      @after-leave="handleCloseDialog"
 
     >
-      <el-form
-        :model="keyModel"
-        label-position="top"
-      >
-        <el-form-item label="键" required>
-          <el-input v-model="keyModel.key" placeholder="键" />
-        </el-form-item>
-        <el-form-item label="类型" required placeholder="类型">
-          <el-select v-model="keyModel.type" w-full>
-            <el-option label="String" value="string">
-              String
-            </el-option>
-            <el-option label="List" value="list">
-              List
-            </el-option>
-            <el-option label="Set" value="set">
-              Set
-            </el-option>
-            <el-option label="ZSet" value="zset">
-              ZSet
-            </el-option>
-            <el-option label="Hash" value="hash">
-              Hash
-            </el-option>
-            <el-option label="Stream" value="stream">
-              Stream
-            </el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
+      <n-form :model="keyModel">
+        <n-form-item label="键">
+          <n-input v-model:value="keyModel.key" placeholder="请输入键" />
+        </n-form-item>
+        <n-form-item label="类型">
+          <n-select v-model:value="keyModel.type" :options="typeOptions" />
+        </n-form-item>
+      </n-form>
 
-      <template #footer>
-        <el-button @click="handleCloseDialog">
+      <template #action>
+        <n-button @click="handleCloseDialog">
           取消
-        </el-button>
-        <el-button type="primary" @click="handleConfirm">
+        </n-button>
+        <n-button type="primary" @click="handleConfirm">
           确定
-        </el-button>
+        </n-button>
       </template>
-    </el-dialog>
+    </n-modal>
   </div>
 </template>
 
