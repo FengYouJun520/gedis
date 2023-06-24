@@ -170,11 +170,24 @@ module.exports = {
       'ignores': [],
     }],
     'vue/first-attribute-linebreak': 'off',
-    'vue/component-name-in-template-casing': ['error', 'PascalCase'],
-    'vue/component-options-name-casing': ['error', 'PascalCase'],
+    'vue/component-name-in-template-casing': ['error', 'kebab-case', {
+      'registeredComponentsOnly': false,
+      'ignores': [],
+      'globals': ['RouterView', 'RouterLink'],
+    }],
+    'vue/v-on-event-hyphenation': ['error', 'always', {
+      'autofix': true,
+      'ignore': [],
+    }],
+    'vue/component-options-name-casing': ['error', 'kebab-case'],
     'vue/custom-event-name-casing': ['error', 'camelCase'],
     'vue/define-macros-order': ['error', {
-      order: ['defineProps', 'defineEmits'],
+      order: [
+        'defineOptions',
+        'defineProps',
+        'defineEmits',
+        'defineSlots',
+      ],
     }],
     'vue/html-comment-content-spacing': ['error', 'always', {
       exceptions: ['-'],

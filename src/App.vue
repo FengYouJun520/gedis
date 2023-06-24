@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useUiState } from './store/ui'
 import Layout from '@/layout/index.vue'
-import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import { darkTheme } from 'naive-ui'
+import hljs from 'highlight.js/lib/core'
+import { allCommands } from './views/terminal/command'
 
 onMounted(() => {
   window.addEventListener('contextmenu', event => {
@@ -39,22 +40,32 @@ watchEffect(() => {
     document.documentElement.className = ''
   }
 })
+
+hljs.registerLanguage('redis-log', () => ({
+  case_insensitive: true,
+  keywords: Object.keys(allCommands).map(cmd => cmd.toLowerCase()),
+  contains: [
+  ],
+}))
 </script>
 
 <template>
-  <el-config-provider :locale="zhCn">
-    <n-config-provider style="height: 100%;" :theme="darkMode ? darkTheme : null">
-      <n-notification-provider>
+  <n-config-provider
+    style="height: 100%;"
+    :theme="darkMode ? darkTheme : null"
+    :hljs="hljs"
+  >
+    <n-notification-provider>
+      <n-dialog-provider>
         <n-message-provider>
-          <n-dialog-provider>
-            <n-loading-bar-provider>
-              <Layout />
-            </n-loading-bar-provider>
-          </n-dialog-provider>
+          <n-loading-bar-provider>
+            <layout />
+            <n-global-style />
+          </n-loading-bar-provider>
         </n-message-provider>
-      </n-notification-provider>
-    </n-config-provider>
-  </el-config-provider>
+      </n-dialog-provider>
+    </n-notification-provider>
+  </n-config-provider>
 </template>
 
 <style scoped>

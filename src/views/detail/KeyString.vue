@@ -13,6 +13,7 @@ interface StringProps {
 const props = defineProps<StringProps>()
 
 const message = useMessage()
+const dialog = useDialog()
 const id = ref(props.id)
 const db = ref(props.db)
 const key = ref(props.keyLabel)
@@ -35,8 +36,10 @@ const fetchKeyDetail = async () => {
 
   keyDetail.value = detail
   content.value = detail.value
+  rawContent.value = detail.value
 }
 
+const rawContent = ref('')
 const content = ref('')
 const viewRef = ref<InstanceType<typeof FormatViewer> | null>(null)
 
@@ -45,33 +48,42 @@ onMounted(() => {
 })
 
 const handleSave = () => {
-  ElMessageBox.confirm('确定要保存吗？', {
-    type: 'info',
-  }).then(async () => {
-    try {
-      const content = viewRef.value!.getRowContent()
-      if (!content) {
-        return
+  dialog.success({
+    title: '保存',
+    content: '确定要保存吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        const content = viewRef.value!.getRowContent()
+        if (!content) {
+          return
+        }
+
+        const keyinfo: AddKeyInfo = {
+          key: unref(key),
+          type: 'string',
+          value: content,
+        }
+
+        await invoke('set_key', {
+          id: props.id,
+          db: props.db,
+          keyinfo,
+        })
+
+        await fetchKeyDetail()
+      } catch (error) {
+        message.error(error as string)
       }
+    },
+    onNegativeClick: () => {
+      console.log('取消')
+      console.log(toValue(rawContent))
 
-      const keyinfo: AddKeyInfo = {
-        key: unref(key),
-        type: 'string',
-        value: content,
-      }
-
-      await invoke('set_key', {
-        id: props.id,
-        db: props.db,
-        keyinfo,
-      })
-
-      await fetchKeyDetail()
-    } catch (error) {
-      message.error(error as string)
-    }
+      content.value = rawContent.value
+    },
   })
-    .catch(() => {})
 }
 </script>
 
@@ -79,16 +91,16 @@ const handleSave = () => {
   <div flex flex-col gap-y-2>
     <el-form :model="keyDetail">
       <el-form-item prop="value">
-        <FormatViewer
+        <format-viewer
           ref="viewRef"
           :content="content"
           :redis-key="keyLabel"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSave">
+        <n-button type="primary" @click="handleSave">
           保存
-        </el-button>
+        </n-button>
       </el-form-item>
     </el-form>
   </div>

@@ -6,6 +6,7 @@ import { useMitt } from '@/useMitt'
 import { useThemeVars } from 'naive-ui'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
+import { useUiState } from '@/store/ui'
 
 interface TerminalProps {
   tabItem: TabsProps
@@ -32,6 +33,7 @@ const db = ref(props.tabItem.db)
 const terminalRef = ref<HTMLDivElement>()
 const argsRegex = /[\s*]|"(.*)"/
 const tabsState = useTabs()
+const uiStore = useUiState()
 
 onUnmounted(() => {
   window.removeEventListener('resize', resize)
@@ -53,9 +55,10 @@ onMounted(() => {
     tabStopWidth: 4,
     rows: 30,
     cursorBlink: true,
-    cursorStyle: 'block',
+    cursorStyle: 'bar',
     theme: {
       background: themeVars.value.bodyColor,
+      foreground: themeVars.value.textColorBase,
     },
     fontSize: 16,
     allowTransparency: true,
@@ -68,7 +71,8 @@ onMounted(() => {
     terminal.focus()
     fitAddon.fit()
   }, 100)()
-  terminal.writeln('welcome')
+  terminal.writeln(`\x1b[1;35mwelcome ${props.tabItem.name}\x1b[0m`)
+  terminal.write(`[${props.tabItem.name}]$ `)
 
   terminal.onData(key => {
     switch (key) {
@@ -101,6 +105,8 @@ const onExecCmd = async () => {
 
   switch (unref(cmd)) {
   case 'exit':
+    command.value = ''
+    terminal.clear()
     tabsState.removeTab(`${props.tabItem.id}-${props.tabItem.db}`)
     return
   case 'clear':

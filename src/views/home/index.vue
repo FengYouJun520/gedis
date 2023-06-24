@@ -32,7 +32,7 @@ onMounted(async () => {
         h200px
       />
       <div>
-        <n-tag type="success">
+        <n-tag type="success" size="large">
           {{ projectName }}: {{ version }}
         </n-tag>
       </div>

@@ -5,10 +5,10 @@ import Tabs from './Tabs.vue'
 
 <template>
   <el-container h-full>
-    <MenuBar />
+    <menu-bar />
     <el-container>
       <el-main>
-        <Tabs />
+        <tabs />
       </el-main>
     </el-container>
   </el-container>

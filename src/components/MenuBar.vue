@@ -25,11 +25,11 @@ const { pressed } = useResizeAsideWidth(handleMouse, { target: resizeRef, touch:
   >
     <div flex flex-col h-full>
       <!-- 头部 -->
-      <MenuHeader />
+      <menu-header />
       <!-- 内容 -->
-      <el-scrollbar>
-        <Connection v-for="config in redisState.configs" :key="config.id" :config="config" />
-      </el-scrollbar>
+      <n-scrollbar>
+        <connection v-for="config in redisState.configs" :key="config.id" :config="config" />
+      </n-scrollbar>
     </div>
 
     <!-- 拖动条 -->

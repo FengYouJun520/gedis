@@ -212,7 +212,7 @@ createConfigContext({
 </script>
 
 <template>
-  <ElMenu
+  <el-menu
     ref="menuRef"
     :key="config.id"
     ellipsis
@@ -224,29 +224,32 @@ createConfigContext({
       <!-- 标题 -->
       <template #title>
         <div w-full flex-1 flex justify-between items-center>
-          <el-tooltip :content="config.name" :show-after="1000">
-            <span
-              text-nowrap
-              overflow-hidden
-              w-full
-              text-ellipsis
-            >
-              {{ config.name }}
-            </span>
-          </el-tooltip>
+          <n-tooltip :delay="1000">
+            {{ config.name }}
+            <template #trigger>
+              <span
+                text-nowrap
+                overflow-hidden
+                w-full
+                text-ellipsis
+              >
+                {{ config.name }}
+              </span>
+            </template>
+          </n-tooltip>
           <i v-if="loading" class="uiw:loading animate-spin" />
-          <RightOpertions v-else v-model:db="selectDb" :config="config" />
+          <right-opertions v-else v-model:db="selectDb" :config="config" />
         </div>
       </template>
 
       <div v-if="isOpen">
         <!-- 操作 -->
-        <MenuOperation v-model:db="selectDb" :keyspaces="keyspaces" :config="config" />
+        <menu-operation v-model:db="selectDb" :keyspaces="keyspaces" :config="config" />
         <!-- key列表 -->
-        <KeyList />
+        <key-list />
       </div>
     </el-sub-menu>
-  </ElMenu>
+  </el-menu>
 </template>
 
 <style lang="css" scoped>

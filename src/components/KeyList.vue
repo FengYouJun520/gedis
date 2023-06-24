@@ -164,8 +164,8 @@ const handleCommand = (command: string) => {
 
 <template>
   <div mt4>
-    <el-scrollbar>
-      <ElTree
+    <n-scrollbar>
+      <el-tree
         ref="treeRef"
         :data="treeKeys"
         style="max-height: calc(100vh - 252px)"
@@ -190,8 +190,8 @@ const handleCommand = (command: string) => {
             </div>
           </template>
         </template>
-      </ElTree>
-    </el-scrollbar>
+      </el-tree>
+    </n-scrollbar>
 
     <!-- contextmenu -->
     <div

@@ -63,16 +63,16 @@ const handleCommand = (key: string, command: string) => {
           :name="tabItem.key"
           :closable="tabItem.type !== 'home'"
         >
-          <Home v-if="tabItem.type === 'home'" />
-          <Info
+          <home v-if="tabItem.type === 'home'" />
+          <info
             v-if="tabItem.type === 'info'"
             :tab-item="tabItem"
           />
-          <Detail
+          <detail
             v-if="tabItem.type === 'detail'"
             :tab-item="tabItem"
           />
-          <Terminal
+          <terminal
             v-if="tabItem.type === 'terminal'"
             :tab-item="tabItem"
           />
@@ -88,12 +88,15 @@ const handleCommand = (key: string, command: string) => {
                 space-x2
                 :class="{ 'tab--active': tabItem.key === tabsState.currentActive }"
               >
-                <el-tooltip content="ctrl+w关闭标签页" :show-after="1000">
-                  <el-space>
-                    <i :class="tabItem.icon" />
-                    <span>{{ tabItem.label }}</span>
-                  </el-space>
-                </el-tooltip>
+                <n-tooltip :delay="500">
+                  ctrl+w关闭标签页
+                  <template #trigger>
+                    <n-space>
+                      <i :class="tabItem.icon" />
+                      <span>{{ tabItem.label }}</span>
+                    </n-space>
+                  </template>
+                </n-tooltip>
               </div>
               <template #dropdown>
                 <el-dropdown-menu>
