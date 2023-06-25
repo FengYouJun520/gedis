@@ -306,6 +306,10 @@ const handleCancel = () => {
           <n-form-item-gi span="2 m:1" label="分隔符">
             <n-input v-model:value="configModel.split" disabled placeholder="分隔符" />
           </n-form-item-gi>
+
+          <n-form-item-gi span="2 m:1" label="集群" label-placement="left">
+            <n-checkbox v-model:checked="configModel.cluster" />
+          </n-form-item-gi>
         </n-grid>
       </n-form>
 

@@ -67,20 +67,47 @@ pub async fn del_match_keys(
     let (con, config) = redis_state.get_con_and_config(&id)?;
     select_db(config, db, con, &history).await?;
 
-    let mut keys = vec![];
-    // 防止二次mutable
-    {
-        // TODO: 集群模式下删除失败
-        let mut iter: AsyncIter<'_, String> = con.scan_match(&match_key).await?;
-        while let Some(key) = iter.next_item().await {
-            keys.push(key);
-        }
-    }
+    if config.cluster {
+        let clients = get_cluster_clients(config, con).await?;
 
-    con.del(&keys).await.context("删除多个键失败".to_string())?;
-    let mut logs = LogArgs!["del"];
-    logs.extend(keys);
-    history.add_log_vec(logs, config);
+        let mut keys_log = vec![];
+        for client in clients {
+            let mut keys = vec![];
+            let mut cluster_con = client.get_async_connection().await?;
+
+            {
+                let mut iter: AsyncIter<'_, String> = cluster_con.scan_match(&match_key).await?;
+                while let Some(key) = iter.next_item().await {
+                    keys.push(key);
+                }
+                info!(?keys, "当前要删除的keys:");
+            }
+
+            if !keys.is_empty() {
+                con.del(&keys).await?;
+                keys_log.extend(keys);
+            }
+        }
+
+        let mut logs = LogArgs!["del"];
+        logs.extend(keys_log);
+        history.add_log_vec(logs, config);
+    } else {
+        let mut keys = vec![];
+        {
+            let mut iter: AsyncIter<'_, String> = con.scan_match(&match_key).await?;
+            while let Some(key) = iter.next_item().await {
+                keys.push(key);
+            }
+        }
+
+        if !keys.is_empty() {
+            con.del(&keys).await?;
+        }
+        let mut logs = LogArgs!["del"];
+        logs.extend(keys);
+        history.add_log_vec(logs, config);
+    }
 
     info!("删除多个key成功");
     Ok(())
@@ -199,7 +226,7 @@ pub async fn get_keys_by_db(
         let clients = get_cluster_clients(config, con).await?;
         for client in clients {
             let mut con = client.get_async_connection().await?;
-            let mut iter: AsyncIter<'_, String> = con.scan().await?;
+            let mut iter: AsyncIter<'_, String> = con.scan_match("*").await?;
             while let Some(val) = iter.next_item().await {
                 keys.push(val);
             }
@@ -215,7 +242,7 @@ pub async fn get_keys_by_db(
         }
     }
 
-    info!("获取指定数据库key列表信息成功");
+    info!(?keys, "获取指定数据库key列表信息成功");
 
     Ok(keys)
 }

@@ -1,5 +1,7 @@
 use csv::StringRecord;
+use redis::{from_redis_value, FromRedisValue};
 use serde::{Deserialize, Serialize};
+use std::io;
 
 use crate::error::SerializeError;
 
@@ -53,11 +55,20 @@ pub struct NodesInfo {
     nodes: Vec<NodeInfo>,
 }
 
-impl TryFrom<Vec<StringRecord>> for NodesInfo {
-    type Error = SerializeError;
+impl TryFrom<String> for NodesInfo {
+    type Error = redis::RedisError;
 
-    fn try_from(value: Vec<StringRecord>) -> Result<Self, Self::Error> {
-        let nodes: Vec<NodeInfo> = value.into_iter().flat_map(NodeInfo::try_from).collect();
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let records = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .delimiter(b' ')
+            .double_quote(false)
+            .flexible(true)
+            .from_reader(value.as_bytes())
+            .records()
+            .collect::<Result<Vec<StringRecord>, csv::Error>>()
+            .map_err(io::Error::from)?;
+        let nodes: Vec<NodeInfo> = records.into_iter().flat_map(NodeInfo::try_from).collect();
         Ok(NodesInfo { nodes })
     }
 }
@@ -69,5 +80,17 @@ impl NodesInfo {
             .filter(|n| n.is_master())
             .cloned()
             .collect()
+    }
+
+    pub fn nodes(&self) -> Vec<NodeInfo> {
+        self.nodes.to_vec()
+    }
+}
+
+impl FromRedisValue for NodesInfo {
+    fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {
+        let s: String = from_redis_value(v)?;
+        let info = s.try_into()?;
+        Ok(info)
     }
 }

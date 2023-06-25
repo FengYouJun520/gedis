@@ -2,7 +2,6 @@ pub mod conn;
 pub mod key_ops;
 pub mod state;
 pub use conn::*;
-use csv::StringRecord;
 pub use key_ops::*;
 use redis::ConnectionInfo;
 pub use state::*;
@@ -34,18 +33,8 @@ pub async fn get_cluster_clients(
     config: &RedisConfig,
     con: &mut RedisConnection,
 ) -> Result<Vec<redis::Client>> {
-    let mut clients = vec![];
-    let nodes: String = redis::cmd("CLUSTER").arg("nodes").query_async(con).await?;
-    let records = csv::ReaderBuilder::new()
-        .has_headers(false)
-        .delimiter(b' ')
-        .double_quote(false)
-        .flexible(true)
-        .from_reader(nodes.as_bytes())
-        .records()
-        .collect::<Result<Vec<StringRecord>, csv::Error>>()?;
+    let nodes: NodesInfo = redis::cmd("CLUSTER").arg("nodes").query_async(con).await?;
 
-    let nodes: NodesInfo = records.try_into()?;
     let connection_infos: Vec<_> = nodes
         .master_nodes()
         .into_iter()
@@ -62,9 +51,11 @@ pub async fn get_cluster_clients(
         })
         .collect();
 
+    let mut clients = vec![];
     for connection_info in connection_infos {
         let client = redis::Client::open(connection_info)?;
-        clients.push(client)
+        clients.push(client);
     }
+
     Ok(clients)
 }

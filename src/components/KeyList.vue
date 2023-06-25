@@ -32,6 +32,9 @@ const treeKeys = computed<TreeOptionExt[]>(() => {
   return generateOption(configOps?.treeKeys.value || [])
 })
 
+console.log(treeKeys)
+
+
 const id = computed(() => configOps!.config.id)
 const db = computed(() => unref(configOps!.db))
 const isCurrent = (otherId: string) => unref(id) === otherId
