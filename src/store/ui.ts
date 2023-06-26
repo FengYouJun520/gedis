@@ -1,5 +1,5 @@
 
-const MIN_WIDTH = 250
+const MIN_WIDTH = 280
 const MAX_WIDTH = 800
 
 interface UIState {

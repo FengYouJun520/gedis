@@ -160,6 +160,7 @@ const parseResult = (result: any) => {
     }
   } else {
     terminal.writeln(`\x1B[33m${result}\x1B[0m`)
+    terminal.write(`[${props.tabItem.name}]$ `)
   }
 }
 </script>

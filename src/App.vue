@@ -4,6 +4,7 @@ import Layout from '@/layout/index.vue'
 import { darkTheme } from 'naive-ui'
 import hljs from 'highlight.js/lib/core'
 import { allCommands } from './views/terminal/command'
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 
 onMounted(() => {
   window.addEventListener('contextmenu', event => {
@@ -50,22 +51,24 @@ hljs.registerLanguage('redis-log', () => ({
 </script>
 
 <template>
-  <n-config-provider
-    style="height: 100%;"
-    :theme="darkMode ? darkTheme : null"
-    :hljs="hljs"
-  >
-    <n-notification-provider>
-      <n-dialog-provider>
-        <n-message-provider>
-          <n-loading-bar-provider>
-            <layout />
-            <n-global-style />
-          </n-loading-bar-provider>
-        </n-message-provider>
-      </n-dialog-provider>
-    </n-notification-provider>
-  </n-config-provider>
+  <el-config-provider :locale="zhCn">
+    <n-config-provider
+      style="height: 100%;"
+      :theme="darkMode ? darkTheme : null"
+      :hljs="hljs"
+    >
+      <n-notification-provider>
+        <n-dialog-provider>
+          <n-message-provider>
+            <n-loading-bar-provider>
+              <layout />
+              <n-global-style />
+            </n-loading-bar-provider>
+          </n-message-provider>
+        </n-dialog-provider>
+      </n-notification-provider>
+    </n-config-provider>
+  </el-config-provider>
 </template>
 
 <style scoped>

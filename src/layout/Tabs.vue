@@ -5,9 +5,10 @@ import Home from '@/views/home/index.vue'
 import Info from '@/views/info/index.vue'
 import Detail from '@/views/detail/index.vue'
 import Terminal from '@/views/terminal/index.vue'
+import { useThemeVars } from 'naive-ui'
 
 const tabsState = useTabs()
-
+const themeVars = useThemeVars()
 const handleClick = (pane: TabsPaneContext, _event: Event) => {
   tabsState.setActive(pane.paneName?.toString() || '')
 }
@@ -55,7 +56,7 @@ const handleCommand = (key: string, command: string) => {
       @tab-click="handleClick"
       @tab-remove="handleRemove"
     >
-      <n-scrollbar>
+      <n-scrollbar style="height: calc(100vh - 70px);">
         <el-tab-pane
           v-for="tabItem in tabsState.tabs"
           :key="tabItem.key"
@@ -91,10 +92,10 @@ const handleCommand = (key: string, command: string) => {
                 <n-tooltip :delay="500">
                   ctrl+w关闭标签页
                   <template #trigger>
-                    <n-space>
+                    <div space-x-2>
                       <i :class="tabItem.icon" />
                       <span>{{ tabItem.label }}</span>
-                    </n-space>
+                    </div>
                   </template>
                 </n-tooltip>
               </div>
@@ -146,6 +147,15 @@ const handleCommand = (key: string, command: string) => {
   height: 100%;
 }
 .tab--active {
-  color: var(--el-color-primary);
+  color: v-bind("themeVars.primaryColor");
+}
+
+:deep(.el-tabs__item) .is-icon-close {
+  color: v-bind("themeVars.primaryColor");
+}
+
+:deep(.el-tabs__item) .is-icon-close:hover {
+  color: v-bind("themeVars.primaryColorHover");
+  background-color: v-bind("themeVars.closeColorPressed");
 }
 </style>

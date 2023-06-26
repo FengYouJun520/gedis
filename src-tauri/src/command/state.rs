@@ -108,6 +108,7 @@ const MAX_HISTORY: usize = 5000;
 #[derive(Debug, Default, Clone)]
 pub struct History(pub Arc<std::sync::Mutex<Vec<String>>>);
 
+
 impl History {
     pub fn add_log(&self, value: String, config: &RedisConfig) {
         let mut histories = self.0.lock().unwrap();

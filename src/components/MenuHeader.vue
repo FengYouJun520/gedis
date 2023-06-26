@@ -201,7 +201,7 @@ const clearLogs = async () => {
             <n-input v-model:value="configData.name" placeholder="localhost@6379" />
           </n-form-item-gi>
           <n-form-item-gi span="2 m:1" label="分隔符">
-            <n-input v-model:value="configData.split" placeholder=":" />
+            <n-input v-model:value="configData.split" placeholder=":" disabled />
           </n-form-item-gi>
 
           <n-form-item-gi span="2 m:1" label="集群" label-placement="left">

@@ -1,10 +1,7 @@
 <script setup lang="tsx">
 import { useTabs } from '@/store/tabs'
-import { TreeNode } from '@/types/redis'
 import { useMitt } from '@/useMitt'
 import { clipboard, invoke } from '@tauri-apps/api'
-import Node from 'element-plus/es/components/tree/src/model/node'
-import { TreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
 import { useConfig } from './useConfig'
 import { DropdownOption, TreeOption } from 'naive-ui'
 import { RenderSwitcherIcon, TreeNodeProps } from 'naive-ui/es/tree/src/interface'
@@ -15,6 +12,7 @@ type TreeOptionExt = TreeOption & {
 }
 
 const message = useMessage()
+const dialog = useDialog()
 const tabsState = useTabs()
 const mitt = useMitt()
 const configOps = useConfig()
@@ -31,9 +29,6 @@ const treeKeys = computed<TreeOptionExt[]>(() => {
 
   return generateOption(configOps?.treeKeys.value || [])
 })
-
-console.log(treeKeys)
-
 
 const id = computed(() => configOps!.config.id)
 const db = computed(() => unref(configOps!.db))
@@ -71,54 +66,67 @@ const handleNodeClick = (data: TreeOptionExt) => {
 }
 
 const handleDeleteKey = async () => {
-  if (!selectedOption.value) {
-    return
-  }
+  dialog.error({
+    title: '删除键',
+    content: '是否删除该键？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      if (!selectedOption.value) {
+        return
+      }
 
-  try {
-    await invoke('del_key', {
-      id: unref(id),
-      db: unref(db),
-      key: selectedOption.value.key,
-    })
+      try {
+        await invoke('del_key', {
+          id: unref(id),
+          db: unref(db),
+          key: selectedOption.value.key,
+        })
 
-    message.success(`删除键: ${selectedOption.value.value}成功`)
-    // 如果有选项卡，删除选项卡
-    tabsState.removeTab(
-      `${unref(id)}-${unref(db)}-${selectedOption.value.value}`
-    )
+        message.success(`删除键: ${selectedOption.value.value}成功`)
+        // 如果有选项卡，删除选项卡
+        tabsState.removeTab(
+          `${unref(id)}-${unref(db)}-${selectedOption.value.value}`
+        )
 
-    mitt.emit('refresh', { id: unref(id), db: unref(db) })
-  } catch (error) {
-    message.error(error as string)
-  }
+        mitt.emit('refresh', { id: unref(id), db: unref(db) })
+      } catch (error) {
+        message.error(error as string)
+      }
+    },
+  })
 }
 
-// TODO: 删除失败bug
 const handleDeleteFolder = async () => {
-  if (!selectedOption.value) {
-    return
-  }
+  dialog.error({
+    title: '删除文件',
+    content: '是否删除该文件？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      if (!selectedOption.value) {
+        return
+      }
 
-  try {
-    console.log(selectedOption.value)
+      try {
+        await invoke('del_match_keys', {
+          id: unref(id),
+          db: unref(db),
+          matchKey: `${selectedOption.value.value}*`,
+        })
 
-    await invoke('del_match_keys', {
-      id: unref(id),
-      db: unref(db),
-      matchKey: `${selectedOption.value.value}*`,
-    })
+        message.success(`删除文件: ${selectedOption.value.value}*成功`)
+        // 如果有选项卡，删除目录下所有相关的选项卡
+        tabsState.removeTab(
+          `${unref(id)}-${unref(db)}-${selectedOption.value.value}`
+        )
 
-    message.success(`删除键: ${selectedOption.value.value}成功`)
-    // 如果有选项卡，删除目录下所有相关的选项卡
-    tabsState.removeTab(
-      `${unref(id)}-${unref(db)}-${selectedOption.value.value}`
-    )
-
-    mitt.emit('refresh', { id: unref(id), db: unref(db) })
-  } catch (error) {
-    message.error(error as string)
-  }
+        mitt.emit('refresh', { id: unref(id), db: unref(db) })
+      } catch (error) {
+        message.error(error as string)
+      }
+    },
+  })
 }
 
 const handleCopyKey = () => {
@@ -137,7 +145,6 @@ const selectedOption = ref<TreeOptionExt>()
 const nodeProps: TreeNodeProps = ({ option }) => ({
   onClick() {
     if (option.isLeaf) {
-      message.info(`[Click] ${option.label}`)
       handleNodeClick(option as TreeOptionExt)
     }
   },
@@ -212,7 +219,6 @@ const handleCommand = (command: string) => {
 
 const handleSelect = (key: string) => {
   showDropdown.value = false
-  console.log(key)
   handleCommand(key)
 }
 

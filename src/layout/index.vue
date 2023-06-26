@@ -4,14 +4,12 @@ import Tabs from './Tabs.vue'
 </script>
 
 <template>
-  <el-container h-full>
+  <n-layout has-sider embedded h-full>
     <menu-bar />
-    <el-container>
-      <el-main>
-        <tabs />
-      </el-main>
-    </el-container>
-  </el-container>
+    <n-layout :native-scrollbar="false">
+      <tabs />
+    </n-layout>
+  </n-layout>
 </template>
 
 <style lang="css" scoped>

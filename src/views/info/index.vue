@@ -95,7 +95,7 @@ const infoListData = computed(() => Object.keys(unref(info))
 <template>
   <div flex flex-col gap-y-6 overflow-hidden>
     <!-- 自动刷新 -->
-    <n-space>
+    <n-space ml-6>
       <n-tag type="primary">
         自动刷新
       </n-tag>
@@ -223,35 +223,35 @@ const infoListData = computed(() => Object.keys(unref(info))
           </n-card>
         </n-gi>
       </n-grid>
-    </n-card>
 
-    <n-card embedded>
-      <template #header>
-        <n-space>
-          <i class="carbon:text-link-analysis" />
-          <span>键值统计</span>
-        </n-space>
-      </template>
-      <n-data-table :data="keyspaceData" :columns="keyspaceColumns" />
-    </n-card>
-
-    <n-card embedded>
-      <template #header>
-        <n-space justify="space-between">
+      <n-card embedded>
+        <template #header>
           <n-space>
-            <i class="mdi:information" />
-            <span>Redis信息集合</span>
+            <i class="carbon:text-link-analysis" />
+            <span>键值统计</span>
           </n-space>
+        </template>
+        <n-data-table :data="keyspaceData" :columns="keyspaceColumns" />
+      </n-card>
 
-          <n-input v-model:value="search" placeholder="搜索">
-            <template #suffix>
-              <i class="ant-design:search-outlined" />
-            </template>
-          </n-input>
-        </n-space>
-      </template>
+      <n-card embedded>
+        <template #header>
+          <n-space justify="space-between">
+            <n-space>
+              <i class="mdi:information" />
+              <span>Redis信息集合</span>
+            </n-space>
 
-      <n-data-table :data="infoListData" :columns="infoListColumns" />
+            <n-input v-model:value="search" placeholder="搜索">
+              <template #suffix>
+                <i class="ant-design:search-outlined" />
+              </template>
+            </n-input>
+          </n-space>
+        </template>
+
+        <n-data-table :data="infoListData" :columns="infoListColumns" />
+      </n-card>
     </n-card>
   </div>
 </template>

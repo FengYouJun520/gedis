@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import KeyList from '@/components/KeyList.vue'
 import { TabsProps, useTabs } from '@/store/tabs'
 import { invoke } from '@tauri-apps/api'
@@ -9,13 +9,14 @@ import { createConfigContext } from './useConfig'
 import { useMitt } from '@/useMitt'
 import RightOperations from './RightOperations.vue'
 import MenuOperation from './MenuOperation.vue'
+import { useThemeVars } from 'naive-ui'
 
 interface ConnectionProps {
   config: RedisConfig
 }
 
 const props = defineProps<ConnectionProps>()
-
+const themeVars = useThemeVars()
 const message = useMessage()
 const mitt = useMitt()
 const tabsState = useTabs()
@@ -256,5 +257,9 @@ createConfigContext({
 <style lang="css" scoped>
 .el-menu {
   border-right: none;
+}
+
+:deep(.el-sub-menu__title):hover {
+  background-color: v-bind("themeVars.tagColor") ;
 }
 </style>

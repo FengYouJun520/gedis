@@ -21,7 +21,7 @@ export const useTabs = defineStore('tabs', {
       id: 'home',
       db: 0,
       key: 'home',
-      value: '',
+      value: 'home',
       name: 'localhost',
       label: '首页',
       type: 'home',

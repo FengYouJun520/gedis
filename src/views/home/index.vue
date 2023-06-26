@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shell, app } from '@tauri-apps/api'
 
-const githubUrl = 'https://github.com/FengYouJun520'
+const githubUrl = 'https://github.com/FengYouJun520/gedis'
 const openGithub = () => {
   shell.open(githubUrl)
 }
@@ -37,7 +37,7 @@ onMounted(async () => {
         </n-tag>
       </div>
       <div flex items-center>
-        <n-button size="large" circle text @click="openGithub">
+        <n-button size="large" circle tertiary @click="openGithub">
           <template #icon>
             <i
               class="mdi:github"
