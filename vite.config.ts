@@ -68,7 +68,7 @@ export default defineConfig({
       },
     }),
     Components({
-      dts: false,
+      dts: resolve(__dirname, 'src/types/components.d.ts'),
       resolvers: [ElementPlusResolver(), NaiveUiResolver()],
     }),
   ],

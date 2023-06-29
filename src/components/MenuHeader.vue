@@ -302,7 +302,6 @@ const clearLogs = async () => {
         </div>
       </div>
     </n-modal>
-
     <n-modal
       v-model:show="visibleLog"
       preset="card"

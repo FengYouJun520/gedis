@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import { useTabs } from '@/store/tabs'
 import type { TabPaneName, TabsPaneContext } from 'element-plus'
 import Home from '@/views/home/index.vue'
@@ -6,9 +6,11 @@ import Info from '@/views/info/index.vue'
 import Detail from '@/views/detail/index.vue'
 import Terminal from '@/views/terminal/index.vue'
 import { useThemeVars } from 'naive-ui'
+import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 
 const tabsState = useTabs()
 const themeVars = useThemeVars()
+
 const handleClick = (pane: TabsPaneContext, _event: Event) => {
   tabsState.setActive(pane.paneName?.toString() || '')
 }
@@ -26,7 +28,57 @@ onMounted(async () => {
   })
 })
 
+const showDropdown = ref(false)
+const xRef = ref(0)
+const yRef = ref(0)
+const currentKey = ref('')
+
+const handleContextMenu = (e: MouseEvent, key: string) => {
+  e.preventDefault()
+  showDropdown.value = false
+  nextTick().then(() => {
+    currentKey.value = key
+    showDropdown.value = true
+    xRef.value = e.clientX
+    yRef.value = e.clientY
+  })
+}
+
+const onClickoutside = () => {
+  showDropdown.value = false
+}
+
+const dropdownOps: DropdownMixedOption[] = [
+  {
+    key: 'close',
+    label: '关闭当前选项卡',
+    icon: () => <i class="mdi:close" />,
+  },
+  {
+    key: 'other',
+    label: '关闭其他选项卡',
+    icon: () => <i class="mdi:close" />,
+  },
+  {
+    key: 'left',
+    label: '关闭左侧选项卡',
+    icon: () => <i class="mdi:close" />,
+  },
+  {
+    key: 'right',
+    label: '关闭右侧选项卡',
+    icon: () => <i class="mdi:close" />,
+  },
+]
+
+const handleSelect = (command: string) => {
+  showDropdown.value = false
+  handleCommand(currentKey.value, command)
+}
+
 const handleCommand = (key: string, command: string) => {
+  console.log(key, command)
+
   switch (command) {
   case 'close':
     tabsState.removeTab(key)
@@ -50,7 +102,7 @@ const handleCommand = (key: string, command: string) => {
   <div h-full w-full>
     <el-tabs
       v-model="tabsState.currentActive"
-      type="border-card"
+      type="card"
       w-full
       h-full
       @tab-click="handleClick"
@@ -78,60 +130,37 @@ const handleCommand = (key: string, command: string) => {
             :tab-item="tabItem"
           />
           <template #label>
-            <el-dropdown
-              h-full
-              trigger="contextmenu"
-              @command="(command: string) => handleCommand(tabItem.key, command)"
+            <div
+              inline-flex
+              items-center
+              space-x2
+              :class="{ 'tab--active': tabItem.key === tabsState.currentActive }"
+              @contextmenu="e => handleContextMenu(e, tabItem.key)"
             >
-              <div
-                inline-flex
-                items-center
-                space-x2
-                :class="{ 'tab--active': tabItem.key === tabsState.currentActive }"
-              >
-                <n-tooltip :delay="500">
-                  ctrl+w关闭标签页
-                  <template #trigger>
-                    <div space-x-2>
-                      <i :class="tabItem.icon" />
-                      <span>{{ tabItem.label }}</span>
-                    </div>
-                  </template>
-                </n-tooltip>
-              </div>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="close">
-                    <div flex items-center>
-                      <i class="mdi:close" />
-                      <span>关闭</span>
-                    </div>
-                  </el-dropdown-item>
-                  <el-dropdown-item command="other">
-                    <div flex items-center>
-                      <i class="mdi:close" />
-                      <span>关闭其他选项卡</span>
-                    </div>
-                  </el-dropdown-item>
-                  <el-dropdown-item command="left">
-                    <div flex items-center>
-                      <i class="mdi:close" />
-                      <span>关闭左侧选项卡</span>
-                    </div>
-                  </el-dropdown-item>
-                  <el-dropdown-item command="right">
-                    <div flex items-center>
-                      <i class="mdi:close" />
-                      <span>关闭右侧选项卡</span>
-                    </div>
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
+              <n-tooltip :delay="500">
+                按Ctrl+w关闭
+                <template #trigger>
+                  <div space-x-2>
+                    <i :class="tabItem.icon" />
+                    <span>{{ tabItem.label }}</span>
+                  </div>
+                </template>
+              </n-tooltip>
+            </div>
           </template>
         </el-tab-pane>
       </n-scrollbar>
     </el-tabs>
+    <n-dropdown
+      inverted
+      trigger="manual"
+      :show="showDropdown"
+      :x="xRef"
+      :y="yRef"
+      :options="dropdownOps"
+      @clickoutside="onClickoutside"
+      @select="handleSelect"
+    />
   </div>
 </template>
 
@@ -145,9 +174,6 @@ const handleCommand = (key: string, command: string) => {
 
 .el-tab-pane {
   height: 100%;
-}
-.tab--active {
-  color: v-bind("themeVars.primaryColor");
 }
 
 :deep(.el-tabs__item) .is-icon-close {
