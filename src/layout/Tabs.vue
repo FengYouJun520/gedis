@@ -77,8 +77,6 @@ const handleSelect = (command: string) => {
 }
 
 const handleCommand = (key: string, command: string) => {
-  console.log(key, command)
-
   switch (command) {
   case 'close':
     tabsState.removeTab(key)
@@ -112,7 +110,7 @@ const handleCommand = (key: string, command: string) => {
         <el-tab-pane
           v-for="tabItem in tabsState.tabs"
           :key="tabItem.key"
-          class="px-4"
+          px-4
           :name="tabItem.key"
           :closable="tabItem.type !== 'home'"
         >
