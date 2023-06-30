@@ -1,36 +1,24 @@
 <script setup lang="ts">
 interface ViewerTextProps {
-  content: string
   readonly?: boolean
 }
 
-const props = defineProps<ViewerTextProps>()
-
-const message = useMessage()
-const newContent = ref(props.content)
-
-onMounted(() => {
-  newContent.value = props.content
-})
-watch(() => props.content, value => {
-  newContent.value = value
-})
+defineProps<ViewerTextProps>()
+const content = defineModel<string>({ required: true })
 
 defineExpose({
-  getContent: () => unref(newContent),
-  getRowContent: () => unref(newContent),
+  getContent: () => unref(content),
+  getRowContent: () => unref(content),
 })
 </script>
 
 <template>
-  <div>
-    <el-input
-      v-model="newContent"
-      type="textarea"
-      :readonly="readonly"
-      :autosize="{ minRows: 16, maxRows: 18 }"
-    />
-  </div>
+  <n-input
+    v-model:value="content"
+    type="textarea"
+    :readonly="readonly"
+    :autosize="{ minRows: 16, maxRows: 20 }"
+  />
 </template>
 
 <style lang="css" scoped>

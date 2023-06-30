@@ -3,13 +3,12 @@ import { useUiState } from '@/store/ui'
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
 
 interface ViewerJsonProps {
-  content: string
   readonly?: boolean
   showLineNumber?: boolean
 }
 
 const props = defineProps<ViewerJsonProps>()
-
+const content = defineModel<string>({ required: true })
 const message = useMessage()
 const uiState = useUiState()
 const editorRef = ref<HTMLDivElement>()
@@ -17,16 +16,20 @@ let monacoEditor: monaco.editor.IStandaloneCodeEditor
 
 const jsonContent = computed(() => {
   try {
-    const obj = JSON.parse(props.content)
+    const obj = JSON.parse(unref(content))
     return JSON.stringify(obj, null, 2)
   } catch (error) {
-    return props.content
+    return unref(content)
   }
 })
 
-
-watch(() => props.content, () => {
-  monacoEditor.setValue(unref(jsonContent))
+// 解决初始化显示的是json时内容没有显示的bug
+watch(content, () => {
+  try {
+    monacoEditor.setValue(jsonContent.value)
+  } catch (error) {
+    return unref(content)
+  }
 })
 
 watch(() => props.showLineNumber, showLine => {
@@ -79,7 +82,6 @@ onMounted(() => {
       minimap: {
         enabled: true,
       },
-      // vertical line
       guides: {
         indentation: true,
         highlightActiveIndentation: true,
@@ -95,18 +97,11 @@ onMounted(() => {
   }
 })
 
-onUnmounted(() => {
-  if (monacoEditor) {
-    monacoEditor.dispose()
-  }
-})
+onUnmounted(() => monacoEditor && monacoEditor.dispose())
 
 
 defineExpose({
-  getContent: () => {
-    const content = monacoEditor.getValue()
-    return content
-  },
+  getContent: () => monacoEditor.getValue(),
   getRowContent: () => {
     const content = monacoEditor.getValue()
     try {
@@ -145,9 +140,9 @@ watch(() => uiState.theme, newTheme => {
 </script>
 
 <template>
-  <el-card>
+  <n-card>
     <div ref="editorRef" class="monaco-editor" />
-  </el-card>
+  </n-card>
 </template>
 
 <style lang="css" scoped>

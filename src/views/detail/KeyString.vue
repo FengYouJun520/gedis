@@ -6,7 +6,7 @@ import FormatViewer from './FormatViewer.vue'
 interface StringProps {
   id: string
   db: number
-  keyLabel: string
+  keyValue: string
   keyinfo: KeyInfo
 }
 
@@ -16,7 +16,7 @@ const message = useMessage()
 const dialog = useDialog()
 const id = ref(props.id)
 const db = ref(props.db)
-const key = ref(props.keyLabel)
+const key = ref(props.keyValue)
 
 const keyDetail = ref<KeyContentDetail<string>>({
   key: unref(key),
@@ -78,9 +78,6 @@ const handleSave = () => {
       }
     },
     onNegativeClick: () => {
-      console.log('取消')
-      console.log(toValue(rawContent))
-
       content.value = rawContent.value
     },
   })
@@ -88,22 +85,20 @@ const handleSave = () => {
 </script>
 
 <template>
-  <div>
-    <el-form :model="keyDetail">
-      <el-form-item prop="value">
-        <format-viewer
-          ref="viewRef"
-          :content="content"
-          :redis-key="keyLabel"
-        />
-      </el-form-item>
-      <el-form-item>
-        <n-button type="primary" @click="handleSave">
-          保存
-        </n-button>
-      </el-form-item>
-    </el-form>
-  </div>
+  <n-form :model="keyDetail" :show-label="false">
+    <n-form-item path="value">
+      <format-viewer
+        ref="viewRef"
+        v-model="content"
+        :redis-key="keyValue"
+      />
+    </n-form-item>
+    <n-form-item>
+      <n-button type="primary" @click="handleSave">
+        保存
+      </n-button>
+    </n-form-item>
+  </n-form>
 </template>
 
 <style lang="css" scoped>

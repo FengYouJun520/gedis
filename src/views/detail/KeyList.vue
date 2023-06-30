@@ -12,7 +12,7 @@ interface ListProps {
 }
 
 const props = defineProps<ListProps>()
-
+const dialog = useDialog()
 const message = useMessage()
 const id = computed(() => props.id)
 const db = computed(() => props.db)
@@ -61,7 +61,7 @@ const columns: DataTableColumns = [
         <n-space size="small">
           <n-tooltip delay={1000} v-slots={{
             trigger: () => (
-              <n-button text size="small" onClick={() => copyValue(rowData.value)}
+              <n-button text size="small" onClick={() => copyValue(rowData)}
                 v-slots={{
                   icon: () => (
                     <span>
@@ -76,7 +76,7 @@ const columns: DataTableColumns = [
           </n-tooltip>
           <n-tooltip delay={1000} v-slots={{
             trigger: () => (
-              <n-button text size="small" onClick={() => editValueClick(rowData.value)}
+              <n-button text size="small" onClick={() => editValueClick(rowData)}
                 v-slots={{
                   icon: () => (
                     <span>
@@ -137,29 +137,32 @@ watch(() => props.keyinfo, async () => {
   }
 })
 
-const copyValue = (value: any) => {
-  clipboard.writeText(value)
+const copyValue = (rawData: any) => {
+  clipboard.writeText(rawData.value)
 }
 
 const deleteValueByKey = (rawData: any) => {
   const value = rawData.value
-  ElMessageBox.confirm('你确定要删除该行吗？', {
-    type: 'warning',
-  }).then(async () => {
-    try {
-      await invoke('del_key_by_value', {
-        id: unref(id),
-        db: unref(db),
-        key: unref(key),
-        value,
-      })
+  dialog.warning({
+    title: '删除行',
+    content: '你确定要删除该行吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await invoke('del_key_by_value', {
+          id: unref(id),
+          db: unref(db),
+          key: unref(key),
+          value,
+        })
 
-      await fetchKeyDetail()
-    } catch (error) {
-      message.error(error as string)
-    }
+        await fetchKeyDetail()
+      } catch (error) {
+        message.error(error as string)
+      }
+    },
   })
-    .catch(() => {})
 }
 
 const addValueClick = () => {
@@ -172,10 +175,10 @@ const addValueClick = () => {
   }
 }
 
-const editValueClick = (value: any) => {
+const editValueClick = (rawData: any) => {
   isEdit.value = true
   showDialog.value = true
-  addKeyinfo.value.value = value
+  addKeyinfo.value.value = rawData.value
 }
 
 const handleCancel = () => {
@@ -183,9 +186,9 @@ const handleCancel = () => {
   showDialog.value = false
 }
 
-const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
+const handleConfirm = async (keyinfo: AddKeyInfo) => {
   try {
-    if (!valid || !keyinfo.value) {
+    if (!keyinfo.value) {
       return
     }
 
@@ -226,7 +229,7 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
     <n-data-table :data="listValue" bordered :columns="columns" />
 
     <form-data-view
-      v-model="showDialog"
+      v-model:show="showDialog"
       :model="addKeyinfo"
       :is-edit="isEdit"
       :title="isEdit ? '修改行' : '添加新行'"

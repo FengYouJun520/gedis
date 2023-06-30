@@ -2,16 +2,16 @@
 import { clipboard } from '@tauri-apps/api'
 import ViewerText from './ViewerText.vue'
 import ViewerJson from './ViewerJson.vue'
+import { SelectOption } from 'naive-ui'
 
 interface FormatViewProps {
-  content: string
   readonly?: boolean
-  selected?: string
+  showFormat?: string
 }
 
 const props = defineProps<FormatViewProps>()
-
-const selectComponent = ref('text')
+const content = defineModel<string>({ required: true })
+const selectComponent = ref(props.showFormat || 'text')
 const viewRef = ref<InstanceType<typeof ViewerJson|typeof ViewerText>|null>(null)
 const lineNumber = ref(false)
 
@@ -27,10 +27,6 @@ const views = [
     component: ViewerJson,
   },
 ]
-
-watch(props, newprops => {
-  selectComponent.value = newprops.selected || 'text'
-})
 
 const copyContent = () => {
   const newContent = viewRef.value!.getContent()
@@ -51,57 +47,49 @@ const viewComponentMap = computed(() => {
   return viewMap
 })
 
-const viewComponent = shallowRef(ViewerText)
-
-const handleChange = (value: string) => {
-  selectComponent.value = value
-}
+const viewComponent = shallowRef(selectComponent.value === 'text' ? ViewerText : ViewerJson)
 
 watch(selectComponent, value => {
   nextTick(() => {
     viewComponent.value = viewComponentMap.value[value]
   })
 })
+
+const options = computed<SelectOption[]>(() => views.map(view => ({
+  label: view.label,
+  value: view.value,
+})))
 </script>
 
 <template>
   <div w-full flex flex-col space-y-5>
-    <div flex items-center space-x-2>
-      <el-select v-model="selectComponent" @change="handleChange">
-        <el-option
-          v-for="view in views"
-          :key="view.value"
-          :label="view.label"
-          :value="view.value"
-        >
-          <template #prefix>
+    <n-grid :x-gap="12" :cols="24" responsive="screen" item-responsive>
+      <n-gi span="8">
+        <n-select v-model:value="selectComponent" :options="options" />
+      </n-gi>
+      <n-gi span="16" flex items-center space-x-2>
+        <n-tag type="primary" :bordered="false">
+          Size: {{ content.length }}B
+        </n-tag>
+        <n-button tertiary size="small" @click="copyContent">
+          复制
+          <template #icon>
             <span>
-              <i class="ant-design:clear-outlined" />
+              <i class="ant-design:copy-outlined" />
             </span>
           </template>
-        </el-option>
-      </el-select>
-      <el-tag>
-        Size: {{ content.length }}B
-      </el-tag>
-      <el-button text size="small" @click="copyContent">
-        复制
-        <template #icon>
-          <span>
-            <i class="ant-design:copy-outlined" />
-          </span>
+        </n-button>
+        <template v-if="selectComponent === 'json'">
+          <span>显示行号: </span>
+          <n-switch v-model:value="lineNumber" />
         </template>
-      </el-button>
-      <template v-if="selectComponent === 'json'">
-        <span>显示行号: </span>
-        <el-switch v-model="lineNumber" />
-      </template>
-    </div>
+      </n-gi>
+    </n-grid>
 
     <component
       :is="viewComponent"
       ref="viewRef"
-      :content="content"
+      v-model="content"
       :readonly="readonly"
       :show-line-number="lineNumber"
     />

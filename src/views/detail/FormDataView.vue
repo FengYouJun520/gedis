@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { AddKeyInfo } from '@/types/redis'
-import type { ElForm } from 'element-plus'
 import FormatViewer from './FormatViewer.vue'
-
+import { FormInst } from 'naive-ui'
 interface FormDataViewProps {
   title: string
-  modelValue: boolean
   model: AddKeyInfo
   isEdit: boolean
   readonly?: boolean
@@ -13,12 +11,12 @@ interface FormDataViewProps {
 
 const props = defineProps<FormDataViewProps>()
 const emit = defineEmits<{
-(e: 'update:modelValue', show: boolean): void,
 (e: 'cancel'): void,
-(e: 'confirm', addKeyinfo: AddKeyInfo, valid: boolean): void
+(e: 'confirm', addKeyinfo: AddKeyInfo): void
 }>()
+const show = defineModel<boolean>('show', { required: true })
 const message = useMessage()
-const formRef = ref<InstanceType<typeof ElForm> | null>(null)
+const formRef = ref<FormInst | null>(null)
 const addKeyinfo = ref<AddKeyInfo>({ ...props.model })
 const viewRef = ref<InstanceType<typeof FormatViewer> | null>(null)
 const content = ref('')
@@ -34,59 +32,58 @@ const handleCancel = () => {
 }
 
 const handleConfirm = () => {
-  formRef.value?.validate(valid => {
-    if (!valid) {
+  formRef.value?.validate(errors => {
+    if (errors) {
       message.error('校验失败')
-      emit('confirm', unref(addKeyinfo), valid)
       return
     }
 
     addKeyinfo.value.value = viewRef.value!.getRowContent()
-    emit('confirm', unref(addKeyinfo), valid)
+    emit('confirm', unref(addKeyinfo))
   })
 }
 </script>
 
 <template>
-  <el-dialog
-    :model-value="modelValue"
+  <n-modal
+    v-model:show="show"
     :title="title"
-    width="80%"
-    append-to-body
-    align-center
-    destroy-on-close
-    @open="handleOpen"
-    @update:model-value="($event) => emit('update:modelValue', $event)"
-    @close="handleCancel"
+    preset="dialog"
+    :auto-focus="false"
+    style="width: 80%;"
+    @after-enter="handleOpen"
+    @after-leave="handleCancel"
   >
-    <el-form ref="formRef" :model="addKeyinfo" label-position="top">
-      <el-form-item v-if="addKeyinfo.type === 'zset'" label="分数" prop="score">
-        <el-input-number v-model="addKeyinfo.score" />
-      </el-form-item>
-      <el-form-item v-if="addKeyinfo.type === 'hash'" label="Field" prop="field">
-        <el-input v-model="addKeyinfo.field" />
-      </el-form-item>
-      <el-form-item v-if="addKeyinfo.type === 'stream'" label="ID" prop="id">
-        <el-input v-model="addKeyinfo.id" :disabled="readonly" />
-      </el-form-item>
+    <n-form ref="formRef" :model="addKeyinfo" label-placement="top">
+      <n-form-item v-if="addKeyinfo.type === 'zset'" label="分数" path="score">
+        <n-input-number v-model:value="addKeyinfo.score" />
+      </n-form-item>
+      <n-form-item v-if="addKeyinfo.type === 'hash'" label="Field" path="field">
+        <n-input v-model:value="addKeyinfo.field" />
+      </n-form-item>
+      <n-form-item v-if="addKeyinfo.type === 'stream'" label="ID" path="id">
+        <n-input v-model:value="addKeyinfo.id" :disabled="readonly" />
+      </n-form-item>
 
       <format-viewer
         ref="viewRef"
-        :content="content"
+        v-model="content"
         :readonly="readonly"
-        :selected="addKeyinfo.type === 'stream' ? 'json' : 'text'"
+        :show-format="addKeyinfo.type === 'stream' ? 'json' : 'text'"
       />
-    </el-form>
+    </n-form>
 
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="handleCancel">取消</el-button>
-        <el-button type="primary" @click="handleConfirm">
+    <template #action>
+      <n-space>
+        <n-button tertiary @click="handleCancel">
+          取消
+        </n-button>
+        <n-button type="primary" @click="handleConfirm">
           确定
-        </el-button>
-      </span>
+        </n-button>
+      </n-space>
     </template>
-  </el-dialog>
+  </n-modal>
 </template>
 
 <style lang="css" scoped>

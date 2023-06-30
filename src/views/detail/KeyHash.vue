@@ -1,12 +1,13 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import { AddKeyInfo, KeyContentDetail, KeyInfo } from '@/types/redis'
 import { clipboard, invoke } from '@tauri-apps/api'
 import FormDataView from './FormDataView.vue'
+import { DataTableColumns } from 'naive-ui'
 
 interface HashProps {
   id: string
   db: number
-  keyLabel: string
+  keyValue: string
   keyinfo: KeyInfo
 }
 
@@ -17,9 +18,10 @@ interface HashDetail {
 
 const props = defineProps<HashProps>()
 const message = useMessage()
+const dialog = useDialog()
 const id = ref(props.id)
 const db = ref(props.db)
-const key = ref(props.keyLabel)
+const key = ref(props.keyValue)
 const listValue = ref<HashDetail[]>([])
 const isEdit = ref(false)
 const showDialog = ref(false)
@@ -39,6 +41,82 @@ const addKeyinfo = ref<AddKeyInfo>({
   field: '',
   value: '',
 })
+
+const columns: DataTableColumns = [
+  {
+    key: 'index',
+    title: () => `ID（Total：${keyDetail.value.size}）`,
+    render(rowData, rowIndex) {
+      return rowIndex
+    },
+  },
+  {
+    key: 'key',
+    title: 'Key',
+  },
+  {
+    key: 'value',
+    title: 'Value',
+    ellipsis: {
+      tooltip: true,
+    },
+  },
+  {
+    key: 'operation',
+    title: 'Operation',
+    render(rowData, rowIndex) {
+      return (
+        <n-space size="small">
+          <n-tooltip delay={1000} v-slots={{
+            trigger: () => (
+              <n-button text size="small" onClick={() => copyValue(rowData)}
+                v-slots={{
+                  icon: () => (
+                    <span>
+                      <i class="ant-design:copy-outlined" />
+                    </span>
+                  ),
+                }}
+              />
+            ),
+          }}>
+          复制值
+          </n-tooltip>
+          <n-tooltip delay={1000} v-slots={{
+            trigger: () => (
+              <n-button text size="small" onClick={() => editValueClick(rowData)}
+                v-slots={{
+                  icon: () => (
+                    <span>
+                      <i class="ant-design:edit-outlined" />
+                    </span>
+                  ),
+                }}
+              />
+            ),
+          }}>
+            编辑值
+          </n-tooltip>
+          <n-tooltip delay={1000} v-slots={{
+            trigger: () => (
+              <n-button text size="small" onClick={() => deleteValueByKey(rowData)}
+                v-slots={{
+                  icon: () => (
+                    <span>
+                      <i class="ant-design:delete-outlined" />
+                    </span>
+                  ),
+                }}
+              />
+            ),
+          }}>
+            删除值
+          </n-tooltip>
+        </n-space>
+      )
+    },
+  },
+]
 
 const fetchKeyDetail = async () => {
   const detail = await invoke<KeyContentDetail<HashDetail[]>>('get_key_detail', {
@@ -70,31 +148,33 @@ watch(() => props.keyinfo, async () => {
   }
 })
 
-const copyValue = (scope: any) => {
-  clipboard.writeText(scope.row.value)
+const copyValue = (rawData: any) => {
+  clipboard.writeText(rawData.value)
 }
 
-const deleteValueByKey = (scope: any) => {
-  const value = scope.row.key
-  ElMessageBox.confirm('你确定要删除该行吗？', {
-    type: 'warning',
-  }).then(async () => {
-    try {
-      await invoke('del_key_by_value', {
-        id: unref(id),
-        db: unref(db),
-        key: unref(key),
-        value,
-      })
+const deleteValueByKey = (rawData: any) => {
+  const value = rawData.key
+  dialog.warning({
+    title: '删除行',
+    content: '你确定要删除该行吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await invoke('del_key_by_value', {
+          id: unref(id),
+          db: unref(db),
+          key: unref(key),
+          value,
+        })
 
-      await fetchKeyDetail()
-    } catch (error) {
-      message.error(error as string)
-    }
+        await fetchKeyDetail()
+      } catch (error) {
+        message.error(error as string)
+      }
+    },
   })
-    .catch(() => {})
 }
-
 
 const addValueClick = () => {
   isEdit.value = false
@@ -108,12 +188,12 @@ const addValueClick = () => {
   }
 }
 
-const editValueClick = (scope: any) => {
+const editValueClick = (rowData: any) => {
   isEdit.value = true
   showDialog.value = true
-  addKeyinfo.value.oldField = scope.row.key
-  addKeyinfo.value.field = scope.row.key
-  addKeyinfo.value.value = scope.row.value
+  addKeyinfo.value.oldField = rowData.key
+  addKeyinfo.value.field = rowData.key
+  addKeyinfo.value.value = rowData.value
 }
 
 const handleCancel = () => {
@@ -121,9 +201,9 @@ const handleCancel = () => {
   showDialog.value = false
 }
 
-const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
+const handleConfirm = async (keyinfo: AddKeyInfo) => {
   try {
-    if (!valid || !keyinfo.value) {
+    if (!keyinfo.value) {
       return
     }
 
@@ -157,55 +237,14 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
 <template>
   <div flex flex-col gap-y-4>
     <div>
-      <el-button type="primary" @click="addValueClick">
+      <n-button type="primary" @click="addValueClick">
         添加新行
-      </el-button>
+      </n-button>
     </div>
-    <el-table
-      :data="listValue"
-      border
-      stripe
-    >
-      <el-table-column type="index" :width="180" :label="`ID（Total: ${keyDetail.size}）`" />
-      <el-table-column prop="key" label="Key" sortable show-tooltip-when-overflow />
-      <el-table-column prop="value" label="Value" sortable show-tooltip-when-overflow />
-      <el-table-column label="Operation">
-        <template #default="scope">
-          <el-space>
-            <el-tooltip content="复制值" :show-after="1000">
-              <el-button text @click="copyValue(scope)">
-                <template #icon>
-                  <span>
-                    <i class="ant-design:copy-outlined" />
-                  </span>
-                </template>
-              </el-button>
-            </el-tooltip>
-            <el-tooltip content="编辑值" :show-after="1000">
-              <el-button text @click="editValueClick(scope)">
-                <template #icon>
-                  <span>
-                    <i class="ant-design:edit-outlined" />
-                  </span>
-                </template>
-              </el-button>
-            </el-tooltip>
-            <el-tooltip content="删除值" :show-after="1000">
-              <el-button type="danger" text @click="deleteValueByKey(scope)">
-                <template #icon>
-                  <span>
-                    <i class="ant-design:delete-outlined" />
-                  </span>
-                </template>
-              </el-button>
-            </el-tooltip>
-          </el-space>
-        </template>
-      </el-table-column>
-    </el-table>
+    <n-data-table :data="listValue" bordered :columns="columns" />
 
     <form-data-view
-      v-model="showDialog"
+      v-model:show="showDialog"
       :model="addKeyinfo"
       :is-edit="isEdit"
       :title="isEdit ? '修改行' : '添加新行'"

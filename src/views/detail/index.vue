@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import { TabsProps, useTabs } from '@/store/tabs'
 import { KeyInfo } from '@/types/redis'
 import { useMitt } from '@/useMitt'
@@ -153,9 +153,22 @@ const handleDeleteKey = () => {
 
         tabsState.removeTab(`${unref(id)}-${unref(db)}-${unref(key)}`)
         mitt.emit('refresh', { id: unref(id), db: unref(db) })
-      } catch (error) {
-        message.error(error as string
+
+        message.success(() =>
+          <span>
+            键：
+            <n-tag
+              type="success"
+              size="small"
+              bordered={false}
+            >
+              {unref(key)}
+            </n-tag>
+            &nbsp;删除成功
+          </span>
         )
+      } catch (error) {
+        message.error(error as string)
       }
     },
   })
@@ -195,6 +208,8 @@ watch(() => keyinfo.value.type, t => {
 <template>
   <div class="h-[calc(100vh-56px)]" flex flex-col>
     <n-form
+      label
+      :show-label="false"
       inline
       :model="keyinfo"
     >
