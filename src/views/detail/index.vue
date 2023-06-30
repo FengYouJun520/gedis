@@ -9,12 +9,14 @@ import KeySet from './KeySet.vue'
 import KeyZSet from './KeyZSet.vue'
 import KeyHash from './KeyHash.vue'
 import KeyStream from './KeyStream.vue'
+import { Component as VueComponent } from 'vue'
 
 interface DetailProps {
   tabItem: TabsProps
 }
 
 const props = defineProps<DetailProps>()
+const dialog = useDialog()
 const message = useMessage()
 const initialData: KeyInfo = {
   key: '',
@@ -66,30 +68,37 @@ onMounted(async () => {
 })
 
 const handleSaveKey = () => {
-  ElMessageBox.confirm('是否保存该键？', {
-    type: 'info',
-  }).then(async () => {
-    await invoke('rename_key', {
-      id: unref(id),
-      db: unref(db),
-      key: unref(key),
-      newKey: unref(keyinfo).key,
-    })
+  dialog.success({
+    title: '保存键',
+    content: '是否保存该键？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await invoke('rename_key', {
+          id: unref(id),
+          db: unref(db),
+          key: unref(key),
+          newKey: unref(keyinfo).key,
+        })
 
-    const tabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
-    key.value = unref(keyinfo).key
-    const newTabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
-    tabsState.editTab(tabKey, {
-      ...props.tabItem,
-      key: newTabKey,
-      label: `${unref(key)} | ${props.tabItem.name} | DB${unref(db)}`,
-      value: unref(keyinfo).key,
-    })
-    tabsState.setActive(newTabKey)
+        const tabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
+        key.value = unref(keyinfo).key
+        const newTabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
+        tabsState.editTab(tabKey, {
+          ...props.tabItem,
+          key: newTabKey,
+          label: `${unref(key)} | ${props.tabItem.name} | DB${unref(db)}`,
+          value: unref(keyinfo).key,
+        })
+        tabsState.setActive(newTabKey)
 
-    mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
+        mitt.emit('fetchTreeKeys', { id: unref(id), db: unref(db) })
+      } catch (error) {
+        message.error(error as string)
+      }
+    },
   })
-    .catch(() =>{})
 }
 
 
@@ -109,38 +118,47 @@ const handleTTL = async (ttl: number) => {
 }
 
 const handleSetKeyTTL = () => {
-  ElMessageBox.confirm(`是否设置该键的过期时间为: ${unref(keyinfo).ttl}？`, {
-    type: 'info',
-  }).then(async () => {
-    await handleTTL(unref(keyinfo).ttl)
+  dialog.success({
+    title: '设置ttl',
+    content: `是否设置该键的过期时间为: ${unref(keyinfo).ttl}？`,
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      await handleTTL(unref(keyinfo).ttl)
+    },
   })
-    .catch(() => {})
 }
 
 const handlePersistKey = () => {
-  ElMessageBox.confirm('是否持久化该键？', {
-    type: 'info',
-  }).then(async () => {
-    await handleTTL(-1)
+  dialog.success({
+    title: '持久化',
+    content: '是否持久化该键？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      await handleTTL(-1)
+    },
   })
-    .catch(()=>{})
 }
 
 const handleDeleteKey = () => {
-  ElMessageBox.confirm('是否删除该键？', {
-    type: 'error',
-  }).then(async () => {
-    try {
-      await invoke('del_key', { id: unref(id), db: unref(db), key: unref(key) })
+  dialog.success({
+    title: '删键',
+    content: '是否删除该键？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await invoke('del_key', { id: unref(id), db: unref(db), key: unref(key) })
 
-      tabsState.removeTab(`${unref(id)}-${unref(db)}-${unref(key)}`)
-      mitt.emit('refresh', { id: unref(id), db: unref(db) })
-    } catch (error) {
-      message.error(error as string
-      )
-    }
+        tabsState.removeTab(`${unref(id)}-${unref(db)}-${unref(key)}`)
+        mitt.emit('refresh', { id: unref(id), db: unref(db) })
+      } catch (error) {
+        message.error(error as string
+        )
+      }
+    },
   })
-    .catch(() => {})
 }
 
 const handleRefresh = async () => {
@@ -164,7 +182,7 @@ const components: Record<string, any> = {
   stream: KeyStream,
 }
 
-const comp = shallowRef()
+const comp = shallowRef<VueComponent>()
 watch(() => keyinfo.value.type, t => {
   if (components[t]) {
     comp.value = components[t]
@@ -175,61 +193,77 @@ watch(() => keyinfo.value.type, t => {
 </script>
 
 <template>
-  <div class="h-[calc(100vh-112px)]">
-    <el-form :model="keyinfo" inline flex grow-0>
-      <el-form-item flex-1>
-        <el-input v-model="keyinfo.key">
-          <template #prepend>
+  <div class="h-[calc(100vh-56px)]" flex flex-col>
+    <n-form
+      inline
+      :model="keyinfo"
+    >
+      <n-form-item>
+        <n-input-group>
+          <n-input-group-label>
             <span>{{ keyinfo.label }}</span>
-          </template>
-          <template #suffix>
-            <el-tooltip content="保存键" :show-after="1000">
-              <i class="ant-design:save-outlined cursor-pointer" @click="handleSaveKey" />
-            </el-tooltip>
-          </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item flex-1>
-        <el-input v-model.number="keyinfo.ttl">
-          <template #prepend>
+          </n-input-group-label>
+          <n-input v-model:value="keyinfo.key" />
+          <n-tooltip :delay="1000">
+            保存键
+            <template #trigger>
+              <n-button type="primary" tertiary @click="handleSaveKey">
+                <template #icon>
+                  <i class="ant-design:save-outlined cursor-pointer" />
+                </template>
+              </n-button>
+            </template>
+          </n-tooltip>
+        </n-input-group>
+      </n-form-item>
+      <n-form-item>
+        <n-input-group>
+          <n-input-group-label>
             <span>TTL</span>
-          </template>
-          <template #suffix>
-            <el-space>
-              <el-tooltip content="持久化" :show-after="1000">
-                <i class="mdi:timer-lock-outline cursor-pointer" @click="handlePersistKey" />
-              </el-tooltip>
-              <el-tooltip content="修改过期时间" :show-after="1000">
-                <i class="mdi:av-timer cursor-pointer" @click="handleSetKeyTTL" />
-              </el-tooltip>
-            </el-space>
-          </template>
-        </el-input>
-      </el-form-item>
-
-      <el-form-item>
-        <el-space>
-          <el-tooltip content="删除键" :show-after="1000">
-            <el-button type="danger" @click="handleDeleteKey">
-              <template #icon>
-                <i class="mdi:delete" />
-              </template>
-            </el-button>
-          </el-tooltip>
-          <el-tooltip content="刷新" :show-after="1000">
-            <el-button type="success" @click="handleRefresh">
-              <template #icon>
-                <i class="mdi:refresh" />
-              </template>
-            </el-button>
-          </el-tooltip>
-        </el-space>
-      </el-form-item>
-    </el-form>
+          </n-input-group-label>
+          <n-input-number v-model:value="keyinfo.ttl" />
+          <n-tooltip :delay="1000">
+            持久化
+            <template #trigger>
+              <n-button type="primary" tertiary @click="handlePersistKey">
+                <template #icon>
+                  <i class="mdi:timer-lock-outline cursor-pointer" />
+                </template>
+              </n-button>
+            </template>
+          </n-tooltip>
+          <n-tooltip :delay="1000">
+            修改过期时间
+            <template #trigger>
+              <n-button type="primary" tertiary @click="handleSetKeyTTL">
+                <template #icon>
+                  <i class="mdi:av-timer cursor-pointer" />
+                </template>
+              </n-button>
+            </template>
+          </n-tooltip>
+        </n-input-group>
+      </n-form-item>
+      <n-form-item>
+        <n-space>
+          <n-button type="error" tertiary @click="handleDeleteKey">
+            <template #icon>
+              <i class="mdi:delete" />
+            </template>
+          </n-button>
+          <n-button type="primary" tertiary @click="handleRefresh">
+            <template #icon>
+              <i class="mdi:refresh" />
+            </template>
+          </n-button>
+        </n-space>
+      </n-form-item>
+    </n-form>
 
     <component
-      :is="comp && comp"
+      :is="comp"
       :id="id"
+      flex-1
       :db="db"
       :key-label="key"
       :keyinfo="keyinfo"

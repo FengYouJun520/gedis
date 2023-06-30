@@ -88,7 +88,7 @@ const handleSave = () => {
 </script>
 
 <template>
-  <div flex flex-col gap-y-2>
+  <div>
     <el-form :model="keyDetail">
       <el-form-item prop="value">
         <format-viewer

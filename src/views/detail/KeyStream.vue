@@ -240,7 +240,7 @@ const objToString = (obj: Record<string, any>) => {
       </el-table-column>
     </el-table>
 
-    <FormDataView
+    <form-data-view
       v-model="showDialog"
       :model="addKeyinfo"
       :readonly="readonly"

@@ -106,7 +106,7 @@ const handleCommand = (key: string, command: string) => {
       @tab-click="handleClick"
       @tab-remove="handleRemove"
     >
-      <n-scrollbar style="height: calc(100vh - 70px);">
+      <n-scrollbar style="height: calc(100vh - 56px);">
         <el-tab-pane
           v-for="tabItem in tabsState.tabs"
           :key="tabItem.key"
@@ -173,6 +173,11 @@ const handleCommand = (key: string, command: string) => {
 .el-tab-pane {
   height: 100%;
 }
+
+.tab--active, :deep(.el-tabs__item):hover {
+  color: v-bind("themeVars.primaryColor");
+}
+
 
 :deep(.el-tabs__item) .is-icon-close {
   color: v-bind("themeVars.primaryColor");

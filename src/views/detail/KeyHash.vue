@@ -204,7 +204,7 @@ const handleConfirm = async (keyinfo: AddKeyInfo, valid: boolean) => {
       </el-table-column>
     </el-table>
 
-    <FormDataView
+    <form-data-view
       v-model="showDialog"
       :model="addKeyinfo"
       :is-edit="isEdit"

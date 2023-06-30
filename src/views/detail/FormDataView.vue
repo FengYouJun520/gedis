@@ -59,7 +59,7 @@ const handleConfirm = () => {
     @update:model-value="($event) => emit('update:modelValue', $event)"
     @close="handleCancel"
   >
-    <ElForm ref="formRef" :model="addKeyinfo" label-position="top">
+    <el-form ref="formRef" :model="addKeyinfo" label-position="top">
       <el-form-item v-if="addKeyinfo.type === 'zset'" label="分数" prop="score">
         <el-input-number v-model="addKeyinfo.score" />
       </el-form-item>
@@ -70,13 +70,13 @@ const handleConfirm = () => {
         <el-input v-model="addKeyinfo.id" :disabled="readonly" />
       </el-form-item>
 
-      <FormatViewer
+      <format-viewer
         ref="viewRef"
         :content="content"
         :readonly="readonly"
         :selected="addKeyinfo.type === 'stream' ? 'json' : 'text'"
       />
-    </ElForm>
+    </el-form>
 
     <template #footer>
       <span class="dialog-footer">
