@@ -245,7 +245,7 @@ watch(() => keyinfo.value.type, t => {
         </n-input-group>
       </n-form-item>
       <n-form-item>
-        <n-space>
+        <n-space :size="4">
           <n-button type="error" tertiary @click="handleDeleteKey">
             <template #icon>
               <i class="mdi:delete" />
@@ -263,10 +263,10 @@ watch(() => keyinfo.value.type, t => {
     <component
       :is="comp"
       :id="id"
-      flex-1
       :db="db"
-      :key-label="key"
+      :key-value="key"
       :keyinfo="keyinfo"
+      class="flex-1"
     />
   </div>
 </template>

@@ -67,13 +67,12 @@ onMounted(() => {
 
   terminal.loadAddon(fitAddon)
   terminal.open(terminalRef.value!)
+  terminal.write(`[${props.tabItem.name}]$ `)
   // 第一次必须防抖才可以调整布局
   useDebounceFn(() => {
     terminal.focus()
     fitAddon.fit()
   }, 100)()
-  terminal.writeln(`\x1b[1;35mwelcome ${props.tabItem.name}\x1b[0m`)
-  terminal.write(`[${props.tabItem.name}]$ `)
 
   terminal.onData(key => {
     switch (key) {
@@ -81,18 +80,22 @@ onMounted(() => {
       terminal.writeln('')
       onExecCmd()
       command.value = ''
-      return
+      break
     }
     case '\u007F': {
       terminal.write('\b \b')
-      command.value = command.value.slice(0, command.value.length - 1)
-      return
+      if (command.value.length > 0) {
+        command.value = command.value.slice(0, command.value.length - 1)
+      }
+      break
     }
     default: {
       command.value += key
       if (key.length > 0) {
         terminal.write(key)
       }
+
+      break
     }
     }
   })

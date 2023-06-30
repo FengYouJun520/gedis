@@ -36,6 +36,8 @@ declare module 'vue' {
     MenuHeader: typeof import('./../components/MenuHeader.vue')['default']
     MenuOperation: typeof import('./../components/MenuOperation.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
+    NButtonGrop: typeof import('naive-ui')['NButtonGrop']
+    NButtonGroup: typeof import('naive-ui')['NButtonGroup']
     NCard: typeof import('naive-ui')['NCard']
     NCheckbox: typeof import('naive-ui')['NCheckbox']
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
