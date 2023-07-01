@@ -60,42 +60,42 @@ jobs:
           releaseDraft: false
           prerelease: false
       
-  update:
-    needs: release
-    runs-on: macos-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+  # update:
+  #   needs: release
+  #   runs-on: macos-latest
+  #   steps:
+  #   - name: Checkout repository
+  #     uses: actions/checkout@v3
 
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8
+  #   - name: Install pnpm
+  #     uses: pnpm/action-setup@v2
+  #     with:
+  #       version: 8
         
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+  #   - name: Get pnpm store directory
+  #     id: pnpm-cache
+  #     shell: bash
+  #     run: |
+  #       echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
     
-    # 配置缓存
-    - uses: actions/cache@v3
-      name: Setup pnpm cache
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
+  #   # 配置缓存
+  #   - uses: actions/cache@v3
+  #     name: Setup pnpm cache
+  #     with:
+  #       path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+  #       key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-pnpm-store-
 
-    - name: Sync node version and setup cache
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-        cache: "pnpm" 
+  #   - name: Sync node version and setup cache
+  #     uses: actions/setup-node@v3
+  #     with:
+  #       node-version: 18
+  #       cache: "pnpm" 
 
-    - run: pnpm install
+  #   - run: pnpm install
 
-    - name: Create Update
-      run: pnpm run update
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #   - name: Create Update
+  #     run: pnpm run update
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "gedis",
-    "version": "1.1.4"
+    "version": "1.1.5"
   },
   "tauri": {
     "allowlist": {
@@ -65,7 +65,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/FengYouJun520/gedis/releases/tag/updater/updater.json"
+        "https://github.com/FengYouJun520/gedis/releases/download/v{{current_version}}/latest.json"
       ],
       "dialog": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVBQ0Q4N0I0M0NFMzQxRDEKUldUUlFlTTh0SWZONmdNeVozTUZ4c1NFYW5HTTJrZGtEeWxJTHFBVkdTU0V6bW5vUkVQcEMvVWYK"
