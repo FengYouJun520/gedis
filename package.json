@@ -1,7 +1,7 @@
 {
   "name": "gedis",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "prepare": "husky install",
-    "lint": "eslint src/**/*.{ts,tsx,js,jsx,vue} --fix"
+    "lint": "eslint src/**/*.{ts,tsx,js,jsx,vue} --fix",
+    "updater": "node scripts/updater.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^1.4.0",
@@ -26,6 +27,7 @@
     "xterm-addon-fit": "^0.7.0"
   },
   "devDependencies": {
+    "@actions/github": "^5.1.1",
     "@commitlint/cli": "^17.6.5",
     "@commitlint/config-conventional": "^17.6.5",
     "@iconify/json": "^2.2.81",
@@ -43,6 +45,7 @@
     "husky": "^8.0.3",
     "lint-staged": "^13.2.2",
     "naive-ui": "^2.34.4",
+    "node-fetch": "^3.3.1",
     "typescript": "5.0.4",
     "unocss": "^0.53.1",
     "unplugin-auto-import": "^0.16.4",

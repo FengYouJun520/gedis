@@ -1,6 +1,6 @@
 [package]
 name = "gedis"
-version = "1.1.0"
+version = "1.1.1"
 description = "redis desktop manager"
 authors = ["FengYouJun"]
 license = "MIT"
@@ -17,7 +17,7 @@ tauri-build = {version = "1.2", features = [] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
-tauri = {version = "1.2", features = [ "clipboard-write-text", "shell-open", "clipboard-read-text"] }
+tauri = {version = "1.2", features = [ "updater", "clipboard-write-text", "shell-open", "clipboard-read-text"] }
 chrono = { version = "0.4", features = ["serde"] }
 anyhow = "1.0"
 tracing = "0.1"

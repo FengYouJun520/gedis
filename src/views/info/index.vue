@@ -242,7 +242,7 @@ const infoListData = computed(() => Object.keys(unref(info))
               <span>Redis信息集合</span>
             </n-space>
 
-            <n-input v-model:value="search" placeholder="搜索">
+            <n-input v-model:value="search" placeholder="搜索" clearable>
               <template #suffix>
                 <i class="ant-design:search-outlined" />
               </template>

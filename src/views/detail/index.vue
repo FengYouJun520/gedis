@@ -260,7 +260,7 @@ watch(() => keyinfo.value.type, t => {
         </n-input-group>
       </n-form-item>
       <n-form-item>
-        <n-space :size="4">
+        <n-space :size="4" :wrap="false">
           <n-button type="error" tertiary @click="handleDeleteKey">
             <template #icon>
               <i class="mdi:delete" />
