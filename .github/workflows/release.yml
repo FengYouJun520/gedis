@@ -61,6 +61,7 @@ jobs:
           prerelease: false
       
   update:
+    needs: release
     runs-on: macos-latest
     steps:
     - name: Checkout repository
