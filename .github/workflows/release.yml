@@ -61,11 +61,7 @@ jobs:
           prerelease: false
       
   update:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [macos-latest, ubuntu-20.04, windows-latest]
-    runs-on: ${{ matrix.platform }}
+    runs-on: macos-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -82,7 +78,7 @@ jobs:
         cache: "pnpm" 
 
     - run: pnpm install
-    
+
     - name: Create Update
       run: pnpm run update
       env:

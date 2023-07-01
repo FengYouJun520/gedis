@@ -10,7 +10,7 @@
     "tauri": "tauri",
     "prepare": "husky install",
     "lint": "eslint src/**/*.{ts,tsx,js,jsx,vue} --fix",
-    "updater": "node scripts/updater.mjs"
+    "update": "node scripts/updater.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^1.4.0",
