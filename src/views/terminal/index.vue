@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { TabsProps, useTabs } from '@/store/tabs'
-import { invoke, shell } from '@tauri-apps/api'
+import { clipboard, invoke, shell } from '@tauri-apps/api'
 import { allCommands, CommandType } from './command'
 import { useMitt } from '@/useMitt'
 import { useThemeVars } from 'naive-ui'
@@ -74,6 +74,26 @@ onMounted(() => {
     fitAddon.fit()
   }, 100)()
 
+  terminal.attachCustomKeyEventHandler(event => {
+    if (event.ctrlKey && event.code === 'KeyC' && event.type === 'keydown') {
+      const selection = terminal.getSelection()
+      if (selection) {
+        clipboard.writeText(selection)
+        return false
+      }
+    }
+
+    if (event.ctrlKey && event.code === 'KeyV' && event.type === 'keydown') {
+      clipboard.readText().then(text => {
+        if (text) {
+          terminal.write(text)
+          command.value += text
+        }
+      })
+    }
+    return true
+  })
+
   terminal.onData(key => {
     switch (key) {
     case '\r': {
@@ -89,12 +109,14 @@ onMounted(() => {
       }
       break
     }
+    case '\u{16}': {
+      break
+    }
     default: {
-      command.value += key
+      command.value += key.trim()
       if (key.length > 0) {
         terminal.write(key)
       }
-
       break
     }
     }
@@ -150,6 +172,7 @@ const onExecCmd = async () => {
     args,
   }).then(res => {
     parseResult(res)
+    terminal.write(`[${props.tabItem.name}]$ `)
   })
     .catch(error => {
       terminal.writeln(`\x1B[31m${error}\x1B[0m`)
@@ -163,7 +186,6 @@ const parseResult = (result: any) => {
     }
   } else {
     terminal.writeln(`\x1B[33m${result}\x1B[0m`)
-    terminal.write(`[${props.tabItem.name}]$ `)
   }
 }
 </script>

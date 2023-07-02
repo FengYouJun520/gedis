@@ -217,7 +217,6 @@ const handleConfirm = async (keyinfo: AddKeyInfo) => {
 
     const obj: object = JSON.parse(keyinfo.value)
     const value = JSON.stringify(objToString(obj))
-    console.log(keyinfo)
 
     // 添加新值
     await invoke('set_key', {

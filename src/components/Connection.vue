@@ -128,13 +128,24 @@ const handlePing = () => {
   }, pingTime)
 }
 
+const { isPending, start, stop } = useTimeoutFn(() => {
+  if (!unref(connected) && isPending) {
+    stop()
+    message.warning('未连接，请检查网络是否正常')
+  }
+  loading.value = false
+}, 5000)
+stop()
+
 const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
   try {
     // 是否连接
     if (!unref(connected)) {
       loading.value = true
+      start()
       await invoke('connection', { config })
       connected.value = true
+      stop()
     }
 
     await refresh(props.config.id, unref(selectDb))
@@ -171,6 +182,7 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
     menuRef.value?.close(config.id, [config.id])
   } finally {
     loading.value = false
+    stop()
   }
 }
 
