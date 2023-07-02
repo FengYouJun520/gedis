@@ -1,13 +1,28 @@
 import {
   checkUpdate,
   installUpdate,
+  onUpdaterEvent,
 } from '@tauri-apps/api/updater'
 import { relaunch } from '@tauri-apps/api/process'
 import { confirm } from '@tauri-apps/api/dialog'
 
 
-export async function versionUpdate() {
-  const message = useMessage()
+export async function useUpdater() {
+  const unlisten = await onUpdaterEvent(({ error, status }) => {
+    if (status === 'UPTODATE') {
+      confirm('目前是最新版', {
+        title: '更新通知',
+        type: 'info',
+      })
+    }
+    if (error) {
+      confirm(error, {
+        title: '更新错误',
+        type: 'error',
+      })
+    }
+  })
+
   try {
     const { shouldUpdate, manifest } = await checkUpdate()
 
@@ -28,6 +43,8 @@ export async function versionUpdate() {
       await relaunch()
     }
   } catch (error) {
-    message.error(error as string)
+    console.error(error)
+  } finally {
+    unlisten()
   }
 }

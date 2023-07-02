@@ -5,9 +5,9 @@ import { darkTheme } from 'naive-ui'
 import hljs from 'highlight.js/lib/core'
 import { allCommands } from './views/terminal/command'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
-import { onUpdaterEvent } from '@tauri-apps/api/updater'
-import { ask } from '@tauri-apps/api/dialog'
-import { versionUpdate } from './updater'
+import { useUpdater } from './updater'
+
+useUpdater()
 
 onMounted(() => {
   window.addEventListener('contextmenu', event => {
@@ -51,28 +51,6 @@ hljs.registerLanguage('redis-log', () => ({
   contains: [
   ],
 }))
-
-let unlisten: Function
-
-onMounted(async () => {
-  unlisten = await onUpdaterEvent(({ error, status }) => {
-    if (error) {
-      ask(error, {
-        title: '更新错误',
-        type: 'error',
-        okLabel: '确定',
-      })
-    }
-  })
-})
-
-onMounted(async () => {
-  await versionUpdate()
-})
-
-onUnmounted(() => {
-  unlisten()
-})
 </script>
 
 <template>

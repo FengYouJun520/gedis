@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useUpdater } from '@/updater'
 import { shell, app } from '@tauri-apps/api'
 
 const githubUrl = 'https://github.com/FengYouJun520/gedis'
@@ -12,6 +13,10 @@ onMounted(async () => {
   projectName.value = await app.getName()
   version.value = await app.getVersion()
 })
+
+const handleCheckUpdate = async () => {
+  await useUpdater()
+}
 </script>
 
 <template>
@@ -44,6 +49,11 @@ onMounted(async () => {
               p3
             />
           </template>
+        </n-button>
+      </div>
+      <div fixed top-4 right-4>
+        <n-button type="primary" secondary @click="handleCheckUpdate">
+          检查更新
         </n-button>
       </div>
     </div>
