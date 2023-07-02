@@ -23,7 +23,6 @@ const mitt = useMitt()
 const themeVars = useThemeVars()
 const visibleNewConn = ref(false)
 const loading = ref(false)
-const logLoading = ref(false)
 const configData = ref<RedisConfig>({ ...initConfig })
 const logs = ref<string[]>([])
 const visibleLog = ref(false)
@@ -32,14 +31,12 @@ const logRef = ref<LogInst | null>(null)
 const borderColor = computed(() => themeVars.value.borderColor)
 
 const fetchlogs = async () => {
-  logLoading.value = true
   try {
     const res = await invoke<string[]>('get_logs')
     logs.value = res
   } catch (error) {
     message.error(error as string)
   }
-  logLoading.value = false
 }
 
 const handleNewConfigBtn = () => {
@@ -82,7 +79,7 @@ const handleLogs = async () => {
   visibleLog.value = true
 }
 
-const handleOpenLog = () => {
+const handleScrollLog = () => {
   logRef.value?.scrollTo({
     position: 'bottom',
     slient: false,
@@ -101,17 +98,13 @@ const syncLog = ref(false)
 watchEffect(cleanup => {
   let timer: number|undefined
   if (unref(visibleLog) && unref(syncLog)) {
-    timer && clearInterval(timer)
-    useIntervalFn(async () => {
-      await fetchlogs()
-      unref(autoScrollBottom) && handleOpenLog()
-    }, 2000)
     timer = setInterval(async () => {
       await fetchlogs()
-      unref(autoScrollBottom) && handleOpenLog()
+      unref(autoScrollBottom) && handleScrollLog()
     }, 2000)
   }
-  cleanup(() => timer && clearInterval(timer))
+  cleanup(() => timer && clearInterval(timer)
+  )
 })
 
 onUnmounted(() => {
@@ -309,7 +302,7 @@ const clearLogs = async () => {
       :auto-focus="false"
       positive-text="确认"
       class="w-[70%]!"
-      @after-enter="handleOpenLog"
+      @after-enter="handleScrollLog"
       @close="visibleLog = false"
     >
       <div flex flex-col gap-y-6>
@@ -318,7 +311,6 @@ const clearLogs = async () => {
           ref="logRef"
           trim
           :lines="logs"
-          :loading="logLoading"
           :font-size="18"
           language="redis-log"
         />
