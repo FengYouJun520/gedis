@@ -1,6 +1,6 @@
 [package]
 name = "gedis"
-version = "1.2.2"
+version = "1.2.3"
 description = "redis desktop manager"
 authors = ["FengYouJun"]
 license = "MIT"
@@ -24,7 +24,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["local-time", "time"] }
 async-trait = "0.1"
 enum_dispatch = "0.3"
-csv = "1.2.2"
+csv = "1.2.3"
 
 [dependencies.redis]
 version = "0.23"

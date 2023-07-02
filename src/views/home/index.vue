@@ -15,7 +15,7 @@ onMounted(async () => {
 })
 
 const handleCheckUpdate = async () => {
-  await useUpdater()
+  await useUpdater(true, true)
 }
 </script>
 
