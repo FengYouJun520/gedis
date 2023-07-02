@@ -9,13 +9,16 @@ const openGithub = () => {
 
 const projectName = ref('')
 const version = ref('')
+const loading = ref(false)
 onMounted(async () => {
   projectName.value = await app.getName()
   version.value = await app.getVersion()
 })
 
 const handleCheckUpdate = async () => {
+  loading.value = true
   await useUpdater(true, true)
+  loading.value = false
 }
 </script>
 
@@ -52,7 +55,7 @@ const handleCheckUpdate = async () => {
         </n-button>
       </div>
       <div fixed top-4 right-4>
-        <n-button type="primary" secondary @click="handleCheckUpdate">
+        <n-button type="primary" secondary :loading="loading" @click="handleCheckUpdate">
           检查更新
         </n-button>
       </div>
