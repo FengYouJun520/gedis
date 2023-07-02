@@ -994,7 +994,7 @@ dependencies = [
 
 [[package]]
 name = "gedis"
-version = "1.2.2"
+version = "1.2.4"
 dependencies = [
  "anyhow",
  "async-trait",
