@@ -67,7 +67,7 @@ onMounted(() => {
 
   terminal.loadAddon(fitAddon)
   terminal.open(terminalRef.value!)
-  terminal.write(`[${props.tabItem.name}]$ `)
+  terminal.writeln(`\x1b[1;32m连接成功：\x1B[1;31m${props.tabItem.name}\x1B[0m`)
   // 第一次必须防抖才可以调整布局
   useDebounceFn(() => {
     terminal.focus()
@@ -113,7 +113,7 @@ onMounted(() => {
       break
     }
     default: {
-      command.value += key.trim()
+      command.value += key
       if (key.length > 0) {
         terminal.write(key)
       }
@@ -172,7 +172,6 @@ const onExecCmd = async () => {
     args,
   }).then(res => {
     parseResult(res)
-    terminal.write(`[${props.tabItem.name}]$ `)
   })
     .catch(error => {
       terminal.writeln(`\x1B[31m${error}\x1B[0m`)
