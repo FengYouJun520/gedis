@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "gedis",
-    "version": "1.2.8"
+    "version": "1.2.9"
   },
   "tauri": {
     "allowlist": {
@@ -83,8 +83,8 @@
         "fullscreen": false,
         "height": 800,
         "width": 1200,
-        "minHeight": 800,
-        "minWidth": 1200,
+        "minHeight": 600,
+        "minWidth": 800,
         "resizable": true,
         "title": "gedis",
         "center": true

@@ -6,8 +6,10 @@
 use chrono::Local;
 use gedis::command::*;
 use gedis::RedisState;
+use tauri::Manager;
 use tracing::Level;
 use tracing_subscriber::fmt::{format::Writer, time::FormatTime};
+use window_shadows::set_shadow;
 
 struct LocalTimer;
 
@@ -32,6 +34,13 @@ fn main() {
     init_tracing_subscriber();
 
     tauri::Builder::default()
+        .setup(|app| {
+            let window = app.get_window("main").unwrap();
+            #[cfg(any(windows, target_os = "macos"))]
+            set_shadow(&window, true).unwrap();
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             test_connection,
             connection,
