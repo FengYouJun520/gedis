@@ -27,7 +27,9 @@ export async function useUpdater(showUptodate = false, showError = false) {
     const { shouldUpdate, manifest } = await checkUpdate()
 
     if (shouldUpdate) {
-      await confirm(`有新版本可用：${manifest?.version}, ${manifest?.date}, ${manifest?.body}，
+      const ok = await confirm(`有新版本可用：${manifest?.version}, 
+更新时间：${manifest?.date}
+${manifest?.body}
 是否现在更新？`, {
         type: 'info',
         title: '版本更新',
@@ -35,12 +37,14 @@ export async function useUpdater(showUptodate = false, showError = false) {
         cancelLabel: '稍后更新',
       })
 
-      // Install the update. This will also restart the app on Windows!
-      await installUpdate()
+      if (ok) {
+        // Install the update. This will also restart the app on Windows!
+        await installUpdate()
 
-      // On macOS and Linux you will need to restart the app manually.
-      // You could use this step to display another confirmation dialog.
-      await relaunch()
+        // On macOS and Linux you will need to restart the app manually.
+        // You could use this step to display another confirmation dialog.
+        await relaunch()
+      }
     }
   } catch (error) {
     console.error(error)
