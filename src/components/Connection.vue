@@ -134,7 +134,7 @@ const { isPending, start, stop } = useTimeoutFn(() => {
     message.warning('未连接，请检查网络是否正常')
   }
   loading.value = false
-}, 5000)
+}, 10000)
 stop()
 
 const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
