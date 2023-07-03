@@ -4,19 +4,19 @@ import {
   onUpdaterEvent,
 } from '@tauri-apps/api/updater'
 import { relaunch } from '@tauri-apps/api/process'
-import { confirm } from '@tauri-apps/api/dialog'
+import { confirm, message } from '@tauri-apps/api/dialog'
 
 
 export async function useUpdater(showUptodate = false, showError = false) {
   const unlisten = await onUpdaterEvent(({ error, status }) => {
     if (status === 'UPTODATE' && showUptodate) {
-      confirm('目前已是最新版本', {
+      message('目前已是最新版本', {
         title: '更新通知',
         type: 'info',
       })
     }
     if (error && showError) {
-      confirm(error!, {
+      message(error!, {
         title: '更新错误',
         type: 'error',
       })
