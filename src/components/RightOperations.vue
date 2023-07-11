@@ -6,7 +6,7 @@ import { useMitt } from '@/useMitt'
 import { invoke } from '@tauri-apps/api'
 import { v4 } from 'uuid'
 import { useConfig } from './useConfig'
-import { DropdownOption, NIcon, useThemeVars } from 'naive-ui'
+import { DropdownOption, InputInst, NIcon, useThemeVars } from 'naive-ui'
 
 interface MenuOperationProps {
   config: RedisConfig
@@ -20,6 +20,7 @@ const mitt = useMitt()
 const configState = useRedis()
 const configOps = useConfig()
 const tabsState = useTabs()
+const focusRef = ref<InputInst>()
 const id = computed(() => props.config.id)
 const selectDb = defineModel('db', { default: 0, required: true })
 
@@ -133,6 +134,8 @@ const handleCommand = async (command: string) => {
     break
   case 'edit':
     await visibleDialog(true)
+    await nextTick()
+    focusRef.value?.focus()
     break
   case 'delete':
     await handleDelete()
@@ -282,7 +285,7 @@ const handleCancel = () => {
       <n-form :model="configModel">
         <n-grid :cols="2" :x-gap="24" responsive="screen" item-responsive>
           <n-form-item-gi span="2 m:1" label="地址">
-            <n-input v-model:value="configModel.host" placeholder="地址" />
+            <n-input ref="focusRef" v-model:value="configModel.host" placeholder="地址" />
           </n-form-item-gi>
           <n-form-item-gi span="2 m:1" label="端口号">
             <n-input-number

@@ -5,7 +5,7 @@ import { v4 } from 'uuid'
 import { invoke } from '@tauri-apps/api'
 import { useUiState } from '@/store/ui'
 import { useMitt } from '@/useMitt'
-import { LogInst, useThemeVars } from 'naive-ui'
+import { LogInst, useThemeVars, InputInst } from 'naive-ui'
 
 const initConfig: RedisConfig = {
   id: '',
@@ -27,7 +27,7 @@ const configData = ref<RedisConfig>({ ...initConfig })
 const logs = ref<string[]>([])
 const visibleLog = ref(false)
 const logRef = ref<LogInst | null>(null)
-
+const focusRef = ref<InputInst>()
 const borderColor = computed(() => themeVars.value.borderColor)
 
 const fetchlogs = async () => {
@@ -39,8 +39,10 @@ const fetchlogs = async () => {
   }
 }
 
-const handleNewConfigBtn = () => {
+const handleNewConfigBtn = async () => {
   visibleNewConn.value = true
+  await nextTick()
+  focusRef.value?.focus()
 }
 
 const handleNewConfigConfirm = () => {
@@ -172,7 +174,7 @@ const clearLogs = async () => {
       >
         <n-grid :cols="2" :x-gap="24" responsive="screen" item-responsive>
           <n-form-item-gi span="2 m:1" label="地址">
-            <n-input v-model:value="configData.host" placeholder="localhost" />
+            <n-input ref="focusRef" v-model:value="configData.host" placeholder="localhost" />
           </n-form-item-gi>
           <n-form-item-gi span="2 m:1" label="端口号">
             <n-input-number
