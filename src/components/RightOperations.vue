@@ -134,8 +134,6 @@ const handleCommand = async (command: string) => {
     break
   case 'edit':
     await visibleDialog(true)
-    await nextTick()
-    focusRef.value?.focus()
     break
   case 'delete':
     await handleDelete()
@@ -175,6 +173,8 @@ const visibleDialog = async (edit: boolean) => {
           configModel.value = { ...props.config }
           tabsState.removeTabById(unref(id))
           visibleEdit.value = true
+          await nextTick()
+          focusRef.value?.focus()
         },
       })
     } else {
@@ -184,6 +184,9 @@ const visibleDialog = async (edit: boolean) => {
     }
   } catch (error) {
     message.error(error as string)
+  } finally {
+    await nextTick()
+    focusRef.value?.focus()
   }
 }
 
