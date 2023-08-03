@@ -115,17 +115,26 @@ const handleDeleteFolder = async () => {
           matchKey: `${selectedOption.value.value}*`,
         })
 
-        message.success(`删除文件: ${selectedOption.value.value}*成功`)
-        // 如果有选项卡，删除目录下所有相关的选项卡
-        tabsState.removeTab(
-          `${unref(id)}-${unref(db)}-${selectedOption.value.value}`
-        )
-
+        removeFolderChildren(selectedOption.value.children as TreeOptionExt[])
         mitt.emit('refresh', { id: unref(id), db: unref(db) })
+        message.success(`删除文件: ${selectedOption.value.value}*成功`)
       } catch (error) {
         message.error(error as string)
       }
     },
+  })
+}
+
+// 如果有选项卡，删除目录下所有相关的选项卡
+const removeFolderChildren = (children: TreeOptionExt[]) => {
+  children.forEach(child => {
+    if (child.children && child.children.length) {
+      removeFolderChildren(child.children as TreeOptionExt[])
+    } else {
+      tabsState.removeTab(
+        `${unref(id)}-${unref(db)}-${child.value}`
+      )
+    }
   })
 }
 
