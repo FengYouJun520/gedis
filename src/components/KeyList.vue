@@ -83,7 +83,17 @@ const handleDeleteKey = async () => {
           key: selectedOption.value.key,
         })
 
-        message.success(`删除键: ${selectedOption.value.value}成功`)
+        message.success(() => <span>
+          删除键：
+          <n-tag
+            type="success"
+            size="small"
+            bordered={false}
+          >
+            {selectedOption.value?.value}
+          </n-tag>
+            &nbsp;删除成功
+        </span>)
         // 如果有选项卡，删除选项卡
         tabsState.removeTab(
           `${unref(id)}-${unref(db)}-${selectedOption.value.value}`
@@ -117,7 +127,17 @@ const handleDeleteFolder = async () => {
 
         removeFolderChildren(selectedOption.value.children as TreeOptionExt[])
         mitt.emit('refresh', { id: unref(id), db: unref(db) })
-        message.success(`删除文件: ${selectedOption.value.value}*成功`)
+        message.success(() => <span>
+          删除文件：
+          <n-tag
+            type="success"
+            size="small"
+            bordered={false}
+          >
+            {selectedOption.value?.value}*
+          </n-tag>
+            &nbsp;成功
+        </span>)
       } catch (error) {
         message.error(error as string)
       }
