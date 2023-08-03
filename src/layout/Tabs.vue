@@ -136,11 +136,13 @@ const handleCommand = (key: string, command: string) => {
               @contextmenu="e => handleContextMenu(e, tabItem.key)"
             >
               <n-tooltip :delay="500">
-                按Ctrl+w关闭
+                {{ tabItem.value }}
                 <template #trigger>
                   <div space-x-2>
                     <i :class="tabItem.icon" />
-                    <span>{{ tabItem.label }}</span>
+                    <span>
+                      {{ tabItem.label.length > 30 ? `${tabItem.label.substring(0, 30)}...` : tabItem.label }}
+                    </span>
                   </div>
                 </template>
               </n-tooltip>
