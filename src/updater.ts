@@ -16,7 +16,7 @@ export async function useUpdater(showUptodate = false, showError = false) {
       })
     }
     if (error && showError) {
-      message(error!, {
+      message(error, {
         title: '更新错误',
         type: 'error',
       })

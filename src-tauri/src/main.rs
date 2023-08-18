@@ -27,10 +27,6 @@ fn init_tracing_subscriber() {
 }
 
 fn main() {
-    std::env::set_var("HTTP_PROXY", "http://127.0.0.1:7890");
-    std::env::set_var("HTTPS_PROXY", "http://127.0.0.1:7890");
-    std::env::set_var("ALL_PROXY", "http://127.0.0.1:7890");
-
     init_tracing_subscriber();
 
     tauri::Builder::default()
