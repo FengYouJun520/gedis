@@ -10,18 +10,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-20.04, windows-latest]
+        platform: [macos-latest, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-latest'
         # You can remove libayatana-appindicator3-dev if you don't use the system tray feature.
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
   
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -43,9 +43,9 @@ jobs:
         with:
           workspaces: "./src-tauri -> target"
 
-      - name: Install app dependencies and build web
+      - name: Install frontend dependencies
         # Remove `&& yarn build` if you build your frontend in `beforeBuildCommand`
-        run: pnpm install && pnpm run build # Change this to npm, yarn or pnpm.
+        run: pnpm install # Change this to npm, yarn or pnpm.
 
       - name: Build the app
         uses: tauri-apps/tauri-action@dev
