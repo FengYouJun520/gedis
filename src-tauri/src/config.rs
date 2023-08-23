@@ -19,8 +19,8 @@ impl IntoConnectionInfo for RedisConfig {
             addr: redis::ConnectionAddr::Tcp(self.host, self.port),
             redis: redis::RedisConnectionInfo {
                 db: 0,
-                username: self.username,
-                password: self.password,
+                username: self.username.filter(|u| !u.is_empty()),
+                password: self.password.filter(|p| !p.is_empty()),
             },
         })
     }
