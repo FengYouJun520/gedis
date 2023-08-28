@@ -1,4 +1,5 @@
 use redis::InfoDict;
+use serde_json::json;
 use std::collections::HashMap;
 use tauri::State;
 use tracing::{info, instrument};
@@ -123,25 +124,43 @@ pub async fn get_info(
     state: State<'_, RedisState>,
     history: State<'_, History>,
     id: String,
-) -> Result<HashMap<String, String>> {
+) -> Result<serde_json::Value> {
     let mut redis_state = state.0.lock().await;
     let (con, config) = redis_state.get_con_and_config(&id)?;
 
-    let info: InfoDict = redis::cmd("INFO")
-        .log(history.0.clone(), config)
-        .query_async(con)
-        .await?;
+    if config.cluster {
+        let infos: Vec<InfoDict> = redis::cmd("INFO")
+            .log(history.0.clone(), config)
+            .query_async(con)
+            .await?;
 
-    let mut info_result = HashMap::new();
-
-    for entry in info.iter() {
-        if let Ok(val) = redis::from_redis_value(entry.1) {
-            info_result.insert(entry.0.to_string(), val);
+        let mut result_infos = HashMap::new();
+        for info in infos.into_iter() {
+            for entry in info.iter() {
+                if let Ok(val) = redis::from_redis_value(entry.1) {
+                    result_infos
+                        .entry(entry.0.to_string())
+                        .or_insert(serde_json::Value::String(val));
+                }
+            }
         }
-    }
 
-    info!("获取redis客户端信息: {}", id);
-    Ok(info_result)
+        Ok(json!(result_infos))
+    } else {
+        let info: InfoDict = redis::cmd("INFO")
+            .log(history.0.clone(), config)
+            .query_async(con)
+            .await?;
+
+        let mut info_result = HashMap::new();
+        for entry in info.iter() {
+            if let Ok(val) = redis::from_redis_value(entry.1) {
+                info_result.insert(entry.0.to_string(), serde_json::Value::String(val));
+            }
+        }
+
+        Ok(json!(info_result))
+    }
 }
 
 /// 获取日志

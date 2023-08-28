@@ -64,8 +64,9 @@ impl Debug for Redis {
     }
 }
 
+// Arc用于解决每次获取新状态时旧状态会被回收导致连接断开的bug
 #[derive(Debug, Default)]
-pub struct RedisState(pub Mutex<Redis>);
+pub struct RedisState(pub Arc<Mutex<Redis>>);
 
 impl Redis {
     pub fn add_con(&mut self, con: RedisConnection, config: RedisConfig) -> Result<()> {
@@ -98,7 +99,10 @@ impl Redis {
 
     pub fn get_con_and_config(&mut self, id: &str) -> Result<(&mut RedisConnection, &RedisConfig)> {
         let con = self.connections.get_mut(id).context("客户端未连接")?;
-        let config = self.configs.get_mut(id).context("客户端未连接")?;
+        let config = self
+            .configs
+            .get_mut(id)
+            .context("获取配置信息失败，客户端未连接")?;
         Ok((con, config))
     }
 }
@@ -107,7 +111,6 @@ const MAX_HISTORY: usize = 5000;
 
 #[derive(Debug, Default, Clone)]
 pub struct History(pub Arc<std::sync::Mutex<Vec<String>>>);
-
 
 impl History {
     pub fn add_log(&self, value: String, config: &RedisConfig) {
