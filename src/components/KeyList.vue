@@ -4,13 +4,15 @@ import { useMitt } from '@/useMitt'
 import { clipboard, invoke } from '@tauri-apps/api'
 import { useConfig } from './useConfig'
 import { DropdownOption, TreeOption } from 'naive-ui'
-import { RenderSwitcherIcon, TreeNodeProps } from 'naive-ui/es/tree/src/interface'
+import { RenderLabel, RenderSwitcherIcon, TreeNodeProps } from 'naive-ui/es/tree/src/interface'
 import { onUpdateExpandedKeys } from 'naive-ui/es/tree/src/Tree'
+import { useUiState } from '@/store/ui'
 
 type TreeOptionExt = TreeOption & {
   value: string
 }
 
+const uiStore = useUiState()
 const message = useMessage()
 const dialog = useDialog()
 const tabsState = useTabs()
@@ -216,10 +218,6 @@ const updatePrefixWithExpaned: onUpdateExpandedKeys = (keys, option, meta) => {
     return
   }
 
-  if (meta.node.isLeaf) {
-    return
-  }
-
   switch (meta.action) {
   case 'collapse':
     meta.node.prefix = () => <i class="vscode-icons:folder-type-redis" w-6 h-6 />
@@ -254,6 +252,19 @@ const handleSelect = (key: string) => {
 const handleClickoutside = () => {
   showDropdown.value = false
 }
+
+const renderLabel: RenderLabel = ({ checked, option, selected }) => {
+  if (option.isLeaf) {
+    return <>
+      <n-ellipsis style={{ maxWidth: uiStore.asideWidth }}>
+        {option.label}
+      </n-ellipsis>
+    </>
+  }
+  return <>
+    <span>{option.label}</span>
+  </>
+}
 </script>
 
 <template>
@@ -267,6 +278,7 @@ const handleClickoutside = () => {
       :pattern="pattern"
       :show-irrelevant-nodes="false"
       :node-props="nodeProps"
+      :render-label="renderLabel"
       :render-switcher-icon="renderSwitcherIconWithExpaned"
       @update:expanded-keys="updatePrefixWithExpaned"
     />

@@ -218,7 +218,12 @@ watch(() => keyinfo.value.type, t => {
           <n-input-group-label>
             <span>{{ keyinfo.label }}</span>
           </n-input-group-label>
-          <n-input v-model:value="keyinfo.key" />
+          <n-tooltip :delay="1000">
+            {{ keyinfo.key }}
+            <template #trigger>
+              <n-input v-model:value="keyinfo.key" />
+            </template>
+          </n-tooltip>
           <n-tooltip :delay="1000">
             保存键
             <template #trigger>
