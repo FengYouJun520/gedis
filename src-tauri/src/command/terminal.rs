@@ -55,7 +55,6 @@ fn parse_result(res: redis::Value) -> serde_json::Value {
         redis::Value::Bulk(data) => {
             let mut result = vec![];
             for val in data {
-                info!(?val);
                 result.push(json!(parse_result(val)));
             }
             json!(result)
