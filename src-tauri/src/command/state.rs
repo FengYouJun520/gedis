@@ -3,10 +3,70 @@ use anyhow::Context;
 use redis::{aio::ConnectionLike, Cmd, Pipeline};
 use std::{collections::HashMap, fmt::Debug, sync::Arc};
 use tauri::async_runtime::Mutex;
-#[derive(Default)]
+
+/// redis实例
+pub struct RedisInstance {
+    id: String,
+    config: RedisConfig,
+    con: RedisConnection,
+}
+
+impl Debug for RedisInstance {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RedisInstance")
+            .field("id", &self.id)
+            .field("config", &self.config)
+            .finish()
+    }
+}
+
+impl RedisInstance {
+    pub fn new(config: RedisConfig, con: RedisConnection) -> Self {
+        Self {
+            id: config.id.clone(),
+            config,
+            con,
+        }
+    }
+}
+
+#[derive(Debug, Default)]
 pub struct Redis {
-    configs: HashMap<String, RedisConfig>,
-    connections: HashMap<String, RedisConnection>,
+    redis_instances: HashMap<String, RedisInstance>,
+}
+
+impl Redis {
+    pub fn add_instance(&mut self, con: RedisConnection, config: RedisConfig) -> Result<()> {
+        let id = config.id.clone();
+        let instance = RedisInstance::new(config, con);
+        self.redis_instances.insert(id, instance);
+
+        Ok(())
+    }
+
+    pub fn remove_con(&mut self, id: &str) -> Result<()> {
+        self.redis_instances.remove(id);
+        Ok(())
+    }
+
+    pub fn remove_con_all(&mut self) -> Result<()> {
+        self.redis_instances.clear();
+        Ok(())
+    }
+
+    pub fn is_connection(&self, id: &str) -> bool {
+        self.redis_instances.contains_key(id)
+    }
+
+    pub fn get_con_mut(&mut self, id: &str) -> Result<&mut RedisConnection> {
+        let instance = self.redis_instances.get_mut(id).context("客户端未连接")?;
+        Ok(&mut instance.con)
+    }
+
+    pub fn get_con_and_config(&mut self, id: &str) -> Result<(&mut RedisConnection, &RedisConfig)> {
+        let instance = self.redis_instances.get_mut(id).context("客户端未连接")?;
+        Ok((&mut instance.con, &instance.config))
+    }
 }
 
 pub enum RedisConnection {
@@ -56,56 +116,8 @@ impl ConnectionLike for RedisConnection {
     }
 }
 
-impl Debug for Redis {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Redis")
-            .field("configs", &self.configs)
-            .finish()
-    }
-}
-
-// Arc用于解决每次获取新状态时旧状态会被回收导致连接断开的bug
 #[derive(Debug, Default)]
 pub struct RedisState(pub Arc<Mutex<Redis>>);
-
-impl Redis {
-    pub fn add_con(&mut self, con: RedisConnection, config: RedisConfig) -> Result<()> {
-        self.connections.insert(config.id.to_string(), con);
-        self.configs.insert(config.id.to_string(), config);
-
-        Ok(())
-    }
-
-    pub fn remove_con(&mut self, id: &str) -> Result<()> {
-        self.connections.remove(id);
-        self.configs.remove(id);
-        Ok(())
-    }
-
-    pub fn remove_con_all(&mut self) -> Result<()> {
-        self.connections.clear();
-        self.configs.clear();
-        Ok(())
-    }
-
-    pub fn is_connection(&self, id: &str) -> bool {
-        self.connections.contains_key(id)
-    }
-
-    pub fn get_con_mut(&mut self, id: &str) -> Result<&mut RedisConnection> {
-        let con = self.connections.get_mut(id).context("客户端未连接")?;
-        Ok(con)
-    }
-
-    pub fn get_con_and_config(&mut self, id: &str) -> Result<(&mut RedisConnection, &RedisConfig)> {
-        let con = self.connections.get_mut(id).context("客户端未连接")?;
-        let config = self
-            .configs
-            .get_mut(id)
-            .context("获取配置信息失败，客户端未连接")?;
-        Ok((con, config))
-    }
-}
 
 const MAX_HISTORY: usize = 5000;
 

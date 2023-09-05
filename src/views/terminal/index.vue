@@ -65,8 +65,9 @@ onMounted(() => {
     allowTransparency: true,
   })
 
-  terminal.loadAddon(fitAddon)
   terminal.open(terminalRef.value!)
+
+  terminal.loadAddon(fitAddon)
   terminal.writeln(`\x1b[1;32m连接成功：\x1B[1;31m${props.tabItem.name}\x1B[0m`)
   // 第一次必须防抖才可以调整布局
   useDebounceFn(() => {

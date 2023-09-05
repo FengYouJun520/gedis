@@ -34,12 +34,7 @@ mitt.on('changeDb', ({ id, db }) => isCurrent(id) && changeDb(db))
 mitt.on('fetchInfo', async id => isCurrent(id) && await fetchInfo(id))
 mitt.on('fetchTreeKeys', async ({ id, db }) => isCurrent(id) && await fetchTreeKeys(id, db))
 mitt.on('refresh', async ({ id, db }) => isCurrent(id) && await refresh(id, db))
-mitt.on('disConnection', async id => {
-  if (isCurrent(id)) {
-    await handleDisConnection(props.config.id)
-    selectDb.value = 0
-  }
-})
+mitt.on('disConnection', async id => isCurrent(id) && await handleDisConnection(id))
 
 onUnmounted(() => {
   mitt.off('changeDb')
@@ -115,7 +110,7 @@ const fetchTreeKeys = async (id: string, db: number) => {
 }
 
 let ping: number|null = null
-const pingTime = 60 * 1000
+const pingTime = 30 * 1000
 const handlePing = () => {
   ping && clearInterval(ping)
   ping = setInterval(async () => {
@@ -129,7 +124,7 @@ const handlePing = () => {
 }
 
 const { isPending, start, stop } = useTimeoutFn(() => {
-  if (!unref(connected) && isPending) {
+  if (!unref(connected) && !isPending) {
     stop()
     message.warning('未连接，请检查网络是否正常')
   }
@@ -196,6 +191,7 @@ const handleDisConnection = async (id: string) => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     menuRef.value.close(id, [id])
+    tabsState.removeTabById(id)
   } catch (error) {
     message.error(error as string)
   } finally {

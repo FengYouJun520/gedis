@@ -1,0 +1,35 @@
+{
+  "cSpell.words": [
+    "hdel",
+    "hlen",
+    "hscan",
+    "hset",
+    "llen",
+    "lpush",
+    "lrange",
+    "lrem",
+    "pinia",
+    "rpush",
+    "sadd",
+    "scard",
+    "sider",
+    "srem",
+    "sscan",
+    "tauri",
+    "unlisten",
+    "unref",
+    "xadd",
+    "xdel",
+    "xlen",
+    "xrevrange",
+    "zadd",
+    "zcard",
+    "zrange",
+    "zrem",
+    "zset"
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "github-actions.workflows.pinned.workflows": [
+    ".github/workflows/release.yml"
+  ],
+}

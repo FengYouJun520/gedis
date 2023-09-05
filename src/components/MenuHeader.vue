@@ -125,7 +125,12 @@ const clearLogs = async () => {
 </script>
 
 <template>
-  <div flex justify-center items-center gap-x-2 p-4>
+  <div
+    class="r-header"
+    flex justify-center items-center
+    gap-x-2 p-4
+    sticky top-0 z-10
+  >
     <n-button
       type="primary"
       flex-1
@@ -189,7 +194,7 @@ const clearLogs = async () => {
             <n-input v-model:value="configData.username" placeholder="ACL(redis >= 6.0)" />
           </n-form-item-gi>
           <n-form-item-gi span="2 m:1" label="密码">
-            <n-input v-model:value="configData.password" type="password" placeholder="密码" />
+            <n-input v-model:value="configData.password" type="password" show-password-on="click" placeholder="密码" />
           </n-form-item-gi>
 
           <n-form-item-gi span="2 m:1" label="名称">
@@ -350,4 +355,7 @@ const clearLogs = async () => {
 </template>
 
 <style lang="css" scoped>
+.r-header {
+  background-color: v-bind("themeVars.bodyColor");
+}
 </style>

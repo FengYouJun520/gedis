@@ -10,10 +10,10 @@ pub use terminal::*;
 
 use crate::{config::RedisConfig, error::Result, node_info::NodesInfo};
 
-pub async fn select_db(
-    config: &RedisConfig,
+pub async fn select_db<'a>(
+    config: &'a RedisConfig,
     db: u8,
-    con: &mut RedisConnection,
+    con: &'a mut RedisConnection,
     history: &History,
 ) -> Result<()> {
     if config.cluster {

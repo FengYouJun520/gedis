@@ -459,7 +459,14 @@ pub async fn set_key(
             // 键不存在
             if expired == -2 {
                 con.lpush(&keyinfo.key, &keyinfo.value).await?;
-                history.add_log_vec(LogArgs!["lpush", &keyinfo.key, &keyinfo.value], config);
+                history.add_log_vec(
+                    vec![
+                        "lpush".to_string(),
+                        keyinfo.key.to_string(),
+                        keyinfo.value.to_string(),
+                    ],
+                    config,
+                );
             } else {
                 con.rpush(&keyinfo.key, &keyinfo.value).await?;
                 history.add_log_vec(LogArgs!["rpush", &keyinfo.key, &keyinfo.value], config)

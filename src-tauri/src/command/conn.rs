@@ -37,7 +37,7 @@ pub async fn connection(
     let mut redis_state = state.0.lock().await;
 
     info!(?config, "连接成功");
-    redis_state.add_con(redis_conn, config)?;
+    redis_state.add_instance(redis_conn, config)?;
 
     Ok(())
 }

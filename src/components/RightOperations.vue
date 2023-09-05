@@ -64,7 +64,7 @@ const handleClose = async () => {
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await configOps?.disConnection(unref(id))
+        mitt.emit('disConnection', unref(id))
         tabsState.removeTabById(unref(id))
       } catch (error) {
         message.error(error as string)
@@ -82,11 +82,12 @@ const handleDelete = async () => {
     onPositiveClick: async () => {
       try {
         const isConnection = await invoke<boolean>('is_connection', { id: unref(id) })
-        if (isConnection) {
-          await configOps?.disConnection(unref(id))
-        }
         tabsState.removeTabById(unref(id))
         configState.removeConfig(unref(id))
+
+        if (isConnection) {
+          console.log('删除连接')
+        }
       } catch (error) {
         message.error(error as string)
       }
@@ -161,7 +162,7 @@ const visibleDialog = async (edit: boolean) => {
       return
     }
 
-    if (unref(isEdit)) {
+    if (isConnection && unref(isEdit)) {
       // 编辑连接
       dialog.info({
         title: unref(isEdit) ? '编辑连接' : '复制连接',
@@ -169,10 +170,13 @@ const visibleDialog = async (edit: boolean) => {
         positiveText: '确定',
         negativeText: '取消',
         onPositiveClick: async () => {
-          await configOps?.disConnection(unref(id))
+          mitt.emit('disConnection', unref(id))
+          console.log('编辑连接')
           configModel.value = { ...props.config }
           tabsState.removeTabById(unref(id))
           visibleEdit.value = true
+
+
           await nextTick()
           focusRef.value?.focus()
         },
@@ -303,7 +307,7 @@ const handleCancel = () => {
             <n-input v-model:value="configModel.username" placeholder="用户名" />
           </n-form-item-gi>
           <n-form-item-gi span="2 m:1" label="密码">
-            <n-input v-model:value="configModel.password" type="password" placeholder="密码" />
+            <n-input v-model:value="configModel.password" type="password" show-password-on="click" placeholder="密码" />
           </n-form-item-gi>
 
           <n-form-item-gi span="2 m:1" label="名称">
