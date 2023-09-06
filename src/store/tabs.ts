@@ -4,6 +4,7 @@ export interface TabsProps {
   key: string
   name: string
   label: string
+  cluster: boolean
   value: string
   db: number
   type: 'home'| 'info' | 'detail' | 'terminal'
@@ -24,6 +25,7 @@ export const useTabs = defineStore('tabs', {
       value: 'home',
       name: 'localhost',
       label: '首页',
+      cluster: false,
       type: 'home',
       icon: 'mdi:home',
     }],

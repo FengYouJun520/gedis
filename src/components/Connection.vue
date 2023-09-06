@@ -21,7 +21,7 @@ const message = useMessage()
 const mitt = useMitt()
 const tabsState = useTabs()
 const treeKeys = ref<string[]>([])
-const keyspaces = ref<Keyspace[]>([])
+const keyspaces = ref<Keyspace[] | Record<string, Keyspace[]>>([])
 const menuRef = ref<InstanceType<typeof ElMenu>|null>(null)
 const connected = ref(false)
 const loading = ref(false)
@@ -79,7 +79,6 @@ watch(selectDb, async db => {
     connected.value = false
   }
 })
-
 watch(connected, newConnected => {
   if (newConnected) {
     handlePing()
@@ -90,8 +89,13 @@ watch(connected, newConnected => {
 
 const fetchInfo = async (id: string) => {
   try {
-    const info = await invoke<Record<string, string>>('get_info', { id })
-    keyspaces.value = parseKeyspaces(info)
+    const info = await invoke<Record<string, any>>('get_info', { id })
+    if (props.config.cluster) {
+      const infodict = Object.values(info).at(0) as Record<string, string>
+      keyspaces.value = parseKeyspaces(infodict)
+    } else {
+      keyspaces.value = parseKeyspaces(info)
+    }
   } catch (error) {
     message.error(error as string)
   }
@@ -157,6 +161,7 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
         value: config.id,
         name: config.name,
         label: config.name,
+        cluster: config.cluster,
         db: 0,
         type: 'info',
         icon: 'emojione:rocket',

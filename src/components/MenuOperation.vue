@@ -7,7 +7,7 @@ import { useConfig } from './useConfig'
 import { SelectOption } from 'naive-ui'
 
 const props = defineProps<{
-  keyspaces: Keyspace[]
+  keyspaces: Keyspace[] | Record<string, Keyspace[]>
   config: RedisConfig
 }>()
 
@@ -28,7 +28,9 @@ const selectOptions = computed<SelectOption[]>(() => {
       value: 0,
     }]
   }
-  return props.keyspaces.map(keyspace => ({
+
+  const keyspaces = props.keyspaces as Keyspace[]
+  return keyspaces.map(keyspace => ({
     label: `DB${keyspace.db} (${keyspace.len})`,
     value: keyspace.db,
   }))
@@ -105,6 +107,7 @@ const handleConfirm = async () => {
         id: unref(id),
         db: unref(db),
         type: 'detail',
+        cluster: configOps.config.cluster,
         key: `${unref(id)}-${unref(db)}-${keyModel.value.key}`,
         value: keyModel.value.key,
         name: configOps.config.name,

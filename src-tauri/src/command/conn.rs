@@ -1,10 +1,9 @@
-use redis::InfoDict;
+use crate::{config::RedisConfig, error::Result, CmdLog, History, RedisConnection, RedisState};
+use redis::{aio::ConnectionLike, InfoDict};
 use serde_json::json;
 use std::collections::HashMap;
 use tauri::State;
 use tracing::{info, instrument};
-
-use crate::{config::RedisConfig, error::Result, CmdLog, History, RedisConnection, RedisState};
 
 /// 测试连接
 #[tauri::command]
@@ -91,7 +90,7 @@ pub async fn change_db(
         .query_async(con)
         .await?;
 
-    info!("change db: {}", db);
+    info!("change db: {} => {}", con.get_db(), db);
     Ok(())
 }
 
@@ -102,7 +101,7 @@ pub async fn dis_connection(state: State<'_, RedisState>, id: String) -> Result<
     let mut redis_state = state.0.lock().await;
     redis_state.remove_con(&id)?;
 
-    info!(?id, "断开连接成功");
+    info!(id, "断开连接成功");
     Ok(())
 }
 
@@ -129,20 +128,30 @@ pub async fn get_info(
     let (con, config) = redis_state.get_con_and_config(&id)?;
 
     if config.cluster {
-        let infos: Vec<InfoDict> = redis::cmd("INFO")
+        let infos: Vec<Vec<(String, InfoDict)>> = redis::cmd("INFO")
             .log(history.0.clone(), config)
             .query_async(con)
             .await?;
 
+        let infos: Vec<(String, InfoDict)> = infos
+            .into_iter()
+            .map(|mut info| info.pop().unwrap())
+            .collect();
+
         let mut result_infos = HashMap::new();
-        for info in infos.into_iter() {
-            for entry in info.iter() {
-                if let Ok(val) = redis::from_redis_value(entry.1) {
-                    result_infos
-                        .entry(entry.0.to_string())
-                        .or_insert(serde_json::Value::String(val));
-                }
-            }
+        for (addr, info) in infos.into_iter() {
+            let result_info: HashMap<String, serde_json::Value> = info
+                .iter()
+                .map(|(k, v)| {
+                    if let Ok(val) = redis::from_redis_value(v) {
+                        (k.to_owned(), serde_json::Value::String(val))
+                    } else {
+                        (k.to_owned(), serde_json::Value::Null)
+                    }
+                })
+                .collect();
+
+            result_infos.insert(addr, serde_json::to_value(result_info)?);
         }
 
         Ok(json!(result_infos))

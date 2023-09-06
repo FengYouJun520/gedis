@@ -262,8 +262,7 @@ pub async fn get_key_info(
     select_db(config, db, con, &history).await?;
 
     let (typ, ttl): (String, i64) = redis::pipe()
-        .cmd("TYPE")
-        .arg(&key)
+        .key_type(&key)
         .ttl(&key)
         .log(history.0.clone(), config)
         .query_async(con)
@@ -298,8 +297,7 @@ pub async fn get_key_detail(
     select_db(config, db, con, &history).await?;
 
     let (typ, ttl): (String, i64) = redis::pipe()
-        .cmd("TYPE")
-        .arg(&key)
+        .key_type(&key)
         .ttl(&key)
         .log(history.0.clone(), config)
         .query_async(con)

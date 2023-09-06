@@ -49,16 +49,23 @@ const message = useMessage()
 const id = ref(props.tabItem.id)
 const info = ref<Record<string, string>>({})
 const autoRefresh = ref(false)
-const keyspaces = ref<Keyspace[]>([])
+const keyspaces = ref<Keyspace[] >([])
 const search = ref('')
 
 let timer:number
 const fetchInfo = async () => {
   try {
     // 获取客户端信息
-    const redisInfo = await invoke<Record<string, string>>('get_info', { id: unref(id) })
-    info.value = redisInfo
-    keyspaces.value = parseKeyspaces(redisInfo)
+    const redisInfo = await invoke<Record<string, any>>('get_info', { id: unref(id) })
+    if (props.tabItem.cluster) {
+      // 目前只获取第一个集群的信息
+      const infodict = Object.values(redisInfo).at(0) as Record<string, string>
+      info.value = infodict
+      keyspaces.value = parseKeyspaces(infodict)
+    } else {
+      info.value = redisInfo
+      keyspaces.value = parseKeyspaces(redisInfo)
+    }
   } catch (error) {
     message.error(error as string)
     autoRefresh.value = false
