@@ -60,6 +60,7 @@ const handleNodeClick = (data: TreeOptionExt) => {
     db: unref(db),
     type: 'detail',
     key,
+    cluster: configOps?.config.cluster,
     value: data.value,
     name: configOps!.config.name,
     label: `${data.value} | ${configOps?.config.name} | DB${unref(db)}`,

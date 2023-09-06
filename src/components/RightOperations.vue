@@ -42,6 +42,7 @@ const handleTerminal = async () => {
       id: unref(id),
       key: `${unref(id)}-${unref(selectDb)}`,
       value: unref(id),
+      cluster: props.config.cluster,
       name: props.config.name,
       label: `${props.config.name} | redis-cli: ${props.config.port}`,
       db: unref(selectDb),
