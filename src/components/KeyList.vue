@@ -87,7 +87,6 @@ const handleDeleteKey = async () => {
         })
 
         message.success(() => <span>
-          删除键：
           <n-tag
             type="success"
             size="small"

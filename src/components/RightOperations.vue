@@ -63,6 +63,7 @@ const handleClose = async () => {
     content: '确定要关闭连接吗？',
     positiveText: '确定',
     negativeText: '取消',
+    autoFocus: false,
     onPositiveClick: async () => {
       try {
         mitt.emit('disConnection', unref(id))
@@ -80,6 +81,7 @@ const handleDelete = async () => {
     content: '确定要删除连接吗？',
     positiveText: '确定',
     negativeText: '取消',
+    autoFocus: false,
     onPositiveClick: async () => {
       try {
         const isConnection = await invoke<boolean>('is_connection', { id: unref(id) })
@@ -170,13 +172,13 @@ const visibleDialog = async (edit: boolean) => {
         content: `需要关闭当前连接才能进行${unref(isEdit) ? '编辑' : '复制'}操作,是否继续?`,
         positiveText: '确定',
         negativeText: '取消',
+        autoFocus: false,
         onPositiveClick: async () => {
           mitt.emit('disConnection', unref(id))
           console.log('编辑连接')
           configModel.value = { ...props.config }
           tabsState.removeTabById(unref(id))
           visibleEdit.value = true
-
 
           await nextTick()
           focusRef.value?.focus()

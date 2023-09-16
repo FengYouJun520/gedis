@@ -11,9 +11,10 @@ interface FormDataViewProps {
 
 const props = defineProps<FormDataViewProps>()
 const emit = defineEmits<{
-(e: 'cancel'): void,
-(e: 'confirm', addKeyinfo: AddKeyInfo): void
+  cancel: [],
+  confirm: [id: AddKeyInfo]
 }>()
+
 const show = defineModel<boolean>('show', { required: true })
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)

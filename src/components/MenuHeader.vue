@@ -259,6 +259,20 @@ const clearLogs = async () => {
       <div flex items-center space-x-4 justify-around>
         <div
           :style="{
+            backgroundColor: uiState.theme === 'light' ? themeVars.borderColor : undefined,
+          }"
+          hover="bg-[var(--theme-hover-color)]"
+          rounded
+          cursor-pointer
+          transition-background-color
+          duration-200
+          p-4
+          @click="uiState.changeTheme('light')"
+        >
+          <i class="material-symbols:sunny" w80px h80px />
+        </div>
+        <div
+          :style="{
             backgroundColor: uiState.theme === 'system' ? borderColor : undefined,
           }"
           hover="bg-[var(--theme-hover-color)]"
@@ -285,20 +299,6 @@ const clearLogs = async () => {
           @click="uiState.changeTheme('dark')"
         >
           <i class="bi:moon-stars-fill" w80px h80px />
-        </div>
-        <div
-          :style="{
-            backgroundColor: uiState.theme === 'light' ? themeVars.borderColor : undefined,
-          }"
-          hover="bg-[var(--theme-hover-color)]"
-          rounded
-          cursor-pointer
-          transition-background-color
-          duration-200
-          p-4
-          @click="uiState.changeTheme('light')"
-        >
-          <i class="material-symbols:sunny" w80px h80px />
         </div>
       </div>
     </n-modal>

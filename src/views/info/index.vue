@@ -109,7 +109,7 @@ const infoListData = computed(() => Object.keys(unref(info))
       <n-switch v-model:value="autoRefresh" />
     </n-space>
     <!-- 状态信息 -->
-    <n-card embedded>
+    <n-card embedded :bordered="false">
       <n-grid :cols="3" :x-gap="24" :y-gap="24" item-responsive responsive="screen">
         <n-gi span="3 m:1">
           <n-card>
@@ -231,7 +231,7 @@ const infoListData = computed(() => Object.keys(unref(info))
         </n-gi>
       </n-grid>
 
-      <n-card embedded>
+      <n-card mt-4>
         <template #header>
           <n-space>
             <i class="carbon:text-link-analysis" />
@@ -241,7 +241,7 @@ const infoListData = computed(() => Object.keys(unref(info))
         <n-data-table :data="keyspaceData" :columns="keyspaceColumns" />
       </n-card>
 
-      <n-card embedded>
+      <n-card mt-4>
         <template #header>
           <n-space justify="space-between">
             <n-space>
@@ -257,7 +257,7 @@ const infoListData = computed(() => Object.keys(unref(info))
           </n-space>
         </template>
 
-        <n-data-table :data="infoListData" :columns="infoListColumns" />
+        <n-data-table :bordered="false" striped :data="infoListData" :columns="infoListColumns" />
       </n-card>
     </n-card>
   </div>
