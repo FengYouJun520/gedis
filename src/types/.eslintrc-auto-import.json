@@ -295,6 +295,7 @@
     "useDialog": true,
     "useLoadingBar": true,
     "useMessage": true,
-    "useNotification": true
+    "useNotification": true,
+    "WritableComputedRef": true
   }
 }

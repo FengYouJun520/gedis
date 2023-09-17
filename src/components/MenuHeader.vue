@@ -6,6 +6,8 @@ import { invoke } from '@tauri-apps/api'
 import { useUiState } from '@/store/ui'
 import { useMitt } from '@/useMitt'
 import { LogInst, useThemeVars, InputInst } from 'naive-ui'
+import { UseVirtualList } from '@vueuse/components'
+import { VirtualizedProps } from 'element-plus'
 
 const initConfig: RedisConfig = {
   id: '',
@@ -15,6 +17,7 @@ const initConfig: RedisConfig = {
   split: ':',
   cluster: false,
 }
+
 
 const message = useMessage()
 const uiState = useUiState()
@@ -26,10 +29,10 @@ const loading = ref(false)
 const configData = ref<RedisConfig>({ ...initConfig })
 const logs = ref<string[]>([])
 const visibleLog = ref(false)
-const logRef = ref<LogInst | null>(null)
 const focusRef = ref<InputInst>()
 const borderColor = computed(() => themeVars.value.borderColor)
 
+const virtualRef = ref<typeof UseVirtualList | null>(null)
 const fetchlogs = async () => {
   try {
     const res = await invoke<string[]>('get_logs')
@@ -79,13 +82,12 @@ const handleSettingBtn = () => {
 const handleLogs = async () => {
   await fetchlogs()
   visibleLog.value = true
+  await nextTick()
+  virtualRef.value?.scrollTo(logs.value.length - 1)
 }
 
 const handleScrollLog = () => {
-  logRef.value?.scrollTo({
-    position: 'bottom',
-    slient: false,
-  })
+  virtualRef.value?.scrollTo(logs.value.length - 1)
 }
 
 mitt.on('clearLogs', async () => {
@@ -309,46 +311,48 @@ const clearLogs = async () => {
       :auto-focus="false"
       positive-text="确认"
       class="w-[70%]!"
+      :block-scroll="false"
       @after-enter="handleScrollLog"
-      @close="visibleLog = false"
     >
-      <div flex flex-col gap-y-6>
-        <!-- 日志组件 -->
-        <n-log
-          ref="logRef"
-          trim
-          :lines="logs"
-          :font-size="18"
-          language="redis-log"
-        />
+      <!-- 日志组件 -->
+      <use-virtual-list
+        ref="virtualRef"
+        :list="logs"
+        height="50vh"
+        :options="{ itemHeight: 30 }"
+      >
+        <template #default="props">
+          <n-code style="font-size: 18px;" :code="props.data" language="redis-log" />
+        </template>
+      </use-virtual-list>
 
-        <div flex-1 flex items-center justify-between>
-          <n-space :size="24">
-            <n-tooltip>
-              自动滚动都底部
-              <template #trigger>
-                <div>
-                  <span>滚动：</span>
-                  <n-switch v-model:value="autoScrollBottom" />
-                </div>
-              </template>
-            </n-tooltip>
-            <n-tooltip>
-              实时同步日志
-              <template #trigger>
-                <div>
-                  <span>实时：</span>
-                  <n-switch v-model:value="syncLog" />
-                </div>
-              </template>
-            </n-tooltip>
-          </n-space>
-          <n-space>
-            <n-button type="error" ghost @click="clearLogs">
-              清空日志
-            </n-button>
-          </n-space>
-        </div>
+      <div flex-1 flex items-center justify-between>
+        <n-space :size="24">
+          <n-tooltip>
+            自动滚动都底部
+            <template #trigger>
+              <div>
+                <span>滚动：</span>
+                <n-switch v-model:value="autoScrollBottom" />
+              </div>
+            </template>
+          </n-tooltip>
+          <n-tooltip>
+            实时同步日志
+            <template #trigger>
+              <div>
+                <span>实时：</span>
+                <n-switch v-model:value="syncLog" />
+                <span>行数：{{ logs.length }}</span>
+              </div>
+            </template>
+          </n-tooltip>
+        </n-space>
+        <n-space>
+          <n-button type="error" ghost @click="clearLogs">
+            清空日志
+          </n-button>
+        </n-space>
       </div>
     </n-modal>
   </div>

@@ -119,21 +119,12 @@ impl ConnectionLike for RedisConnection {
 #[derive(Debug, Default)]
 pub struct RedisState(pub Arc<Mutex<Redis>>);
 
-const MAX_HISTORY: usize = 5000;
-
 #[derive(Debug, Default, Clone)]
 pub struct History(pub Arc<std::sync::Mutex<Vec<String>>>);
 
 impl History {
     pub fn add_log(&self, value: String, config: &RedisConfig) {
         let mut histories = self.0.lock().unwrap();
-        if histories.len() == MAX_HISTORY {
-            histories.reverse();
-            for _ in 0..=2500 {
-                histories.pop();
-            }
-            histories.reverse();
-        }
         histories.push(format!("[{}] {}", config.name, value));
     }
 
