@@ -1,6 +1,6 @@
 [package]
 name = "gedis"
-version = "1.4.1"
+version = "1.5.0"
 description = "redis desktop manager"
 authors = ["FengYouJun"]
 license = "MIT"
@@ -11,13 +11,20 @@ rust-version = "1.72.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = {version = "1.4", features = [] }
+tauri-build = { version = "1.4", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
-tauri = {version = "1.4", features = [ "dialog-message", "dialog-confirm", "updater", "clipboard-write-text", "shell-open", "clipboard-read-text"] }
+tauri = { version = "1.4", features = [
+  "dialog-message",
+  "dialog-confirm",
+  "updater",
+  "clipboard-write-text",
+  "shell-open",
+  "clipboard-read-text",
+] }
 chrono = { version = "0.4", features = ["serde"] }
 anyhow = "1.0"
 tracing = "0.1"
@@ -30,11 +37,11 @@ window-shadows = "0.2.1"
 [dependencies.redis]
 version = "0.23"
 features = [
-  "tokio-native-tls-comp", 
-  "cluster-async", 
-  "r2d2", 
-  "connection-manager", 
-  "ahash"
+  "tokio-native-tls-comp",
+  "cluster-async",
+  "r2d2",
+  "connection-manager",
+  "ahash",
 ]
 
 [features]
@@ -46,7 +53,7 @@ default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 
 [profile.release]
-panic = "abort" # Strip expensive panic clean-up logic
+panic = "abort"   # Strip expensive panic clean-up logic
 codegen-units = 1 # Compile crates one after another so the compiler can optimize better
-lto = true # Enables link to optimizations
-opt-level = "s" # Optimize for binary size
+lto = true        # Enables link to optimizations
+opt-level = "s"   # Optimize for binary size
