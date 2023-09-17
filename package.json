@@ -1,7 +1,7 @@
 {
   "name": "gedis",
   "private": true,
-  "version": "1.5.0",
+  "version": "1.5.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -45,7 +45,7 @@
     "lint-staged": "^14.0.1",
     "naive-ui": "^2.34.4",
     "node-fetch": "^3.3.2",
-    "typescript": "5.2.2",
+    "typescript": "5.0.4",
     "unocss": "^0.55.7",
     "unplugin-auto-import": "^0.16.6",
     "unplugin-vue-components": "^0.25.2",
