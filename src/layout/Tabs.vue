@@ -1,22 +1,25 @@
 <script setup lang="tsx">
 import { useTabs } from '@/store/tabs'
-import type { TabPaneName, TabsPaneContext } from 'element-plus'
 import Home from '@/views/home/index.vue'
 import Info from '@/views/info/index.vue'
 import Detail from '@/views/detail/index.vue'
 import Terminal from '@/views/terminal/index.vue'
-import { useThemeVars } from 'naive-ui'
+import { TabsInst, useThemeVars } from 'naive-ui'
 import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 
-const tabsState = useTabs()
 const themeVars = useThemeVars()
+const tabsState = useTabs()
+const tabsInstRef = ref<TabsInst | null>(null)
 
-const handleClick = (pane: TabsPaneContext, _event: Event) => {
-  tabsState.setActive(pane.paneName?.toString() || '')
+const handleClick = (name: string) => {
+  nextTick().then(() => {
+    tabsState.setActive(name)
+  })
 }
 
-const handleRemove = (name: TabPaneName) => {
+const handleRemove = (name: string | number) => {
   tabsState.removeTab(name.toString())
+  nextTick().then(() => tabsInstRef.value?.syncBarPosition())
 }
 
 onMounted(async () => {
@@ -33,18 +36,18 @@ const xRef = ref(0)
 const yRef = ref(0)
 const currentKey = ref('')
 
-const handleContextMenu = (e: MouseEvent, key: string) => {
+const handleContextMenu = (key: string, e: MouseEvent) => {
   e.preventDefault()
-  showDropdown.value = false
+  currentKey.value = key
+  showDropdown.value = true
+
   nextTick().then(() => {
-    currentKey.value = key
-    showDropdown.value = true
     xRef.value = e.clientX
     yRef.value = e.clientY
   })
 }
 
-const onClickoutside = () => {
+const onClickOutside = () => {
   showDropdown.value = false
 }
 
@@ -98,95 +101,71 @@ const handleCommand = (key: string, command: string) => {
 
 <template>
   <div h-full w-full>
-    <el-tabs
-      v-model="tabsState.currentActive"
+    <n-tabs
+      ref="tabsInstRef"
+      v-model:value="tabsState.currentActive"
       type="card"
-      w-full
-      h-full
-      @tab-click="handleClick"
-      @tab-remove="handleRemove"
+      @update:value="handleClick"
+      @close="handleRemove"
     >
-      <n-scrollbar style="height: calc(100vh - 56px);">
-        <el-tab-pane
-          v-for="tabItem in tabsState.tabs"
-          :key="tabItem.key"
-          px-4
-          :name="tabItem.key"
-          :closable="tabItem.type !== 'home'"
-        >
-          <home v-if="tabItem.type === 'home'" />
-          <info
-            v-if="tabItem.type === 'info'"
-            :tab-item="tabItem"
-          />
-          <detail
-            v-if="tabItem.type === 'detail'"
-            :tab-item="tabItem"
-          />
-          <terminal
-            v-if="tabItem.type === 'terminal'"
-            :tab-item="tabItem"
-          />
-          <template #label>
-            <div
-              inline-flex
-              items-center
-              space-x2
-              :class="{ 'tab--active': tabItem.key === tabsState.currentActive }"
-              @contextmenu="e => handleContextMenu(e, tabItem.key)"
-            >
-              <n-tooltip :delay="500">
-                {{ tabItem.value }}
-                <template #trigger>
-                  <div space-x-2>
-                    <i :class="tabItem.icon" />
-                    <span>
-                      {{ tabItem.label.length > 30 ? `${tabItem.label.substring(0, 30)}...` : tabItem.label }}
-                    </span>
-                  </div>
-                </template>
-              </n-tooltip>
-            </div>
-          </template>
-        </el-tab-pane>
-      </n-scrollbar>
-    </el-tabs>
+      <n-tab-pane
+        v-for="tabItem in tabsState.getTabs" :key="tabItem.id"
+        :name="tabItem.key"
+        :closable="tabItem.key !== 'home'"
+        display-directive="show"
+      >
+        <template #tab>
+          <div
+            inline-flex
+            items-center
+            space-x2
+            :class="{ 'tab--active': tabItem.key === tabsState.currentActive }"
+            @contextmenu="e => handleContextMenu(tabItem.key, e)"
+          >
+            <n-tooltip :delay="500">
+              {{ tabItem.value }}
+              <template #trigger>
+                <div space-x-2>
+                  <i :class="tabItem.icon" />
+                  <span>
+                    {{ tabItem.label.length > 30 ? `${tabItem.label.substring(0, 30)}...` : tabItem.label }}
+                  </span>
+                </div>
+              </template>
+            </n-tooltip>
+          </div>
+        </template>
+
+        <home v-if="tabItem.type === 'home'" />
+        <info
+          v-if="tabItem.type === 'info'"
+          :tab-item="tabItem"
+        />
+        <detail
+          v-if="tabItem.type === 'detail'"
+          :tab-item="tabItem"
+        />
+        <terminal
+          v-if="tabItem.type === 'terminal'"
+          :tab-item="tabItem"
+        />
+      </n-tab-pane>
+    </n-tabs>
+
     <n-dropdown
-      inverted
       trigger="manual"
       :show="showDropdown"
       :x="xRef"
       :y="yRef"
       :options="dropdownOps"
-      @clickoutside="onClickoutside"
+      @clickoutside="onClickOutside"
       @select="handleSelect"
     />
   </div>
 </template>
 
 <style lang="css" scoped>
-.el-tabs {
-  @apply flex flex-col;
-}
-:deep(.el-tabs__content) {
-  flex: 1;
-}
-
-.el-tab-pane {
-  height: 100%;
-}
-
-.tab--active, :deep(.el-tabs__item):hover {
-  color: v-bind("themeVars.primaryColor");
-}
-
-
-:deep(.el-tabs__item) .is-icon-close {
-  color: v-bind("themeVars.primaryColor");
-}
-
-:deep(.el-tabs__item) .is-icon-close:hover {
-  color: v-bind("themeVars.primaryColorHover");
-  background-color: v-bind("themeVars.closeColorPressed");
+.n-tabs :deep(.n-tabs-nav) {
+  @apply backdrop-blur bg-opacity-90 w-full overflow-hidden sticky top-0 z-10;
 }
 </style>

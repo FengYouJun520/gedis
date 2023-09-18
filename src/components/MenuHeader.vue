@@ -327,7 +327,7 @@ const clearLogs = async () => {
       </use-virtual-list>
 
       <div flex-1 flex items-center justify-between>
-        <n-space :size="24">
+        <n-space :size="24" align="center">
           <n-tooltip>
             自动滚动都底部
             <template #trigger>
@@ -343,10 +343,10 @@ const clearLogs = async () => {
               <div>
                 <span>实时：</span>
                 <n-switch v-model:value="syncLog" />
-                <span>行数：{{ logs.length }}</span>
               </div>
             </template>
           </n-tooltip>
+          <span>行数：{{ logs.length }}</span>
         </n-space>
         <n-space>
           <n-button type="error" ghost @click="clearLogs">
