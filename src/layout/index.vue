@@ -6,7 +6,7 @@ import Tabs from './Tabs.vue'
 <template>
   <n-layout has-sider embedded h-full>
     <menu-bar />
-    <n-layout :native-scrollbar="false" style="z-index: 99;">
+    <n-layout :native-scrollbar="false">
       <tabs />
     </n-layout>
   </n-layout>

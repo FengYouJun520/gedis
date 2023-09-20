@@ -206,7 +206,7 @@ watch(() => keyinfo.value.type, t => {
 </script>
 
 <template>
-  <n-card class="h-[calc(100vh-56px)]" flex flex-col>
+  <div class="h-[calc(100vh-96px)]" flex flex-col>
     <n-form
       label
       :show-label="false"
@@ -288,7 +288,7 @@ watch(() => keyinfo.value.type, t => {
       :keyinfo="keyinfo"
       class="flex-1"
     />
-  </n-card>
+  </div>
 </template>
 
 <style lang="css" scoped>

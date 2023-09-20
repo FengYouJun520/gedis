@@ -101,6 +101,7 @@ const infoListData = computed(() => Object.keys(unref(info))
 
 <template>
   <div flex flex-col gap-y-6 overflow-hidden>
+    <!-- 状态信息 -->
     <!-- 自动刷新 -->
     <n-space ml-6>
       <n-tag type="primary">
@@ -108,7 +109,6 @@ const infoListData = computed(() => Object.keys(unref(info))
       </n-tag>
       <n-switch v-model:value="autoRefresh" />
     </n-space>
-    <!-- 状态信息 -->
     <n-card embedded :bordered="false">
       <n-grid :cols="3" :x-gap="24" :y-gap="24" item-responsive responsive="screen">
         <n-gi span="3 m:1">

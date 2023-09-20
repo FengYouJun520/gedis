@@ -10,6 +10,9 @@ module.exports = {
     'plugin:vue/vue3-recommended',
     './src/types/.eslintrc-auto-import.json',
   ],
+  globals: {
+    defineModel: true,
+  },
   overrides: [
   ],
   parser: 'vue-eslint-parser',

@@ -1,6 +1,7 @@
 {
   "cSpell.words": [
     "clickoutside",
+    "commitlint",
     "gedis",
     "hdel",
     "hlen",
@@ -11,6 +12,7 @@
     "lpush",
     "lrange",
     "lrem",
+    "persistedstate",
     "pinia",
     "rpush",
     "sadd",

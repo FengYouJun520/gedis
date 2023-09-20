@@ -141,14 +141,16 @@ const handleCommand = (key: string, command: string) => {
           v-if="tabItem.type === 'info'"
           :tab-item="tabItem"
         />
-        <detail
-          v-if="tabItem.type === 'detail'"
-          :tab-item="tabItem"
-        />
-        <terminal
-          v-if="tabItem.type === 'terminal'"
-          :tab-item="tabItem"
-        />
+        <n-card embedded :bordered="false">
+          <detail
+            v-if="tabItem.type === 'detail'"
+            :tab-item="tabItem"
+          />
+          <terminal
+            v-if="tabItem.type === 'terminal'"
+            :tab-item="tabItem"
+          />
+        </n-card>
       </n-tab-pane>
     </n-tabs>
 
@@ -166,6 +168,6 @@ const handleCommand = (key: string, command: string) => {
 
 <style lang="css" scoped>
 .n-tabs :deep(.n-tabs-nav) {
-  @apply backdrop-blur bg-opacity-90 w-full overflow-hidden sticky top-0 z-10;
+  @apply backdrop-blur-4 bg-opacity-90 w-full overflow-hidden sticky top-0 z-10;
 }
 </style>

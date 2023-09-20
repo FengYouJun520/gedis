@@ -95,6 +95,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
+          'highlight.js': ['highlight.js'],
+          'pinia': ['pinia', 'pinia-plugin-persistedstate'],
+          'vue': ['vue'],
+          'xterm': ['xterm', 'xterm-addon-fit'],
+          'uuid': ['uuid'],
+          'mitt': ['mitt'],
         },
       },
     },
