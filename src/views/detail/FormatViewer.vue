@@ -9,6 +9,7 @@ interface FormatViewProps {
   showFormat?: string
 }
 
+
 const props = defineProps<FormatViewProps>()
 const content = defineModel<string>({ required: true })
 const selectComponent = ref(props.showFormat || 'text')
@@ -62,7 +63,7 @@ const options = computed<SelectOption[]>(() => views.map(view => ({
 </script>
 
 <template>
-  <div w-full flex flex-col space-y-5>
+  <div w-full h-full flex flex-col space-y-5>
     <n-grid :x-gap="12" :cols="24" responsive="screen" item-responsive>
       <n-gi span="8">
         <n-select v-model:value="selectComponent" :options="options" />

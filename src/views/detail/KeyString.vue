@@ -85,12 +85,13 @@ const handleSave = () => {
 </script>
 
 <template>
-  <n-form :model="keyDetail" :show-label="false">
-    <n-form-item path="value">
+  <n-form :model="keyDetail" :show-label="false" class="flex flex-col justify-between">
+    <n-form-item path="value" flex-1 flex-grow-1 flex-shrink-0>
       <format-viewer
         ref="viewRef"
         v-model="content"
         :redis-key="keyValue"
+
       />
     </n-form-item>
     <n-form-item>

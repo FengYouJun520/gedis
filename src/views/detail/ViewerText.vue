@@ -15,11 +15,14 @@ defineExpose({
 <template>
   <n-input
     v-model:value="content"
+    class="viewer-text"
     type="textarea"
     :readonly="readonly"
-    :autosize="{ minRows: 16, maxRows: 20 }"
   />
 </template>
 
 <style lang="css" scoped>
+.viewer-text {
+  height: calc(100vh - 300px);
+}
 </style>

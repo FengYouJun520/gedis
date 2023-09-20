@@ -4,17 +4,15 @@ import Home from '@/views/home/index.vue'
 import Info from '@/views/info/index.vue'
 import Detail from '@/views/detail/index.vue'
 import Terminal from '@/views/terminal/index.vue'
-import { TabsInst, useThemeVars } from 'naive-ui'
+import { TabsInst } from 'naive-ui'
 import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 
-const themeVars = useThemeVars()
 const tabsState = useTabs()
 const tabsInstRef = ref<TabsInst | null>(null)
 
 const handleClick = (name: string) => {
-  nextTick().then(() => {
-    tabsState.setActive(name)
-  })
+  tabsState.setActive(name)
+  nextTick().then(() => tabsInstRef.value?.syncBarPosition())
 }
 
 const handleRemove = (name: string | number) => {
@@ -27,6 +25,7 @@ onMounted(async () => {
     event.stopPropagation()
     if (event.ctrlKey && event.key === 'w') {
       tabsState.removeTab(tabsState.currentActive)
+      nextTick().then(() => tabsInstRef.value?.syncBarPosition())
     }
   })
 })
@@ -115,25 +114,23 @@ const handleCommand = (key: string, command: string) => {
         display-directive="show"
       >
         <template #tab>
-          <div
-            inline-flex
-            items-center
-            space-x2
-            :class="{ 'tab--active': tabItem.key === tabsState.currentActive }"
-            @contextmenu="e => handleContextMenu(tabItem.key, e)"
-          >
-            <n-tooltip :delay="500">
-              {{ tabItem.value }}
-              <template #trigger>
+          <n-tooltip :delay="1000">
+            {{ tabItem.value }}
+            <template #trigger>
+              <div
+                inline-flex
+                items-center
+                @contextmenu="e => handleContextMenu(tabItem.key, e)"
+              >
                 <div space-x-2>
                   <i :class="tabItem.icon" />
                   <span>
                     {{ tabItem.label.length > 30 ? `${tabItem.label.substring(0, 30)}...` : tabItem.label }}
                   </span>
                 </div>
-              </template>
-            </n-tooltip>
-          </div>
+              </div>
+            </template>
+          </n-tooltip>
         </template>
 
         <home v-if="tabItem.type === 'home'" />

@@ -208,12 +208,12 @@ const nodeProps: TreeNodeProps = ({ option }) => ({
   },
 })
 
-const renderSwitcherIconWithExpaned: RenderSwitcherIcon = ({ expanded }) => (
+const renderSwitcherIconWithExpanded: RenderSwitcherIcon = ({ expanded }) => (
   <>
     <i class="bi:caret-right-fill" />
   </>
 )
-const updatePrefixWithExpaned: onUpdateExpandedKeys = (keys, option, meta) => {
+const updatePrefixWithExpended: onUpdateExpandedKeys = (keys, option, meta) => {
   if (!meta.node) {
     return
   }
@@ -279,8 +279,8 @@ const renderLabel: RenderLabel = ({ checked, option, selected }) => {
       :show-irrelevant-nodes="false"
       :node-props="nodeProps"
       :render-label="renderLabel"
-      :render-switcher-icon="renderSwitcherIconWithExpaned"
-      @update:expanded-keys="updatePrefixWithExpaned"
+      :render-switcher-icon="renderSwitcherIconWithExpanded"
+      @update:expanded-keys="updatePrefixWithExpended"
     />
 
 
