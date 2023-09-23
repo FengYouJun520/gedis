@@ -175,7 +175,6 @@ const visibleDialog = async (edit: boolean) => {
         autoFocus: false,
         onPositiveClick: async () => {
           mitt.emit('disConnection', unref(id))
-          console.log('编辑连接')
           configModel.value = { ...props.config }
           tabsState.removeTabById(unref(id))
           visibleEdit.value = true

@@ -8,6 +8,8 @@
     "hscan",
     "hset",
     "iconify",
+    "Keyspace",
+    "keyspaces",
     "llen",
     "lpush",
     "lrange",
@@ -39,7 +41,5 @@
     "zset"
   ],
   "typescript.tsdk": "node_modules/typescript/lib",
-  "github-actions.workflows.pinned.workflows": [
-    ".github/workflows/release.yml"
-  ],
+  "github-actions.workflows.pinned.workflows": [".github/workflows/release.yml"]
 }

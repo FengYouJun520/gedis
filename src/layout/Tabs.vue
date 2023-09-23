@@ -4,9 +4,10 @@ import Home from '@/views/home/index.vue'
 import Info from '@/views/info/index.vue'
 import Detail from '@/views/detail/index.vue'
 import Terminal from '@/views/terminal/index.vue'
-import { TabsInst } from 'naive-ui'
+import { TabsInst, useThemeVars } from 'naive-ui'
 import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 
+const themeVars = useThemeVars()
 const tabsState = useTabs()
 const tabsInstRef = ref<TabsInst | null>(null)
 
@@ -165,6 +166,7 @@ const handleCommand = (key: string, command: string) => {
 
 <style lang="css" scoped>
 .n-tabs :deep(.n-tabs-nav) {
-  @apply backdrop-blur-4 bg-opacity-90 w-full overflow-hidden sticky top-0 z-10;
+  background: v-bind("themeVars.bodyColor");
+  @apply dark:bg-transparent dark:backdrop-blur-4 dark:bg-opacity-90 w-full overflow-hidden sticky top-0 z-10;
 }
 </style>

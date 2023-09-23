@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { TabsProps } from '@/store/tabs'
-import { useUiState } from '@/store/ui'
 import { Keyspace } from '@/types/redis'
 import { parseKeyspaces } from '@/util'
 import { invoke } from '@tauri-apps/api'

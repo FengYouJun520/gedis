@@ -10,6 +10,10 @@ import { useUpdater } from './updater'
 useUpdater()
 
 onMounted(() => {
+  if (import.meta.env.DEV) {
+    return
+  }
+
   window.addEventListener('contextmenu', event => {
     event.preventDefault()
   })

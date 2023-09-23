@@ -5,9 +5,8 @@ import { v4 } from 'uuid'
 import { invoke } from '@tauri-apps/api'
 import { useUiState } from '@/store/ui'
 import { useMitt } from '@/useMitt'
-import { LogInst, useThemeVars, InputInst } from 'naive-ui'
+import { useThemeVars, InputInst } from 'naive-ui'
 import { UseVirtualList } from '@vueuse/components'
-import { VirtualizedProps } from 'element-plus'
 
 const initConfig: RedisConfig = {
   id: '',
@@ -33,7 +32,7 @@ const focusRef = ref<InputInst>()
 const borderColor = computed(() => themeVars.value.borderColor)
 
 const virtualRef = ref<typeof UseVirtualList | null>(null)
-const fetchlogs = async () => {
+const fetchLogs = async () => {
   try {
     const res = await invoke<string[]>('get_logs')
     logs.value = res
@@ -80,7 +79,7 @@ const handleSettingBtn = () => {
 }
 
 const handleLogs = async () => {
-  await fetchlogs()
+  await fetchLogs()
   visibleLog.value = true
   await nextTick()
   virtualRef.value?.scrollTo(logs.value.length - 1)
@@ -103,7 +102,7 @@ watchEffect(cleanup => {
   let timer: number|undefined
   if (unref(visibleLog) && unref(syncLog)) {
     timer = setInterval(async () => {
-      await fetchlogs()
+      await fetchLogs()
       unref(autoScrollBottom) && handleScrollLog()
     }, 2000)
   }
