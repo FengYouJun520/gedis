@@ -105,6 +105,7 @@ const handleCommand = (key: string, command: string) => {
       ref="tabsInstRef"
       v-model:value="tabsState.currentActive"
       type="card"
+      class="px-3"
       @update:value="handleClick"
       @close="handleRemove"
     >

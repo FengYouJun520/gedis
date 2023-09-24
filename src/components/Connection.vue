@@ -195,7 +195,7 @@ const handleDisConnection = async (id: string) => {
     selectDb.value = 0
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    menuRef.value.close(id, [id])
+    menuRef.value?.close(id, [id])
     tabsState.removeTabById(id)
   } catch (error) {
     message.error(error as string)

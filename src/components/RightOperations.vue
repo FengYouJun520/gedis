@@ -89,7 +89,7 @@ const handleDelete = async () => {
         configState.removeConfig(unref(id))
 
         if (isConnection) {
-          console.log('删除连接')
+          mitt.emit('disConnection', unref(id))
         }
       } catch (error) {
         message.error(error as string)
