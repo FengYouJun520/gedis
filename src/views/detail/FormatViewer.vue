@@ -13,7 +13,7 @@ interface FormatViewProps {
 const props = defineProps<FormatViewProps>()
 const content = defineModel<string>({ required: true })
 const selectComponent = ref(props.showFormat || 'text')
-const viewRef = ref<InstanceType<typeof ViewerJson|typeof ViewerText>|null>(null)
+const viewRef = ref<InstanceType<typeof ViewerJson | typeof ViewerText> | null>(null)
 const lineNumber = ref(false)
 
 const views = [

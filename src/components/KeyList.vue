@@ -273,7 +273,7 @@ const renderLabel: RenderLabel = ({ checked, option, selected }) => {
       block-line
       expand-on-click
       virtual-scroll
-      style="height: 350px;"
+      style="max-height: 350px;"
       :data="treeKeys"
       :pattern="pattern"
       :show-irrelevant-nodes="false"

@@ -12,13 +12,13 @@ interface FormDataViewProps {
 const props = defineProps<FormDataViewProps>()
 const emit = defineEmits<{
   cancel: [],
-  confirm: [id: AddKeyInfo]
+  confirm: [keyinfo: AddKeyInfo]
 }>()
 
 const show = defineModel<boolean>('show', { required: true })
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)
-const addKeyinfo = ref<AddKeyInfo>({ ...props.model })
+const addKeyinfo = ref<AddKeyInfo>(props.model)
 const viewRef = ref<InstanceType<typeof FormatViewer> | null>(null)
 const content = ref('')
 

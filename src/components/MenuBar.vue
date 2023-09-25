@@ -30,7 +30,7 @@ const { pressed } = useResizeAsideWidth(handleMouse, { target: resizeRef, touch:
     <!-- 头部 -->
     <menu-header />
     <!-- 内容 -->
-    <transition-group name="list">
+    <transition-group name="list" appear>
       <connection v-for="config in redisState.configs" :key="config.id" :config="config" />
     </transition-group>
 
