@@ -8,6 +8,7 @@
     "hscan",
     "hset",
     "iconify",
+    "infodict",
     "keyinfo",
     "Keyspace",
     "keyspaces",

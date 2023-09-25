@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { TabsProps, useTabs } from '@/store/tabs'
-import { clipboard, invoke, shell } from '@tauri-apps/api'
+import { clipboard, shell } from '@tauri-apps/api'
 import { allCommands, CommandType } from './command'
 import { useMitt } from '@/useMitt'
 import { useThemeVars } from 'naive-ui'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { useUiState } from '@/store/ui'
+import { sendTerminalCli } from '@/apis/terminal_ops'
 
 interface TerminalProps {
   tabItem: TabsProps
@@ -167,11 +168,7 @@ const onExecCmd = async () => {
 
   const args = cmd.split(argsRegex).filter(arg => arg && arg !== '')
 
-  invoke('terminal', {
-    id: props.tabItem.id,
-    db: unref(db),
-    args,
-  }).then(res => {
+  sendTerminalCli(props.tabItem.id, unref(db), args).then(res => {
     parseResult(res)
   })
     .catch(error => {

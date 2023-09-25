@@ -2,7 +2,7 @@
 import { TabsProps } from '@/store/tabs'
 import { Keyspace } from '@/types/redis'
 import { parseKeyspaces } from '@/util'
-import { invoke } from '@tauri-apps/api'
+import conOpsApi from '@/apis/conn_ops'
 import { TableColumn } from 'naive-ui/es/data-table/src/interface'
 
 interface InfoProps {
@@ -55,7 +55,7 @@ let timer:number
 const fetchInfo = async () => {
   try {
     // 获取客户端信息
-    const redisInfo = await invoke<Record<string, any>>('get_info', { id: unref(id) })
+    const redisInfo = await conOpsApi.getInfo(unref(id))
     if (props.tabItem.cluster) {
       // 目前只获取第一个集群的信息
       const infodict = Object.values(redisInfo).at(0) as Record<string, string>

@@ -1,7 +1,6 @@
 <script setup lang="tsx">
 import KeyList from '@/components/KeyList.vue'
 import { TabsProps, useTabs } from '@/store/tabs'
-import { invoke } from '@tauri-apps/api'
 import { Keyspace, RedisConfig } from '@/types/redis'
 import type { ElMenu } from 'element-plus'
 import { keysToTree, parseKeyspaces } from '@/util'
@@ -10,6 +9,8 @@ import { useMitt } from '@/useMitt'
 import RightOperations from './RightOperations.vue'
 import MenuOperation from './MenuOperation.vue'
 import { useThemeVars } from 'naive-ui'
+import connApi from '@/apis/conn_ops'
+import keyOpsApi from '@/apis/key_ops'
 
 interface ConnectionProps {
   config: RedisConfig
@@ -89,7 +90,7 @@ watch(connected, newConnected => {
 
 const fetchInfo = async (id: string) => {
   try {
-    const info = await invoke<Record<string, any>>('get_info', { id })
+    const info = await connApi.getInfo(id)
     if (props.config.cluster) {
       const infodict = Object.values(info).at(0) as Record<string, string>
       keyspaces.value = parseKeyspaces(infodict)
@@ -104,7 +105,7 @@ const fetchInfo = async (id: string) => {
 // 获取指定数据库的所有树型key列表
 const fetchTreeKeys = async (id: string, db: number) => {
   try {
-    const keys = await invoke<string[]>('get_keys_by_db', { id, db })
+    const keys = await keyOpsApi.getKeysByDb(id, db)
     treeKeys.value = keysToTree(keys)
   } catch (error) {
     message.error(error as string)
@@ -119,7 +120,7 @@ const handlePing = () => {
   ping && clearInterval(ping)
   ping = setInterval(async () => {
     try {
-      await invoke('ping', { id: props.config.id })
+      await connApi.ping(props.config.id)
     } catch (error) {
       message.error(error as string)
       await handleDisConnection(props.config.id)
@@ -142,7 +143,7 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
     if (!unref(connected)) {
       loading.value = true
       start()
-      await invoke('connection', { config })
+      await connApi.connection(config)
       connected.value = true
       stop()
     }
@@ -188,7 +189,7 @@ const handleConnection = async (config: RedisConfig, tabs?: TabsProps) => {
 
 const handleDisConnection = async (id: string) => {
   try {
-    await invoke('dis_connection', { id })
+    await connApi.disConnection(id)
     mitt.emit('clearLogs')
     isOpen.value = false
     connected.value = false

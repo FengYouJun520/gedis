@@ -2,7 +2,7 @@
 import { TabsProps, useTabs } from '@/store/tabs'
 import { KeyInfo } from '@/types/redis'
 import { useMitt } from '@/useMitt'
-import { invoke } from '@tauri-apps/api'
+import keyOpsApi from '@/apis/key_ops'
 import KeyString from './KeyString.vue'
 import KeyList from './KeyList.vue'
 import KeySet from './KeySet.vue'
@@ -45,11 +45,7 @@ onUnmounted(() => {
 })
 
 const fetchKeyInfo = async () => {
-  const res = await invoke<KeyInfo>('get_key_info', {
-    id: unref(id),
-    db: unref(db),
-    key: unref(key),
-  })
+  const res = await keyOpsApi.getKeyInfo(unref(id), unref(db), unref(key))
 
   if (res.ttl === -2) {
     return Promise.reject(`指定的键: ${unref(key)}不存在`)
@@ -75,12 +71,7 @@ const handleSaveKey = () => {
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await invoke('rename_key', {
-          id: unref(id),
-          db: unref(db),
-          key: unref(key),
-          newKey: unref(keyinfo).key,
-        })
+        await keyOpsApi.renameKey(unref(id), unref(db), unref(key), unref(keyinfo).key)
 
         const tabKey = `${unref(id)}-${unref(db)}-${unref(key)}`
         key.value = unref(keyinfo).key
@@ -104,12 +95,7 @@ const handleSaveKey = () => {
 
 const handleTTL = async (ttl: number) => {
   try {
-    await invoke('set_key_ttl', {
-      id: unref(id),
-      db: unref(db),
-      key: keyinfo.value.key,
-      ttl,
-    })
+    await keyOpsApi.setKeyTTL(unref(id), unref(db), keyinfo.value.key, ttl)
 
     await fetchKeyInfo()
   } catch (error) {
@@ -149,7 +135,7 @@ const handleDeleteKey = () => {
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await invoke('del_key', { id: unref(id), db: unref(db), key: unref(key) })
+        await keyOpsApi.delKey(unref(id), unref(db), unref(key))
 
         tabsState.removeTab(`${unref(id)}-${unref(db)}-${unref(key)}`)
         mitt.emit('refresh', { id: unref(id), db: unref(db) })

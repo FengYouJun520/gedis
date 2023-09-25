@@ -1,6 +1,7 @@
 <script setup lang="tsx">
 import { AddKeyInfo, KeyContentDetail, KeyInfo } from '@/types/redis'
-import { clipboard, invoke } from '@tauri-apps/api'
+import { clipboard } from '@tauri-apps/api'
+import keyOpsApi from '@/apis/key_ops'
 import FormDataView from './FormDataView.vue'
 import { DataTableColumns } from 'naive-ui'
 
@@ -120,12 +121,7 @@ const columns: DataTableColumns = [
 ]
 
 const fetchKeyDetail = async () => {
-  const detail = await invoke<KeyContentDetail<StreamDetail[]>>('get_key_detail', {
-    id: unref(id),
-    db: unref(db),
-    key: props.keyinfo.key,
-  })
-
+  const detail = await keyOpsApi.getKeyDetail<StreamDetail[]>(unref(id), unref(db), props.keyinfo.key)
   keyDetail.value = detail
   listValue.value = detail.value.map(value => ({
     id: value.id,
@@ -159,13 +155,7 @@ const deleteValueByKey = (rawData: any) => {
     type: 'warning',
   }).then(async () => {
     try {
-      await invoke('del_key_by_value', {
-        id: unref(id),
-        db: unref(db),
-        key: unref(key),
-        value,
-      })
-
+      await keyOpsApi.delKeyByValue(unref(id), unref(db), unref(key), value)
       await fetchKeyDetail()
     } catch (error) {
       message.error(error as string)
@@ -219,15 +209,7 @@ const handleConfirm = async (keyinfo: AddKeyInfo) => {
     const value = JSON.stringify(objToString(obj))
 
     // 添加新值
-    await invoke('set_key', {
-      id: unref(id),
-      db: unref(db),
-      keyinfo: {
-        ...keyinfo,
-        value,
-      },
-    })
-
+    await keyOpsApi.setKey(unref(id), unref(db), { ...keyinfo, value })
     await fetchKeyDetail()
 
     isEdit.value = false

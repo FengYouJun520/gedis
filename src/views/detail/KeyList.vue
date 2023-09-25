@@ -1,6 +1,7 @@
 <script setup lang="tsx">
 import { AddKeyInfo, KeyContentDetail, KeyInfo } from '@/types/redis'
-import { clipboard, invoke } from '@tauri-apps/api'
+import { clipboard } from '@tauri-apps/api'
+import keyOpsApi from '@/apis/key_ops'
 import FormDataView from './FormDataView.vue'
 import { DataTableColumns } from 'naive-ui'
 
@@ -111,12 +112,7 @@ const columns: DataTableColumns = [
 ]
 
 const fetchKeyDetail = async () => {
-  const detail = await invoke<KeyContentDetail<string[]>>('get_key_detail', {
-    id: unref(id),
-    db: unref(db),
-    key: props.keyinfo.key,
-  })
-
+  const detail = await keyOpsApi.getKeyDetail<string[]>(unref(id), unref(db), props.keyinfo.key)
   keyDetail.value = detail
   listValue.value = detail.value.map(value => ({ value }))
 }
@@ -150,13 +146,7 @@ const deleteValueByKey = (rawData: any) => {
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await invoke('del_key_by_value', {
-          id: unref(id),
-          db: unref(db),
-          key: unref(key),
-          value,
-        })
-
+        await keyOpsApi.delKeyByValue(unref(id), unref(db), unref(key), value)
         await fetchKeyDetail()
       } catch (error) {
         message.error(error as string)
@@ -194,21 +184,11 @@ const handleConfirm = async (keyinfo: AddKeyInfo) => {
 
     // 删除原来值
     if (unref(isEdit)) {
-      await invoke('del_key_by_value', {
-        id: unref(id),
-        db: unref(db),
-        key: unref(key),
-        value: unref(addKeyinfo).value,
-      })
+      await keyOpsApi.delKeyByValue(unref(id), unref(db), unref(key), unref(addKeyinfo).value)
     }
 
     // 添加新值
-    await invoke('set_key', {
-      id: unref(id),
-      db: unref(db),
-      keyinfo,
-    })
-
+    await keyOpsApi.setKey(unref(id), unref(db), keyinfo)
     await fetchKeyDetail()
 
     isEdit.value = false

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api'
+import keyOpsApi from '@/apis/key_ops'
 import { KeyContentDetail, AddKeyInfo, KeyInfo } from '@/types/redis'
 import FormatViewer from './FormatViewer.vue'
 
@@ -28,12 +28,7 @@ const keyDetail = ref<KeyContentDetail<string>>({
 })
 
 const fetchKeyDetail = async () => {
-  const detail = await invoke<KeyContentDetail<string>>('get_key_detail', {
-    id: unref(id),
-    db: unref(db),
-    key: unref(key),
-  })
-
+  const detail = await keyOpsApi.getKeyDetail<string>(unref(id), unref(db), unref(key))
   keyDetail.value = detail
   content.value = detail.value
   rawContent.value = detail.value
@@ -43,9 +38,12 @@ const rawContent = ref('')
 const content = ref('')
 const viewRef = ref<InstanceType<typeof FormatViewer> | null>(null)
 
-onMounted(() => {
-  fetchKeyDetail()
+onMounted(async () => {
+  await fetchKeyDetail()
 })
+
+// 刷新时重新获取最新数据
+watch(() => props.keyinfo, fetchKeyDetail)
 
 const handleSave = () => {
   dialog.success({
@@ -66,12 +64,7 @@ const handleSave = () => {
           value: content,
         }
 
-        await invoke('set_key', {
-          id: props.id,
-          db: props.db,
-          keyinfo,
-        })
-
+        await keyOpsApi.setKey(props.id, props.db, keyinfo)
         await fetchKeyDetail()
       } catch (error) {
         message.error(error as string)

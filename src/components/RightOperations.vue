@@ -3,7 +3,8 @@ import { useRedis } from '@/store/redis'
 import { useTabs } from '@/store/tabs'
 import { RedisConfig } from '@/types/redis'
 import { useMitt } from '@/useMitt'
-import { invoke } from '@tauri-apps/api'
+import conOpsApi from '@/apis/conn_ops'
+import keyOpsApi from '@/apis/key_ops'
 import { v4 } from 'uuid'
 import { useConfig } from './useConfig'
 import { DropdownOption, InputInst, NIcon, useThemeVars } from 'naive-ui'
@@ -53,7 +54,7 @@ const handleTerminal = async () => {
 }
 
 const handleClose = async () => {
-  const isConnection = await invoke<boolean>('is_connection', { id: unref(id) })
+  const isConnection = await conOpsApi.isConnection(unref(id))
   if (!isConnection) {
     return
   }
@@ -84,7 +85,7 @@ const handleDelete = async () => {
     autoFocus: false,
     onPositiveClick: async () => {
       try {
-        const isConnection = await invoke<boolean>('is_connection', { id: unref(id) })
+        const isConnection = await conOpsApi.isConnection(unref(id))
         tabsState.removeTabById(unref(id))
         configState.removeConfig(unref(id))
 
@@ -156,7 +157,7 @@ const handleCommand = async (command: string) => {
 const visibleDialog = async (edit: boolean) => {
   try {
     isEdit.value = edit
-    const isConnection = await invoke('is_connection', { id: unref(id) })
+    const isConnection = await conOpsApi.isConnection(unref(id))
     // 如果是编辑并且没有连接
     if (!isConnection && unref(isEdit)) {
       configModel.value = { ...props.config }
@@ -200,7 +201,7 @@ const visibleDialog = async (edit: boolean) => {
 const handleTestConnection = async () => {
   try {
     editLoading.value = true
-    await invoke('test_connection', { config: configModel.value })
+    await conOpsApi.testConnection(configModel.value)
     message.success('连接成功')
   } catch (error) {
     message.error(error as string)
@@ -217,7 +218,7 @@ const handleClearKeys = async () => {
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await invoke('clear_keys', { id: unref(id), db: unref(selectDb) })
+        await keyOpsApi.clearKeys(unref(id), unref(selectDb))
 
         // 删除所有相关的选项卡(DB)
         tabsState.removeTabByDb(unref(selectDb))

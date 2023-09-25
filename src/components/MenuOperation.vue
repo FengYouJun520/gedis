@@ -2,9 +2,9 @@
 import { useTabs } from '@/store/tabs'
 import { AddKeyInfo, Keyspace, RedisConfig } from '@/types/redis'
 import { useMitt } from '@/useMitt'
-import { invoke } from '@tauri-apps/api'
 import { useConfig } from './useConfig'
 import { SelectOption } from 'naive-ui'
+import { setKey } from '@/apis/key_ops'
 
 const props = defineProps<{
   keyspaces: Keyspace[] | Record<string, Keyspace[]>
@@ -95,11 +95,7 @@ const handleConfirm = async () => {
     if (keyModel.value.type === 'stream') {
       keyModel.value.value = '{"New key": "New value"}'
     }
-    await invoke('set_key', {
-      id: unref(id),
-      db: unref(db),
-      keyinfo: keyModel.value,
-    })
+    await setKey(unref(id), unref(db), keyModel.value)
 
     // 添加新的选项卡并且跳转
     if (configOps) {

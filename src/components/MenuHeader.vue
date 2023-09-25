@@ -2,7 +2,7 @@
 import { RedisConfig } from '@/types/redis'
 import { useRedis } from '@/store/redis'
 import { v4 } from 'uuid'
-import { invoke } from '@tauri-apps/api'
+import conOpsApi from '@/apis/conn_ops'
 import { useUiState } from '@/store/ui'
 import { useMitt } from '@/useMitt'
 import { useThemeVars, InputInst } from 'naive-ui'
@@ -34,7 +34,7 @@ const borderColor = computed(() => themeVars.value.borderColor)
 const virtualRef = ref<typeof UseVirtualList | null>(null)
 const fetchLogs = async () => {
   try {
-    const res = await invoke<string[]>('get_logs')
+    const res = await conOpsApi.getLogs()
     logs.value = res
   } catch (error) {
     message.error(error as string)
@@ -58,7 +58,7 @@ const handleNewConfigConfirm = () => {
 const handleTestConnection = async () => {
   try {
     loading.value = true
-    await invoke('test_connection', { config: configData.value })
+    await conOpsApi.testConnection(configData.value)
     message.success('连接成功')
   } catch (error) {
     message.error(error as string)
@@ -116,7 +116,7 @@ onUnmounted(() => {
 
 const clearLogs = async () => {
   try {
-    await invoke('clear_logs')
+    await conOpsApi.clearLogs()
     logs.value = []
     visibleLog.value = false
   } catch (error) {

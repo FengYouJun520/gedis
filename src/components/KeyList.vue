@@ -1,12 +1,13 @@
 <script setup lang="tsx">
 import { useTabs } from '@/store/tabs'
 import { useMitt } from '@/useMitt'
-import { clipboard, invoke } from '@tauri-apps/api'
+import { clipboard } from '@tauri-apps/api'
 import { useConfig } from './useConfig'
 import { DropdownOption, TreeOption } from 'naive-ui'
 import { RenderLabel, RenderSwitcherIcon, TreeNodeProps } from 'naive-ui/es/tree/src/interface'
 import { onUpdateExpandedKeys } from 'naive-ui/es/tree/src/Tree'
 import { useUiState } from '@/store/ui'
+import keyOpsApi from '@/apis/key_ops'
 
 type TreeOptionExt = TreeOption & {
   value: string
@@ -80,22 +81,20 @@ const handleDeleteKey = async () => {
       }
 
       try {
-        await invoke('del_key', {
-          id: unref(id),
-          db: unref(db),
-          key: selectedOption.value.key,
-        })
+        await keyOpsApi.delKey(unref(id), unref(db), selectedOption.value.key as string)
 
-        message.success(() => <span>
-          <n-tag
-            type="success"
-            size="small"
-            bordered={false}
-          >
-            {selectedOption.value?.value}
-          </n-tag>
-            &nbsp;删除成功
-        </span>)
+        message.success(() => (
+          <span>
+            <n-tag
+              type="success"
+              size="small"
+              bordered={false}
+            >
+              {selectedOption.value?.value}
+            </n-tag>
+            删除成功
+          </span>
+        ))
         // 如果有选项卡，删除选项卡
         tabsState.removeTab(
           `${unref(id)}-${unref(db)}-${selectedOption.value.value}`
@@ -121,12 +120,7 @@ const handleDeleteFolder = async () => {
       }
 
       try {
-        await invoke('del_match_keys', {
-          id: unref(id),
-          db: unref(db),
-          matchKey: `${selectedOption.value.value}*`,
-        })
-
+        await keyOpsApi.delMatchKeys(unref(id), unref(db), `${selectedOption.value.value}*`)
         removeFolderChildren(selectedOption.value.children as TreeOptionExt[])
         mitt.emit('refresh', { id: unref(id), db: unref(db) })
         message.success(() => <span>
@@ -138,7 +132,7 @@ const handleDeleteFolder = async () => {
           >
             {selectedOption.value?.value}*
           </n-tag>
-            &nbsp;成功
+          成功
         </span>)
       } catch (error) {
         message.error(error as string)
