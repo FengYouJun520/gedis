@@ -17,14 +17,14 @@ const mitt = useMitt()
 const configOps = useConfig()
 const selectDB = defineModel('db', { default: 0, required: true })
 const search = ref('')
-const id = computed(() => configOps!.config.id)
-const db = computed(() => unref(configOps!.db))
+const id = computed(() => configOps.config.id)
+const db = computed(() => unref(configOps.db))
 const isCluster = computed(() => props.config.cluster)
 
 const selectOptions = computed<SelectOption[]>(() => {
   if (unref(isCluster)) {
     return [{
-      label: `DB0 (${configOps?.treeKeys.value.length})`,
+      label: `DB0 (${configOps.treeKeys.value.length})`,
       value: 0,
     }]
   }

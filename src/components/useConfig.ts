@@ -18,4 +18,4 @@ export const createConfigContext = (ops: ConfigOps) => {
   provide(ConfigKey, ops)
 }
 
-export const useConfig = () => inject(ConfigKey)
+export const useConfig = () => inject(ConfigKey) as ConfigOps

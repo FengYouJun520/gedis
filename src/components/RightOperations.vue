@@ -33,11 +33,11 @@ const handleRefresh = () => {
 }
 
 const handleHome = async () => {
-  await configOps?.connection(props.config)
+  await configOps.connection(props.config)
 }
 
 const handleTerminal = async () => {
-  await configOps?.connection(
+  await configOps.connection(
     props.config,
     {
       id: unref(id),
@@ -249,7 +249,7 @@ const handleCancel = () => {
   visibleEdit.value = false
   editLoading.value = false
   isEdit.value = false
-  configModel.value = { ...configOps!.config }
+  configModel.value = { ...configOps.config }
 }
 </script>
 

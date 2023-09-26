@@ -30,11 +30,11 @@ const treeKeys = computed<TreeOptionExt[]>(() => {
     } as TreeOptionExt))
   }
 
-  return generateOption(configOps?.treeKeys.value || [])
+  return generateOption(configOps.treeKeys.value || [])
 })
 
-const id = computed(() => configOps!.config.id)
-const db = computed(() => unref(configOps!.db))
+const id = computed(() => configOps.config.id)
+const db = computed(() => unref(configOps.db))
 const isCurrent = (otherId: string) => unref(id) === otherId
 
 mitt.on('searchKeyTree', ({ id, query }) => {
@@ -61,10 +61,10 @@ const handleNodeClick = (data: TreeOptionExt) => {
     db: unref(db),
     type: 'detail',
     key,
-    cluster: configOps?.config.cluster,
+    cluster: configOps.config.cluster,
     value: data.value,
-    name: configOps!.config.name,
-    label: `${data.value} | ${configOps?.config.name} | DB${unref(db)}`,
+    name: configOps.config.name,
+    label: `${data.value} | ${configOps.config.name} | DB${unref(db)}`,
     icon: 'fxemoji:key',
   })
 }
